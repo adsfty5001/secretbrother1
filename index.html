@@ -10,13 +10,14 @@
     <meta name="keywords" content="시크릿브라더, 부동산강의, 아파트투자, 내집마련, 부동산큐레이팅, 재테크, 갭투자, 서울머니쇼">
     <meta name="author" content="시크릿브라더">
     
+    <!-- [SNS 공유 최적화] 이미지3(3.jpg) 사용 -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="시크릿클래스 - 아파트 큐레이터 시크릿브라더">
     <meta property="og:description" content="부동산 유목민의 마지막 종착지! 당신에게 딱 맞는 아파트를 찾아드립니다.">
-    <meta property="og:image" content="./2.png">
+    <meta property="og:image" content="./3.jpg">
     <meta property="og:url" content="https://www.secretclass.co.kr">
     
-    <!-- [데이터 분석] GA4 -->
+    <!-- [데이터 분석] GA4 (ID 수정 필요) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -52,7 +53,6 @@
         }
         .modal-content { animation: modal-pop 0.2s ease-out forwards; }
         .break-keep { word-break: keep-all; word-wrap: break-word; }
-        /* 후기 카드 호버 효과 */
         .review-card:hover { transform: translateY(-5px); cursor: pointer; }
     </style>
 </head>
@@ -156,8 +156,8 @@
                 <div class="w-full lg:w-1/2 relative lg:sticky lg:top-24">
                     <div class="bg-gray-50 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 relative overflow-hidden shadow-xl border border-gray-200">
                         <div class="aspect-[4/5] bg-gray-200 rounded-xl md:rounded-2xl flex items-center justify-center mb-6 overflow-hidden relative group border-2 border-gray-300">
-                            <!-- [수정완료] 프로필 이미지 2.png -> 3.jpg -->
-                            <img src="./3.jpg" alt="시크릿브라더 프로필" class="absolute inset-0 w-full h-full object-cover rounded-xl md:rounded-2xl">
+                            <!-- [수정완료] 이미지2 (2.jpg) 사용 -->
+                            <img src="./2.jpg" alt="시크릿브라더 프로필" class="absolute inset-0 w-full h-full object-cover rounded-xl md:rounded-2xl">
                         </div>
                         <div class="absolute top-8 right-8 md:top-12 md:right-12 bg-white/90 backdrop-blur px-3 py-1.5 md:px-4 md:py-2 rounded-full shadow-lg border border-gray-100 text-xs md:text-sm font-bold text-indigo-600 flex items-center gap-2 animate-bounce">
                             <i data-lucide="star" class="w-3 h-3 md:w-4 md:h-4 fill-current"></i> 베스트셀러 작가
@@ -185,7 +185,7 @@
                     <div class="space-y-3 bg-gray-50 p-5 md:p-6 rounded-xl border border-gray-100 mb-8 font-body">
                         <h4 class="font-bold text-gray-900 mb-4 flex items-center gap-2 text-base md:text-lg"><i data-lucide="award" class="w-5 h-5 md:w-6 md:h-6 text-yellow-500 fill-current"></i> 주요 경력 및 활동</h4>
                         
-                        <!-- [수정완료] 서울머니쇼 링크 (./1.jpg) -->
+                        <!-- [수정완료] 이미지1 (1.jpg) 사용 -->
                         <button onclick="openImageModal('./1.jpg')" class="w-full flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100 text-left">
                             <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">1</span>
                             <span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-indigo-600 break-keep flex-grow">서울머니쇼 초청강사</span>
@@ -311,10 +311,21 @@
     <!-- 후기 섹션 -->
     <section id="reviews" class="py-24 bg-gray-50">
         <div class="max-w-6xl mx-auto px-4">
-            <div class="text-center mb-16">
-                <span class="text-indigo-600 font-bold tracking-widest text-sm mb-4 block">REVIEWS</span>
-                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2" style="font-family: 'Jalnan', sans-serif !important;">수강생 리얼 후기</h2>
-                <p class="text-gray-600 text-lg font-body">조작 없는 100% 실제 수강생들의 이야기입니다.</p>
+            <div class="flex justify-between items-center mb-16">
+                <div class="text-left">
+                    <span class="text-indigo-600 font-bold tracking-widest text-sm mb-4 block">REVIEWS</span>
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2" style="font-family: 'Jalnan', sans-serif !important;">수강생 리얼 후기</h2>
+                    <p class="text-gray-600 text-lg font-body">조작 없는 100% 실제 수강생들의 이야기입니다.</p>
+                </div>
+                <button onclick="openWriteReview()" class="hidden md:flex items-center gap-2 bg-indigo-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-800 transition-colors shadow-lg">
+                    <i data-lucide="pen-tool" class="w-4 h-4"></i> 후기 작성하기
+                </button>
+            </div>
+            
+            <div class="md:hidden text-right mb-8">
+                 <button onclick="openWriteReview()" class="inline-flex items-center gap-2 bg-indigo-900 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-800 transition-colors shadow-md text-sm">
+                    <i data-lucide="pen-tool" class="w-4 h-4"></i> 후기 작성하기
+                </button>
             </div>
 
             <div id="reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 font-body">
@@ -849,34 +860,175 @@
             },
             {
                 title: "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기",
-                content: "안녕하세요\n\n전 추석직전 큐레이팅 신청하고 추석연휴동안  갈아타기를 위해 열심히 임장을 다녔습니다.\n\n70일 아기를 데리고 임장을 하는 것이 정말 쉽지 않았는데요. 아기와 나중에 실거주와 투자하기 좋은 곳으로 살고싶다는\n\n목표로 버틴것 같습니다.\n\n추석연휴동안 부동산 사장님들과 연락이 쉽지 않았고 매물을 볼수도 없었기에 제 마음은 굉장히 조급했습니다.\n\n그리고 큐레이팅 일주일이 연휴에 끼어있었기 때문에 종료가되면 난 매물도 잘 못봤는데 제대로 큐레이팅을 이용하지 못한채\n\n종료될까바 걱정되었습니다.\n\n하지만 시부님께서는 큐레이팅기간 종료후에도 제가 계약종료를 마칠때까지 잘 이끌어주셨습니다.\n\n그점이 너무 감사했습니다.\n\n<제가 큐레이팅을 진행하며 가장 좋았던 점은>\n\n1. 나의 사고를 확장시킬 수 있었던점 > 혼자서 부동산 공부를 하거나 시장을 바라보는 것은 한계가 있는데 다양한 사람들을 많이만나고\n\n상담을 해보신 시부님은 현재 부동산 상황과 분위기등을 잘 파악하고 계셔서 현재 상황이 이러니 이렇게 하면 좋겠다 라는 점을 알려주셔서서도움이 되었습니다.\n\n2.평소 부동산에 대해 궁금한 것을 마음껏 질문할 수 있었고 그 답변을 굉장히 성의껏 이유와 함께 답변을 주십니다.\n\n3.다양한 매물중 어떤것이 가장 좋은 매물인지? 그 이유까지 알려주셔서 선택지를 좁히고 시간을 아낄수가 있습니다.\n\n4.나의 전재산이 들어가기때문에 물건을 정할때 마음이 불안합니다. 제가 맞는 선택을 한건가? 그럴때 부동산 전문가가 같이 결정을 해주니 나의 선택에 있어 덜 불안하다는 점\n\n5.나의 현재 상황과 조건들을 들어보고 그것에 맞게 매물 추천을 해주는 점.\n\n이 5가지가 전 가장 도움이 되었습니다.\n\n \n\n덕분에 저는 동탄을 갈아타기 해서 매수할 수 있었고 현재는 풍선효과로 가격이 제가 매수한 가격보다 많이 올랐습니다.\n\n시부님의 큐레이팅은 이가격에 믿을 수 없는 퀄리티 입니다. 큐레이팅을 안 받는것이 솔직히 손해라고 생각이드네요 ㅎㅎㅎㅎㅎ\n\n \n\n시부님 감사했습니다!!",
+                content: `안녕하세요
+
+전 추석직전 큐레이팅 신청하고 추석연휴동안  갈아타기를 위해 열심히 임장을 다녔습니다.
+
+70일 아기를 데리고 임장을 하는 것이 정말 쉽지 않았는데요. 아기와 나중에 실거주와 투자하기 좋은 곳으로 살고싶다는
+
+목표로 버틴것 같습니다.
+
+추석연휴동안 부동산 사장님들과 연락이 쉽지 않았고 매물을 볼수도 없었기에 제 마음은 굉장히 조급했습니다.
+
+그리고 큐레이팅 일주일이 연휴에 끼어있었기 때문에 종료가되면 난 매물도 잘 못봤는데 제대로 큐레이팅을 이용하지 못한채
+
+종료될까바 걱정되었습니다.
+
+하지만 시부님께서는 큐레이팅기간 종료후에도 제가 계약종료를 마칠때까지 잘 이끌어주셨습니다.
+
+그점이 너무 감사했습니다.
+
+<제가 큐레이팅을 진행하며 가장 좋았던 점은>
+
+1. 나의 사고를 확장시킬 수 있었던점 > 혼자서 부동산 공부를 하거나 시장을 바라보는 것은 한계가 있는데 다양한 사람들을 많이만나고
+
+상담을 해보신 시부님은 현재 부동산 상황과 분위기등을 잘 파악하고 계셔서 현재 상황이 이러니 이렇게 하면 좋겠다 라는 점을 알려주셔서서도움이 되었습니다.
+
+2.평소 부동산에 대해 궁금한 것을 마음껏 질문할 수 있었고 그 답변을 굉장히 성의껏 이유와 함께 답변을 주십니다.
+
+3.다양한 매물중 어떤것이 가장 좋은 매물인지? 그 이유까지 알려주셔서 선택지를 좁히고 시간을 아낄수가 있습니다.
+
+4.나의 전재산이 들어가기때문에 물건을 정할때 마음이 불안합니다. 제가 맞는 선택을 한건가? 그럴때 부동산 전문가가 같이 결정을 해주니 나의 선택에 있어 덜 불안하다는 점
+
+5.나의 현재 상황과 조건들을 들어보고 그것에 맞게 매물 추천을 해주는 점.
+
+이 5가지가 전 가장 도움이 되었습니다.
+
+ 
+
+덕분에 저는 동탄을 갈아타기 해서 매수할 수 있었고 현재는 풍선효과로 가격이 제가 매수한 가격보다 많이 올랐습니다.
+
+시부님의 큐레이팅은 이가격에 믿을 수 없는 퀄리티 입니다. 큐레이팅을 안 받는것이 솔직히 손해라고 생각이드네요 ㅎㅎㅎㅎㅎ
+
+ 
+
+시부님 감사했습니다!!`,
                 author: "변미소님",
                 date: "2025-11-12",
                 rating: 5,
                 badge: "BEST"
             },
-            // ... (필요하면 여기에 더 추가하세요)
             {
-                title: "두 번째 수강입니다. 다시 들어도 새롭네요.",
-                content: "작년에 듣고 올해 업데이트된 내용이 궁금해서 다시 결제했습니다. 역시 시크릿브라더님 인사이트는 명불허전입니다.",
-                author: "이**님",
-                date: "2024.03.10",
+                title: "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공!",
+                content: `안녕하세요!
+
+결혼을 준비하던 약 3년 전부터 부동산을 째려보던 제가
+시브님을 만나고 약 2주만에 서울에 내집 마련을 했습니다!
+
+성격이 좋게 말하면 꼼꼼하고 나쁘게 말하면 의사 결정을 잘 못내리는데,
+좋은 시기에 시브님을 만나 빠르게 의사결정 내려서 드디어 매수에 성공했습니다 :)
+
+평소 부동산 유튜브, 월부 커뮤니티 등 다양한 소스로 부동산 공부를 하다가,
+시브님의 칼럼을 읽고 앗 이분이다! 하는 생각이 들어
+시브님을 알게되고 바로 다음 날에 큐레이팅 컨설팅을 신청하였는데요!
+
+마포, 성동구를 째려보다가 매수 시기를 놓쳐 우울해 했었는데,
+저희 부부의 시드 및 상황을 빠르게 파악하시고
+저희가 가진 금액에서 접근할 수 있는 5개의 단지를 큐레이팅 해주셨습니다!
+
+처음 봤던 단지들이 대부분이라,
+중간에 제가 더 아파트를 서치해보았지만
+시브님이 정말 귀신같이(?) 더 나은 매물들만 골라주셨더라구요 ㅎㅎㅎ
+
+그래서 큐레이팅이 정말 많은 시간을 단축해주는구나! 하는 생각을 했고
+(진행하시는 분들은 믿고 가셔도 좋을 것 같습니다!!!)
+중간 중간 지금 더 찾을 때가 아니라 얼른 가서 임장하고 부동산 볼때다 라고 회초리(?)를 들어주신 것도
+밍기적 거리는 저에게 큰 도움이 됐습니다!
+
+말씀듣고 바로 다음 날 부동산 가서 봤던 매물을
+1015 대책 이후에 급매로 나와서 바로 잡을 수 있었습니다 ㅎㅎㅎ
+
+가장 추천 드리는 부분은 1) 예산에 맞는 최고의 단지를 추천해주시고
+2) 움직일 수 있도록 이끌어주시는 부분이고,
+
+저희 부부에게, 그리고 빠르게 매수가 필요했던 이번 시기에 너무 큰 도움을 받았습니다.
+
+결론적으로 결혼 2년 전부터 3년간 째려봤던 부동산을
+시브님을 만나고 2주 만에 매수 할 수 있게 되었습니다 :)
+
++) 중간 중간 제 많은 질문들 답변 주셔서 감사드리며,
+좋은 물건 사고 싶으신 분들, 그리고 부린이라서 계약이 무서우신 분들께 강력 추천드립니다!
+
+감사합니다 시브님 :)
+(갈아타기때 또 뵙겠습니다!)`,
+                author: "김푸름님",
+                date: "2025-11-04",
                 rating: 5,
-                badge: ""
+                badge: "BEST"
             },
             {
-                title: "고민하시는 분들 그냥 들으세요",
-                content: "치킨 두 마리 값으로 10년치 시행착오를 줄일 수 있습니다. 강력 추천합니다.",
-                author: "최**님",
-                date: "2024.03.08",
-                rating: 4,
-                badge: ""
+                title: "큐레이팅 후기",
+                content: `안녕하세요 큐레이팅 후기를 남깁니다.
+
+저는 추석 연휴가 끝나고 큐레이팅을 시작해서 한 주만에 살던 집을 매도하고 새집을 매수하게 되었습니다.
+
+처음에 큐레이팅을 신청할 때는 '정말로 이번 기회에 매도와 매수를 해야겠다' 이런 생각보다는 그간에 부동산에 대해서 제가 생각했던
+
+시나리오를 누군가에게 검증 받아 보자라는 마음으로 시작했습니다.
+
+사실 부동산이라는 것이 예민한 주제라 주변인들과 적극적인 토론을 하기는 좀 꺼려지는 경향이 있고 인터넷 카페에 고민을 올려도
+
+고민에 댓글을 달아주는 분들의 상황이 다 저와 다르기 때문에 객관적인 상담은 어렵겠다고 생각했었습니다.
+
+이때 마침 친구가 추천해준 '나는 1000만원으로 아파트 산다'라는 책의 저자 시크릿브라더가 생각나서 제 손으로 유투브를 검색해서 찾아내고
+
+여기서 큐레이팅이 있다는 것을 보고 신청해서 상담을 받았습니다.
+
+결과는 대만족이었습니다. 사실 이번에 매수까지 성공하지 못했더라도 굉장히 만족스러운 상담이었다고 생각합니다.
+
+특히 저처럼 돌다리도 두드려보고 건너고 싶은 성격의 소유자이면서 또 남들이 하는 한마디에 맘이 크게 흔들릴 수 있는 분들에게 추천합니다.
+
+다들 마음속에 '이렇게 이렇게 해서 이런 아파트를 사는게 좋지 않을까?' 라는 막연한 시나리오 들은 있을 겁니다.
+
+이번에 큐레이팅을 받아 매도매수과정을 함께 해보니 이런 시나리오들을 행동으로 옮기는데
+
+혼자서 해봤다면 (정말 괜찮은 좋은 방향의 시나리오라도) 많은 장애물들을 넘지 못하고 실행하지 못 했을 수도 있었을 거란 생각이 듭니다.
+
+현황의 분석과 나라는 사람의 특수성을 고려한 제안들은 너무 좋았고 특히 직접 다른 사람들과 부딪히면서 해결해 나가게되는
+
+부동산에 매물을 올리는 과정, 네고, 계약서 작성등의 단계에서 혼자 있지 않다는 느낌을 받으며 실시간으로 상담받았던 기억이 지금도 생생합니다.
+
+집을 매수하거나 매도할 때 향후의 결과가 어떻게 될지는100% 예측할 수 있는 사람은 없을 거라고 생각합니다.
+
+짧은 부동산 경력이지만 저는 그렇기 때문에 결과가 좋다면 당연히 좋은거지만 결과가 좋지 않을 때에 대한 마음의 대비가 중요하다고 봅니다.
+
+그러한 마음의 대비는 만약에 시간이 지나 부동산 거래의 성적표가 도달했을 때도 '과거의 나로 돌아간다면 이런 생각과 결정이 그 상황의 나에게 있어선 최선이었어'라는
+
+본인을 납득시킬 수 있는 이유가 있어야한다고 생각합니다.
+
+이번 부동산 거래는 인생에 있어 2번째이지만 가장 큰 부동산 거래 였는데 앞으로 어떻게 될지는 100% 장담할 순 없을 것 같습니다.
+
+하지만 정말로 치열한 고민 끝에 내린 결정이었음을 이미 알고 있고 그러한 치열한 생각의 과정에서 옆에 있어 줬던 시크릿브라더에게 참 감사합니다.`,
+                author: "이준석님",
+                date: "2025-10-27",
+                rating: 5, // 별점 4점 -> 5점 수정 완료
+                badge: "BEST"
             },
              {
-                title: "1:1 큐레이팅은 정말 신의 한 수 였습니다",
-                content: "제 상황에 딱 맞는 아파트를 찍어주시는데 소름이 돋았습니다. 단순히 추천만 해주는 게 아니라 왜 좋은지 근거를 명확히 설명해주셔서 확신을 가지고 매수할 수 있었습니다.",
-                author: "행복한부자님",
-                date: "2024.03.05",
+                title: "[시크릿브라더] 부동산 큐레이팅 후기",
+                content: `안녕하세요, 
+
+10월 초 추석 연휴 전 큐레이팅을 신청 하였고, 실거주와 갭투자를 고민하는 상황이었습니다. 
+결론을 먼저 말씀 드리자면 시크릿브라더님 큐레이팅 조언을 통해 실거주집을 매수하기로 계약을 한 상태입니다. 
+
+결과부터 말씀드리자면 큐레이팅 내용에 대해 정말 대만족 입니다! 
+시크릿브라더님 뿐만 아니라 다른 곳에서도 이전에 아파트를 매수하기전에 컨설팅을 받아 본적이 있습니다. 
+물론 이전에 했던 곳들도 장점이 많고 도움이 되었지만 여러가지 측면에 시크릿 브라더님 큐레이팅이 만족도 최상입니다. 
+
+우선, 다른 컨설팅과 마찬가지로 설문지와 현상황에 대해 설명을 드리면 정말 주말도 가리지 않으시고 빠르게 피드백을 주십니다. 
+생각보다 디테일하게 빠른 1차 피드백을 주말동안 주셔서 1차 감동이었습니다. 
+
+그 다음은 정말 명확하고, 직관적으로 피드백을 주십니다. 그리고 그렇게 선정한 이유를 명확하고, 직관적으로 설명해주시기에 여러가지 옵션 중에 어떤 방향으로 나아가야할지를 명확하게 이해 할 수 있었습니다. 
+뿐만 아니라 지역이면 지역, 단지면 단지 딱 정확하게 짚어 주시기에 지역을 선정하고 매물을 결정하는데 있어서 효율적으로 시간을 아낄 수 있었습니다. 
+비전문가로서 가장 어려운 부분이 어느 가격이 정적가격이고, 어느 가격에 계약을 해야할지인데, 명확하게 어떤 금액을 타겟으로, 그리고 어떤 가격이면 계약해도 될지 안내를 해주셨습니다. 
+
+마지막으로 여러지역을 고민하느라 매물임장을 여러 군데 보느라 시간이 오래 걸려서 죄송스러웠지만, 끝까지 책임감 있게 큐레이팅 해주시고, 기간이 지났음에도 계약서까지 검토 해주신다는 말씀에 감동을 받았습니다. 
+
+주변에 집을 매수하기를 고민 하는 인원이 있다면 무조건 강추 할 생각이고, 저 또한 다음 집을 매수 할 때 도움을 받고 싶습니다. 
+정말 가성비와 더불아 퀄리티 최상인 부동산 컨설팅이 아닌가 싶습니다. 
+`,
+                author: "김준용님",
+                date: "2025-10-27",
                 rating: 5,
                 badge: "BEST"
             }
@@ -889,8 +1041,6 @@
 
         function renderReviews() {
             reviewsContainer.innerHTML = '';
-            // 모바일에서는 처음 3개, PC에서는 처음 3개 (반응형에 따라 조정 가능)
-            // 여기서는 'visibleCount' 변수를 사용하여 제어
             const currentReviews = reviewData.slice(0, visibleCount);
 
             currentReviews.forEach((review, index) => {
@@ -909,8 +1059,8 @@
                 if(review.badge === 'BEST') badgeHtml = '<span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded">BEST</span>';
                 else if(review.badge === 'NEW') badgeHtml = '<span class="bg-indigo-100 text-indigo-600 text-xs font-bold px-2 py-1 rounded">NEW</span>';
 
-                // 줄바꿈 처리 (개행 문자를 <br>로 변환)
-                const formattedContent = review.content.replace(/\n/g, '<br>');
+                // 줄바꿈 처리 (카드 내에서는 말줄임표 처리되므로 원본 텍스트 사용)
+                // 모달에서는 줄바꿈 반영
 
                 card.innerHTML = `
                     <div class="flex justify-between items-start mb-4">
@@ -941,6 +1091,62 @@
             visibleCount += 3; // 3개씩 더 보여줌
             renderReviews();
         }
+
+        // [중요] 후기 작성 팝업 열기 (결제 여부 체크)
+        function openWriteReview() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const paymentStatus = localStorage.getItem('paymentStatus');
+
+            if (!isLoggedIn) {
+                alert("로그인이 필요합니다.");
+                toggleModal('loginModal');
+                return;
+            }
+
+            if (paymentStatus !== 'paid') {
+                alert("수강 내역이 없습니다.\n결제 완료된 수강생만 후기를 작성할 수 있습니다.");
+                return;
+            }
+
+            // 통과 시 모달 열기
+            toggleModal('writeReviewModal');
+        }
+
+        // [중요] 후기 제출 로직
+        function submitReview() {
+            const title = document.getElementById('review-input-title').value;
+            const content = document.getElementById('review-input-content').value;
+            const author = localStorage.getItem('userName') || '익명';
+            
+            if (!title || !content) {
+                alert("제목과 내용을 모두 입력해주세요.");
+                return;
+            }
+
+            // 새 후기 데이터 생성
+            const newReview = {
+                title: title,
+                content: content,
+                author: author + "님",
+                date: new Date().toISOString().split('T')[0].replace(/-/g, '.'),
+                rating: 5, // 기본 5점
+                badge: "NEW"
+            };
+
+            // 데이터 맨 앞에 추가
+            reviewData.unshift(newReview);
+            
+            // 화면 갱신
+            renderReviews();
+            
+            // 모달 닫기 및 초기화
+            toggleModal('writeReviewModal');
+            document.getElementById('review-input-title').value = '';
+            document.getElementById('review-input-content').value = '';
+            
+            alert("소중한 후기가 등록되었습니다! 감사합니다.");
+        }
+
 
         // 후기 상세 모달 열기
         function openReviewDetail(index) {
