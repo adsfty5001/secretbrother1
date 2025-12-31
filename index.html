@@ -52,7 +52,6 @@
         }
         .modal-content { animation: modal-pop 0.2s ease-out forwards; }
         .break-keep { word-break: keep-all; word-wrap: break-word; }
-        /* 후기 카드 호버 효과 */
         .review-card:hover { transform: translateY(-5px); cursor: pointer; }
     </style>
 </head>
@@ -309,7 +308,7 @@
         </div>
     </section>
 
-    <!-- 후기 섹션 -->
+    <!-- 후기 섹션 (NEW) -->
     <section id="reviews" class="py-24 bg-gray-50">
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-between items-center mb-16">
@@ -556,11 +555,7 @@
                 <h2 id="modal-review-title" class="text-xl font-bold text-gray-900 mb-6 leading-snug"></h2>
                 <div class="text-gray-700 leading-relaxed whitespace-pre-wrap mb-8" id="modal-review-content"></div>
                 <div class="flex items-center justify-between pt-4 border-t border-gray-100 text-sm text-gray-500">
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold" id="modal-review-author"></span>
-                        <span class="text-xs text-gray-400">|</span>
-                        <span class="text-xs text-gray-500 flex items-center gap-1"><i data-lucide="eye" class="w-3 h-3"></i> <span id="modal-review-views"></span></span>
-                    </div>
+                    <span class="font-bold" id="modal-review-author"></span>
                     <span id="modal-review-date"></span>
                 </div>
             </div>
@@ -640,7 +635,40 @@
 시브님은 제 의견은 다 들어주시되, 시브님의 의견을 근거를 들어가며 설명해 주시고,
 저에게 선택권을 주셨습니다.
 덕분에 전 실거주로 방향성을 잡게 되었고,
-시브님의 근거들 덕분에 제 방향성에 확신을 더할 수 있었습니다.`,
+시브님의 근거들 덕분에 제 방향성에 확신을 더할 수 있었습니다.
+ 
+그리고, 상담을 많이 해보셔서 그런 걸까요? 아님 책이나 여러 경험들을 통해 그릇이 커서 그런 걸까요?
+저는 큐레이팅 내내 경제적인 것 뿐만이 아니라 인생에 대해서도 저보다 큰 그릇을 갖고 계신 분과 대화 함으로써 
+느끼는 경외감?이 있었습니다.
+실거주다 보니 아이와 남편의 이야기까지 하게 되는데, 
+제가 망설이거나 고민하고 있는 부분을 잘 잡아 주셔서 감사했던 기억이 있습니다. 
+ 
+후보지 단지와 지역을 추천해 주시고, 그 곳을 임장하고 나서 느낀점을 적는 숙제를 내 주셨는데,
+단지의 장단점과 주의해서 확인해야 할 점들을 미리 보내주셔서 그 부분을 중점으로 제 눈으로 다시 한번 확인하고
+제가 임장 후기를 보냈을 때, 피드백을 주셨는데 이것이 단지들을 객관적으로 바라보는 기준이 되었습니다.
+그리고 현재 그 지역의 부동산 분위기를 설명해 주셔서 제를 채찍질 해주셨는데,, 
+9월에 매수했다면 좋았을 것을 자가에 전세가 끼어있는 집까지 두 개를 동시에 매도하려니 시간이 참 오래걸렸습니다.
+자가 매도시에도 시브님의 채찍질이 참 도움이 많이 됐어요.
+그렇게 일주일이라는 기간이 후딱 가고, 큐레이팅이 끝났죠.
+ 
+아!!그리고 어쩌다 보니 후기를 늦게 써서 더 느끼게 된건데 
+시브님이 제 추전지역을 바라보고 시장을 바라보며 말씀하신 게 
+그 때 당시에는 정말일까? 라는 의구심?도 아주 조금은 있었는데
+지나고 보니 진짜였어요.
+ 
+그리고, 몇 달이 지난 이 시점에 전 매도를 다 끝내고 
+제가 원하는 지역에 드디어 매수했습니다.
+9월과 11월 사이에 정책으로 부동산시장은 엄청 혼란스러웠고
+지금도 그 때의 큐레이팅 내용이 유효할까? 생각하며
+나눈 대화를 다시 한번 읽어나가며 
+아직도 유효하다는 판단을 할 수 있었고 괜찮은 가격이다.
+라는 확신으로 매수를 진행할 수 있었습니다.
+ 
+시크릿큐레이팅은 내가 어떤 질문을 하느냐에 따라 제가 얻고자 하는 대답보다 더 많은 것을 얻어갈 수 있습니다.
+그리고, 혹시 저처럼 질문을 못 하면 어떻하지?라고 생각하셔도 괜찮습니다. 
+알아서 물어봐 주시거든요.
+30만원으로 3000만원의 가치를 줄 수 있다는 시크릿큐레이팅의 홍보문구는 과장이 아닙니다.
+읽어주셔서 감사합니다.`,
                 author: "이은정님",
                 date: "2025-12-01",
                 rating: 5,
@@ -719,7 +747,7 @@
                 date: "2025-10-20",
                 rating: 5,
                 badge: "NEW",
-                views: calculateViews(850)
+                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
             },
             {
                 title: "지방 투자에 대한 확신을 얻었습니다",
@@ -728,7 +756,7 @@
                 date: "2025-10-18",
                 rating: 5,
                 badge: "",
-                views: calculateViews(780)
+                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
             },
             {
                 title: "30대 직장인 생애 첫 내집마련 성공!",
@@ -737,7 +765,7 @@
                 date: "2025-10-15",
                 rating: 5,
                 badge: "",
-                views: calculateViews(720)
+                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
             },
             {
                 title: "갈아타기 타이밍, 기가 막히게 잡아주셨네요",
@@ -746,7 +774,7 @@
                 date: "2025-10-10",
                 rating: 5,
                 badge: "",
-                views: calculateViews(690)
+                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
             },
             {
                 title: "부동산 사장님 상대하는 법부터 알려주심 ㅋㅋ",
@@ -755,7 +783,7 @@
                 date: "2025-10-05",
                 rating: 5,
                 badge: "",
-                views: calculateViews(650)
+                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
             },
             {
                 title: "전세냐 매매냐.. 2년 고민 끝!",
@@ -764,7 +792,7 @@
                 date: "2025-10-01",
                 rating: 5,
                 badge: "",
-                views: calculateViews(600)
+                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
             },
             {
                 title: "투자 마인드셋까지 다시 잡아주십니다",
@@ -773,7 +801,7 @@
                 date: "2025-09-28",
                 rating: 5,
                 badge: "",
-                views: calculateViews(550)
+                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
             },
             {
                 title: "맞벌이 부부의 현실적인 내집마련기",
@@ -782,7 +810,7 @@
                 date: "2025-09-25",
                 rating: 5,
                 badge: "",
-                views: calculateViews(500)
+                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
             },
             {
                 title: "다주택자 포트폴리오 재정비 받았습니다",
@@ -791,7 +819,7 @@
                 date: "2025-09-20",
                 rating: 5,
                 badge: "",
-                views: calculateViews(480)
+                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
             },
             {
                 title: "1기 신도시 재건축, 지금 들어가도 될까?",
@@ -800,7 +828,7 @@
                 date: "2025-09-15",
                 rating: 4,
                 badge: "",
-                views: calculateViews(450)
+                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
             },
             {
                 title: "사회초년생 종잣돈 모으기부터 시작합니다",
@@ -809,7 +837,7 @@
                 date: "2025-09-10",
                 rating: 5,
                 badge: "NEW",
-                views: calculateViews(420)
+                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
             },
             {
                 title: "역시 시크릿브라더.. 이름값 하시네요",
@@ -818,7 +846,7 @@
                 date: "2025-09-05",
                 rating: 5,
                 badge: "",
-                views: calculateViews(390)
+                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
             }
         ];
 
