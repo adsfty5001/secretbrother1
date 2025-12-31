@@ -55,8 +55,8 @@
         .review-card { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .review-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
         
-        /* 모달 내 본문 스타일 */
-        #modal-review-content { line-height: 1.8; color: #374151; }
+        /* 모달 내 본문 스타일 (줄바꿈/태그 적용) */
+        #modal-review-content { line-height: 1.8; color: #374151; white-space: pre-wrap; }
         #modal-review-content p { margin-bottom: 1em; }
     </style>
 </head>
@@ -140,11 +140,9 @@
             <div class="w-full md:w-[40%] flex justify-center z-10 relative h-64 md:h-full items-center">
                 <div class="relative w-full h-full flex items-center justify-center group">
                     <div class="absolute w-64 h-64 md:w-80 md:h-80 bg-indigo-500/30 rounded-full blur-[60px] md:blur-[80px] animate-pulse"></div>
-                    <!-- 책 1 (YES24 이미지 직접 연결) -->
                     <a href="https://www.yes24.com/product/goods/104491194" target="_blank" class="absolute w-36 md:w-48 lg:w-60 transform -rotate-[15deg] -translate-x-10 md:-translate-x-14 translate-y-4 hover:rotate-0 hover:scale-110 hover:z-30 transition-all duration-500 shadow-2xl cursor-pointer z-10">
                         <img src="https://image.yes24.com/goods/104491194/XL" alt="나는 1000만원으로 아파트 산다" class="w-full rounded-r-xl book-shadow border-l-2 border-gray-600">
                     </a>
-                    <!-- 책 2 (YES24 이미지 직접 연결) -->
                     <a href="https://www.yes24.com/product/goods/122689813" target="_blank" class="absolute w-36 md:w-48 lg:w-60 transform rotate-[5deg] translate-x-8 md:translate-x-10 -translate-y-4 hover:rotate-0 hover:scale-110 hover:z-30 transition-all duration-500 shadow-2xl cursor-pointer z-20">
                         <img src="https://image.yes24.com/goods/122689813/XL" alt="돈 버는 뇌 못 버는 뇌" class="w-full rounded-r-xl book-shadow border-l-2 border-gray-600">
                     </a>
@@ -160,7 +158,6 @@
                 <div class="w-full lg:w-1/2 relative lg:sticky lg:top-24">
                     <div class="bg-gray-50 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 relative overflow-hidden shadow-xl border border-gray-200">
                         <div class="aspect-[4/5] bg-gray-200 rounded-xl md:rounded-2xl flex items-center justify-center mb-6 overflow-hidden relative group border-2 border-gray-300">
-                            <!-- [수정] 프로필 이미지 경로 (3.jpg) -->
                             <img src="./3.jpg" alt="시크릿브라더 프로필" class="absolute inset-0 w-full h-full object-cover rounded-xl md:rounded-2xl">
                         </div>
                         <div class="absolute top-8 right-8 md:top-12 md:right-12 bg-white/90 backdrop-blur px-3 py-1.5 md:px-4 md:py-2 rounded-full shadow-lg border border-gray-100 text-xs md:text-sm font-bold text-indigo-600 flex items-center gap-2 animate-bounce">
@@ -326,7 +323,6 @@
                 </button>
             </div>
             
-            <!-- 모바일용 후기 작성 버튼 (상단 배치) -->
             <div class="md:hidden text-right mb-8">
                  <button onclick="openWriteReview()" class="inline-flex items-center gap-2 bg-indigo-900 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-800 transition-colors shadow-md text-sm">
                     <i data-lucide="pen-tool" class="w-4 h-4"></i> 후기 작성하기
@@ -688,9 +684,6 @@
 
         // 조회수 계산 함수 (매일 증가 + 랜덤성 부여)
         function calculateViews(baseMin, baseMax) {
-            // 랜덤 베이스 조회수 (최초 로드 시)
-            // 실제 구현에서는 서버가 없으므로 로컬스토리지나 랜덤 함수 사용
-            // 여기서는 심플하게 랜덤 값 리턴 (새로고침하면 바뀜)
             return Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
         }
 
@@ -891,7 +884,6 @@
                 content: `안녕하세요!
 결혼을 준비하던 약 3년 전부터 부동산을 째려보던 제가
 시브님을 만나고 약 2주만에 서울에 내집 마련을 했습니다!
-
 성격이 좋게 말하면 꼼꼼하고 나쁘게 말하면 의사 결정을 잘 못내리는데,
 좋은 시기에 시브님을 만나 빠르게 의사결정 내려서 드디어 매수에 성공했습니다 :)
 
@@ -977,22 +969,7 @@
                 content: `안녕하세요, 
 10월 초 추석 연휴 전 큐레이팅을 신청 하였고, 실거주와 갭투자를 고민하는 상황이었습니다. 
 결론을 먼저 말씀 드리자면 시크릿브라더님 큐레이팅 조언을 통해 실거주집을 매수하기로 계약을 한 상태입니다. 
-
-결과부터 말씀드리자면 큐레이팅 내용에 대해 정말 대만족 입니다! 
-시크릿브라더님 뿐만 아니라 다른 곳에서도 이전에 아파트를 매수하기전에 컨설팅을 받아 본적이 있습니다. 
-물론 이전에 했던 곳들도 장점이 많고 도움이 되었지만 여러가지 측면에 시크릿 브라더님 큐레이팅이 만족도 최상입니다. 
-
-우선, 다른 컨설팅과 마찬가지로 설문지와 현상황에 대해 설명을 드리면 정말 주말도 가리지 않으시고 빠르게 피드백을 주십니다. 
-생각보다 디테일하게 빠른 1차 피드백을 주말동안 주셔서 1차 감동이었습니다. 
-
-그 다음은 정말 명확하고, 직관적으로 피드백을 주십니다. 그리고 그렇게 선정한 이유를 명확하고, 직관적으로 설명해주시기에 여러가지 옵션 중에 어떤 방향으로 나아가야할지를 명확하게 이해 할 수 있었습니다. 
-뿐만 아니라 지역이면 지역, 단지면 단지 딱 정확하게 짚어 주시기에 지역을 선정하고 매물을 결정하는데 있어서 효율적으로 시간을 아낄 수 있었습니다. 
-비전문가로서 가장 어려운 부분이 어느 가격이 정적가격이고, 어느 가격에 계약을 해야할지인데, 명확하게 어떤 금액을 타겟으로, 그리고 어떤 가격이면 계약해도 될지 안내를 해주셨습니다. 
-
-마지막으로 여러지역을 고민하느라 매물임장을 여러 군데 보느라 시간이 오래 걸려서 죄송스러웠지만, 끝까지 책임감 있게 큐레이팅 해주시고, 기간이 지났음에도 계약서까지 검토 해주신다는 말씀에 감동을 받았습니다. 
-
-주변에 집을 매수하기를 고민 하는 인원이 있다면 무조건 강추 할 생각이고, 저 또한 다음 집을 매수 할 때 도움을 받고 싶습니다. 
-정말 가성비와 더불아 퀄리티 최상인 부동산 컨설팅이 아닌가 싶습니다.`,
+결과부터 말씀드리자면 큐레이팅 내용에 대해 정말 대만족 입니다!`,
                 author: "김*용님",
                 date: "2025-10-27",
                 rating: 5,
