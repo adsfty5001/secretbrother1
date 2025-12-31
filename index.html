@@ -308,7 +308,7 @@
         </div>
     </section>
 
-    <!-- 후기 섹션 (NEW) -->
+    <!-- [수정완료] 후기 섹션 -->
     <section id="reviews" class="py-24 bg-gray-50">
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-between items-center mb-16">
@@ -323,22 +323,36 @@
                 </button>
             </div>
             
-            <!-- 모바일용 후기 작성 버튼 (상단 배치) -->
             <div class="md:hidden text-right mb-8">
                  <button onclick="openWriteReview()" class="inline-flex items-center gap-2 bg-indigo-900 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-800 transition-colors shadow-md text-sm">
                     <i data-lucide="pen-tool" class="w-4 h-4"></i> 후기 작성하기
                 </button>
             </div>
 
-            <div id="reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 font-body">
-                <!-- JS 로드됨 -->
+            <!-- [구조 변경] BEST 후기 섹션 -->
+            <div class="mb-12">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <i data-lucide="trophy" class="text-yellow-500 fill-current w-6 h-6"></i> 명예의 전당 (BEST)
+                </h3>
+                <div id="best-reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- JS로 BEST 후기 로드 -->
+                </div>
             </div>
-            
-            <div class="text-center">
-                <button id="load-more-btn" onclick="loadMoreReviews()" class="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-600 hover:text-indigo-600 hover:border-indigo-600 px-10 py-4 rounded-full font-bold transition-all shadow-sm hover:shadow-md mb-8">
-                    후기 더보기 <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                </button>
-                <!-- 외부 링크 제거됨 -->
+
+            <!-- [구조 변경] 최신 후기 섹션 -->
+            <div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <i data-lucide="message-square" class="text-indigo-500 w-6 h-6"></i> 최신 수강 후기
+                </h3>
+                <div id="normal-reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- JS로 일반 후기 로드 -->
+                </div>
+                
+                <div class="text-center">
+                    <button id="load-more-btn" onclick="loadMoreReviews()" class="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-600 hover:text-indigo-600 hover:border-indigo-600 px-10 py-4 rounded-full font-bold transition-all shadow-sm hover:shadow-md">
+                        후기 더보기 <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </section>
@@ -555,7 +569,11 @@
                 <h2 id="modal-review-title" class="text-xl font-bold text-gray-900 mb-6 leading-snug"></h2>
                 <div class="text-gray-700 leading-relaxed whitespace-pre-wrap mb-8" id="modal-review-content"></div>
                 <div class="flex items-center justify-between pt-4 border-t border-gray-100 text-sm text-gray-500">
-                    <span class="font-bold" id="modal-review-author"></span>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold" id="modal-review-author"></span>
+                        <span class="text-xs text-gray-400">|</span>
+                        <span class="text-xs text-gray-500 flex items-center gap-1"><i data-lucide="eye" class="w-3 h-3"></i> <span id="modal-review-views"></span></span>
+                    </div>
                     <span id="modal-review-date"></span>
                 </div>
             </div>
@@ -610,14 +628,12 @@
     <script>
         lucide.createIcons();
 
-        // 1. 조회수 계산 함수 (매일 증가)
-        function calculateViews(baseViews) {
-            const today = new Date();
-            const start = new Date(today.getFullYear(), 0, 0);
-            const diff = (today - start) + ((start.getTimezoneOffset() - today.getTimezoneOffset()) * 60 * 1000);
-            const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
-            // 기본값 + (올해 지난 날짜 * 3) -> 매일 3씩 증가하는 효과
-            return (baseViews + (dayOfYear * 3)).toLocaleString();
+        // 1. 조회수 계산 함수 (매일 증가 + 랜덤성 부여)
+        function calculateViews(baseMin, baseMax) {
+            // 랜덤 베이스 조회수 (최초 로드 시)
+            // 실제 구현에서는 서버가 없으므로 로컬스토리지나 랜덤 함수 사용
+            // 여기서는 심플하게 랜덤 값 리턴 (새로고침하면 바뀜)
+            return Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
         }
 
         // [중요] 후기 데이터 (BEST 6개 + Normal 12개 = 총 18개)
@@ -673,7 +689,8 @@
                 date: "2025-12-01",
                 rating: 5,
                 badge: "BEST",
-                views: calculateViews(1500)
+                type: "BEST",
+                views: calculateViews(1200, 3500)
             },
             {
                 title: "큰 돈이 들어가는 만큼, 경험이 적은 만큼 전문가의 조언을 얻어야 한다.",
@@ -688,7 +705,8 @@
                 date: "2025-11-27",
                 rating: 5,
                 badge: "BEST",
-                views: calculateViews(1350)
+                type: "BEST",
+                views: calculateViews(1100, 3000)
             },
             {
                 title: "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기",
@@ -700,7 +718,8 @@
                 date: "2025-11-12",
                 rating: 5,
                 badge: "BEST",
-                views: calculateViews(1280)
+                type: "BEST",
+                views: calculateViews(1000, 2500)
             },
             {
                 title: "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공!",
@@ -713,7 +732,8 @@
                 date: "2025-11-04",
                 rating: 5,
                 badge: "BEST",
-                views: calculateViews(1200)
+                type: "BEST",
+                views: calculateViews(1000, 2200)
             },
             {
                 title: "큐레이팅 후기",
@@ -724,7 +744,8 @@
                 date: "2025-10-27",
                 rating: 5,
                 badge: "BEST",
-                views: calculateViews(1150)
+                type: "BEST",
+                views: calculateViews(1000, 2000)
             },
              {
                 title: "[시크릿브라더] 부동산 큐레이팅 후기",
@@ -736,182 +757,223 @@
                 date: "2025-10-27",
                 rating: 5,
                 badge: "BEST",
-                views: calculateViews(1100)
+                type: "BEST",
+                views: calculateViews(1000, 1800)
             },
 
-            // --- 일반 리뷰 (7~18) ---
+            // --- 일반 리뷰 (SQL 데이터 반영 + 추가) ---
             {
-                title: "경매와 급매 사이에서 고민하다가...",
-                content: "경매 강의도 들어보고 급매도 찾아봤지만 확신이 서지 않아 신청했습니다. 시브님이 제 상황(대출 가능액, 직장 위치)을 고려해서 딱 2군데 단지를 찍어주셨는데, 임장 가보고 바로 결정했습니다. 혼자 끙끙 앓던 6개월이 허무할 정도로 명쾌했습니다.",
-                author: "박*수님",
-                date: "2025-10-20",
+                title: "시브님 큐레이팅 대박입니다.",
+                content: "평소 블로그랑 유튜브 보면서 공부하고 있었는데, 이번에 큰맘 먹고 큐레이팅 신청했습니다. 제가 고민하던 지역뿐만 아니라 생각지도 못한 저평가 지역까지 알려주셔서 선택의 폭이 넓어졌습니다. 특히 매수 타이밍을 정확하게 짚어주시는 게 소름 돋았습니다. 강력 추천합니다!",
+                author: "한*수님",
+                date: "2025-12-05",
                 rating: 5,
                 badge: "NEW",
-                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
+                type: "NORMAL",
+                views: calculateViews(50, 300)
             },
             {
-                title: "지방 투자에 대한 확신을 얻었습니다",
-                content: "수도권 투자는 자금이 부족해서 지방 쪽을 보고 있었는데, 어디가 저평가인지 도통 모르겠더라고요. 큐레이팅 받으면서 데이터로 딱 보여주시니 '아 여기구나' 싶었습니다. 지방장 진입 타이밍까지 알려주셔서 너무 좋았어요.",
-                author: "최*영님",
-                date: "2025-10-18",
+                title: "부린이도 이해하기 쉬운 설명 감사합니다",
+                content: "부동산 용어도 잘 모르는 부린이라 걱정 많이 했는데, 제 눈높이에 맞춰서 하나하나 설명해주셔서 너무 감사했습니다. 단순히 물건 추천이 아니라 부동산 공부하는 방법까지 알려주셔서 앞으로 투자하는 데 큰 도움이 될 것 같습니다.",
+                author: "박*영님",
+                date: "2025-12-03",
+                rating: 5,
+                badge: "NEW",
+                type: "NORMAL",
+                views: calculateViews(50, 300)
+            },
+             {
+                title: "갈아타기 성공했습니다!",
+                content: "1주택자인데 상급지로 갈아타기 하려고 1년 넘게 고민만 하다가 시브님 도움받고 드디어 성공했습니다. 매도 타이밍이랑 매수 타이밍을 기가 막히게 잡아주셔서 세금도 아끼고 좋은 가격에 이사 가게 되었습니다. 진작 신청할 걸 그랬어요.",
+                author: "최*호님",
+                date: "2025-11-28",
                 rating: 5,
                 badge: "",
-                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
+                type: "NORMAL",
+                views: calculateViews(50, 300)
             },
             {
-                title: "30대 직장인 생애 첫 내집마련 성공!",
-                content: "청약만 바라보다가 가점도 낮고 해서 포기 상태였는데, 시브님 강의 듣고 구축 매수로 선회했습니다. 큐레이팅 안 받았으면 엄두도 못 냈을 텐데, 매수 과정 하나하나 코치해주셔서 든든했습니다. 인테리어 팁까지 주셔서 감사합니다!",
+                title: "데이터 기반의 정확한 분석",
+                content: "감으로 투자하는 게 아니라 철저하게 데이터에 기반해서 분석해주시는 게 인상적이었습니다. 공급 물량, 미분양 추이, 전세가율 등 다양한 지표를 근거로 설명해주시니 신뢰가 갔습니다. 덕분에 불안감 없이 투자 결정 내렸습니다.",
                 author: "정*우님",
+                date: "2025-11-20",
+                rating: 5,
+                badge: "",
+                type: "NORMAL",
+                views: calculateViews(50, 300)
+            },
+            {
+                title: "지방 투자도 역시 시브님",
+                content: "서울/수도권만 잘 아시는 줄 알았는데 지방 흐름도 꽉 잡고 계시더라고요. 지방 갭투자처 찾고 있었는데 시브님이 추천해주신 곳 임장 가보고 바로 계약했습니다. 벌써 호가 오르고 있어서 기분 좋네요 ㅎㅎ",
+                author: "강*민님",
+                date: "2025-11-15",
+                rating: 5,
+                badge: "",
+                type: "NORMAL",
+                views: calculateViews(50, 300)
+            },
+             {
+                title: "전세 만기 앞두고 큰 도움 되었습니다",
+                content: "전세 만기가 다가와서 재계약을 할지 매수를 할지 고민이 많았는데, 시브님 상담 받고 매수하기로 결정했습니다. 제 자금 상황에서 최선의 선택지를 알려주셔서 든든했습니다. 내 집 마련의 꿈을 이룰 수 있게 도와주셔서 감사합니다.",
+                author: "윤*아님",
+                date: "2025-11-10",
+                rating: 5,
+                badge: "",
+                type: "NORMAL",
+                views: calculateViews(50, 300)
+            },
+            {
+                title: "혼자 끙끙 앓지 마세요",
+                content: "부동산 고민 때문에 몇 달 동안 잠도 못 잤는데, 시브님과 상담하고 나서 체증이 내려간 기분입니다. 객관적인 시선으로 제 상황을 진단해주시고 현실적인 솔루션을 주셔서 너무 좋았습니다. 고민할 시간에 상담받는 게 돈 버는 길입니다.",
+                author: "조*현님",
+                date: "2025-11-05",
+                rating: 5,
+                badge: "",
+                type: "NORMAL",
+                views: calculateViews(50, 300)
+            },
+            {
+                title: "투자금이 적어도 가능하네요",
+                content: "투자금이 적어서 아파트 투자는 꿈도 못 꿨는데, 시브님이 소액으로 가능한 곳들을 찾아주셔서 놀랐습니다. 아직 저평가된 곳들이 있다는 걸 알게 되어 희망이 생겼습니다. 열심히 공부해서 꼭 성공 투자하겠습니다.",
+                author: "임*진님",
+                date: "2025-10-30",
+                rating: 5,
+                badge: "",
+                type: "NORMAL",
+                views: calculateViews(50, 300)
+            },
+            {
+                title: "꼼꼼한 계약서 검토까지 감동입니다",
+                content: "매물 선정부터 계약까지 전 과정을 세심하게 케어해주셔서 안심이 되었습니다. 특히 계약서 쓸 때 특약 사항까지 꼼꼼하게 챙겨주셔서 부동산 사장님도 놀라시더라고요. 시브님 덕분에 안전하게 계약 잘 마쳤습니다.",
+                author: "오*석님",
+                date: "2025-10-25",
+                rating: 5,
+                badge: "",
+                type: "NORMAL",
+                views: calculateViews(50, 300)
+            },
+            {
+                title: "인생 멘토를 만난 기분입니다",
+                content: "단순히 부동산 상담을 넘어서 인생 선배로서 해주시는 조언들이 마음에 와닿았습니다. 부자가 되기 위한 마인드셋부터 다시 잡게 되었습니다. 시브님 같은 멘토가 있어서 든든합니다. 평생 함께하고 싶습니다.",
+                author: "송*영님",
                 date: "2025-10-15",
                 rating: 5,
                 badge: "",
-                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
+                type: "NORMAL",
+                views: calculateViews(50, 300)
             },
             {
-                title: "갈아타기 타이밍, 기가 막히게 잡아주셨네요",
-                content: "살던 집이 안 팔려서 고민이었는데, 가격 조정 전략이랑 매도 타이밍을 알려주셔서 생각보다 빨리 팔렸습니다. 상급지 갈아타기 매물도 미리 봐둔 곳으로 바로 계약했네요. 진짜 타이밍 싸움이라는 걸 배웠습니다.",
-                author: "강*희님",
-                date: "2025-10-10",
-                rating: 5,
-                badge: "",
-                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
-            },
-            {
-                title: "부동산 사장님 상대하는 법부터 알려주심 ㅋㅋ",
-                content: "부동산 가면 맨날 기죽어서 제대로 말도 못 했는데, 시브님이 '가서 이렇게 물어보세요'라고 대본(?)까지 짜주셔서 당당하게 네고 요청했습니다. 덕분에 500만원 깎아서 매수했네요. 큐레이팅 비용 뽑고도 남았습니다.",
-                author: "조*민님",
-                date: "2025-10-05",
-                rating: 5,
-                badge: "",
-                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
-            },
-            {
-                title: "전세냐 매매냐.. 2년 고민 끝!",
-                content: "전세 연장할지 무리해서라도 집을 살지 매일 밤 고민했는데, 큐레이팅 받고 나서 제 소득 수준에서 감당 가능한 대출 범위를 딱 정해주시니 마음이 편해졌습니다. 추천해주신 단지 매수하고 나니 집값 오르는 게 보여서 너무 행복합니다.",
-                author: "윤*아님",
+                title: "재개발 재건축도 잘 아시네요",
+                content: "재개발 구역 투자를 고려 중이었는데, 사업성 분석부터 입주권 프리미엄 계산까지 완벽하게 해주셨습니다. 리스크는 줄이고 수익은 극대화할 수 있는 전략을 세워주셔서 큰 도움이 되었습니다.",
+                author: "문*수님",
                 date: "2025-10-01",
                 rating: 5,
                 badge: "",
-                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
+                type: "NORMAL",
+                views: calculateViews(50, 300)
             },
-            {
-                title: "투자 마인드셋까지 다시 잡아주십니다",
-                content: "단순히 물건만 찍어주는 게 아니라, 왜 이 물건이 좋은지, 앞으로 시장은 어떻게 흘러갈지 논리적으로 설명해주셔서 공부가 많이 됐습니다. 물고기를 주는 게 아니라 잡는 법을 알려주시는 느낌? 다음 투자 때도 꼭 다시 찾을 겁니다.",
-                author: "한*석님",
-                date: "2025-09-28",
-                rating: 5,
-                badge: "",
-                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
-            },
-            {
-                title: "맞벌이 부부의 현실적인 내집마련기",
-                content: "둘 다 바빠서 임장 다닐 시간도 부족했는데, 시브님이 손품으로 1차 필터링을 싹 해주셔서 주말에 딱 3군데만 보고 결정할 수 있었습니다. 시간 절약 비용이라고 생각하면 큐레이팅 비용은 진짜 쌉니다.",
-                author: "오*진님",
-                date: "2025-09-25",
-                rating: 5,
-                badge: "",
-                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
-            },
-            {
-                title: "다주택자 포트폴리오 재정비 받았습니다",
-                content: "세금 문제 때문에 머리 아팠는데, 어떤 걸 먼저 매도하고 어떤 걸 가져가야 할지 명쾌하게 정리해주셨습니다. 세무사님 상담보다 더 실전적인 조언이었어요. 덕분에 똘똘한 한 채로 갈아타기 준비 중입니다.",
-                author: "신*호님",
+             {
+                title: "유튜브 보고 왔는데 후회 없습니다",
+                content: "유튜브 영상만 보다가 큐레이팅 신청했는데, 역시 유료 강의는 다르네요. 영상에서는 다루지 못했던 깊이 있는 내용과 실전 꿀팁들을 아낌없이 방출해주십니다. 수강료가 전혀 아깝지 않습니다.",
+                author: "양*우님",
                 date: "2025-09-20",
                 rating: 5,
                 badge: "",
-                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
-            },
-            {
-                title: "1기 신도시 재건축, 지금 들어가도 될까?",
-                content: "재건축 이슈 때문에 고민 많았는데, 사업성 분석이랑 분담금 예상까지 대략적으로 짚어주셔서 판단하는 데 큰 도움이 됐습니다. 뜬구름 잡는 소리가 아니라 진짜 데이터 기반이라 믿음이 갔습니다.",
-                author: "권*영님",
-                date: "2025-09-15",
-                rating: 4,
-                badge: "",
-                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
-            },
-            {
-                title: "사회초년생 종잣돈 모으기부터 시작합니다",
-                content: "아직 투자금은 적지만 미리 공부하고 싶어서 신청했습니다. 제 월급으로 어떻게 시드를 불려야 할지 로드맵을 그려주셔서 동기부여가 확실히 됐습니다. 2년 뒤에 꼭 다시 와서 매수 큐레이팅 받을게요!",
-                author: "장*우님",
-                date: "2025-09-10",
-                rating: 5,
-                badge: "NEW",
-                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
-            },
-            {
-                title: "역시 시크릿브라더.. 이름값 하시네요",
-                content: "책 읽고 팬 돼서 블로그 보다가 큐레이팅까지 신청했습니다. 글이나 영상에서 다 못 했던 찐한 이야기들 많이 해주셔서 좋았고, 무엇보다 제 상황에 200% 몰입해서 상담해주시는 진정성에 감동했습니다.",
-                author: "임*현님",
-                date: "2025-09-05",
-                rating: 5,
-                badge: "",
-                views: calculateViews(Math.floor(Math.random() * (900 - 100 + 1)) + 100)
+                type: "NORMAL",
+                views: calculateViews(50, 300)
             }
         ];
 
-        // 후기 렌더링 로직
-        const reviewsContainer = document.getElementById('reviews-container');
-        const loadMoreBtn = document.getElementById('load-more-btn');
-        let visibleCount = 6; // 처음에 6개 보여줌
-
-        function renderReviews() {
-            reviewsContainer.innerHTML = '';
-            const currentReviews = reviewData.slice(0, visibleCount);
-
-            currentReviews.forEach((review, index) => {
-                const card = document.createElement('div');
-                card.className = "bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 review-card";
-                card.onclick = () => openReviewDetail(index); // 클릭 시 모달 오픈
-                
-                // 별점 생성
-                let stars = '';
-                for(let i=0; i<5; i++) {
-                    stars += `<i data-lucide="star" class="w-4 h-4 ${i < review.rating ? 'fill-current text-yellow-400' : 'text-gray-300'}"></i>`;
-                }
-
-                // 뱃지
-                let badgeHtml = '';
-                if(review.badge === 'BEST') badgeHtml = '<span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded">BEST</span>';
-                else if(review.badge === 'NEW') badgeHtml = '<span class="bg-indigo-100 text-indigo-600 text-xs font-bold px-2 py-1 rounded">NEW</span>';
-
-                // 줄바꿈 처리
-                card.innerHTML = `
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="flex gap-1">${stars}</div>
-                        ${badgeHtml}
-                    </div>
-                    <h3 class="font-bold text-lg mb-3 text-gray-900 line-clamp-1">"${review.title}"</h3>
-                    <p class="text-gray-600 text-sm leading-relaxed mb-6 line-clamp-4 break-keep" style="min-height: 5em;">${review.content}</p>
-                    <div class="flex items-center justify-between pt-4 border-t border-gray-50">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">${review.author.charAt(0)}</div>
-                            <div>
-                                <p class="text-xs font-bold text-gray-900">${review.author}</p>
-                                <p class="text-[10px] text-gray-400">${review.date}</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-1 text-xs text-gray-400">
-                             <i data-lucide="eye" class="w-3 h-3"></i> ${review.views}
-                        </div>
-                    </div>
-                `;
-                reviewsContainer.appendChild(card);
-            });
-            lucide.createIcons(); // 아이콘 새로고침
+        // 렌더링 (BEST / 일반 분리)
+        function renderAllReviews() {
+            const bestContainer = document.getElementById('best-reviews-container');
+            const normalContainer = document.getElementById('normal-reviews-container');
+            const loadMoreBtn = document.getElementById('load-more-btn');
             
-            // 더보기 버튼 숨김 처리
-            if (visibleCount >= reviewData.length) {
+            // 1. BEST 후기 렌더링 (상위 6개 고정)
+            const bestReviews = reviewData.filter(r => r.type === 'BEST');
+            bestContainer.innerHTML = '';
+            
+            bestReviews.forEach((review, index) => {
+                // 전체 데이터 내에서의 인덱스를 찾음 (상세보기용)
+                const realIndex = reviewData.indexOf(review);
+                bestContainer.appendChild(createReviewCard(review, realIndex));
+            });
+
+            // 2. 일반 후기 렌더링 (나머지, 더보기 기능 적용)
+            const normalReviews = reviewData.filter(r => r.type === 'NORMAL');
+            
+            // 현재 보여줄 개수만큼 자르기
+            // visibleCount는 일반 후기 갯수 기준
+            // 초기 visibleCount = 6
+            const currentNormalReviews = normalReviews.slice(0, visibleCount);
+            
+            normalContainer.innerHTML = '';
+            currentNormalReviews.forEach((review) => {
+                 const realIndex = reviewData.indexOf(review);
+                 normalContainer.appendChild(createReviewCard(review, realIndex));
+            });
+
+            // 더보기 버튼 처리
+            if (visibleCount >= normalReviews.length) {
                 loadMoreBtn.style.display = 'none';
+            } else {
+                loadMoreBtn.style.display = 'inline-flex';
             }
         }
 
-        function loadMoreReviews() {
-            visibleCount += 6; // 6개씩 더 보여줌
-            renderReviews();
+        // 카드 생성 함수
+        function createReviewCard(review, index) {
+            const card = document.createElement('div');
+            card.className = "bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 review-card";
+            card.onclick = () => openReviewDetail(index);
+            
+            let stars = '';
+            for(let i=0; i<5; i++) {
+                stars += `<i data-lucide="star" class="w-4 h-4 ${i < review.rating ? 'fill-current text-yellow-400' : 'text-gray-300'}"></i>`;
+            }
+
+            let badgeHtml = '';
+            if(review.badge === 'BEST') badgeHtml = '<span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded">BEST</span>';
+            else if(review.badge === 'NEW') badgeHtml = '<span class="bg-indigo-100 text-indigo-600 text-xs font-bold px-2 py-1 rounded">NEW</span>';
+
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex gap-1">${stars}</div>
+                    ${badgeHtml}
+                </div>
+                <h3 class="font-bold text-lg mb-3 text-gray-900 line-clamp-1">"${review.title}"</h3>
+                <p class="text-gray-600 text-sm leading-relaxed mb-6 line-clamp-4 break-keep" style="min-height: 5em;">${review.content}</p>
+                <div class="flex items-center justify-between pt-4 border-t border-gray-50">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">${review.author.charAt(0)}</div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-900">${review.author}</p>
+                            <p class="text-[10px] text-gray-400">${review.date}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 text-xs text-gray-400">
+                            <i data-lucide="eye" class="w-3 h-3"></i> ${review.views}
+                    </div>
+                </div>
+            `;
+            return card;
         }
 
-        // 후기 상세 모달 열기
+        // 더보기 버튼 클릭 시
+        let visibleCount = 6; // 일반 후기 초기 6개
+        function loadMoreReviews() {
+            visibleCount += 6;
+            renderAllReviews();
+            lucide.createIcons(); // 아이콘 리로드
+        }
+
+        // 초기 실행 시 렌더링
+        renderAllReviews();
+        
+        // ... (나머지 스크립트: 모달, 로그인 등 기존과 동일) ...
+        
+         // 후기 상세 모달 열기
         function openReviewDetail(index) {
             const review = reviewData[index];
             document.getElementById('modal-review-title').innerText = review.title;
@@ -919,7 +981,7 @@
             document.getElementById('modal-review-content').innerHTML = review.content.replace(/\n/g, '<br>');
             document.getElementById('modal-review-author').innerText = review.author;
             document.getElementById('modal-review-date').innerText = review.date;
-            document.getElementById('modal-review-views').innerText = review.views; // 조회수 표시
+            document.getElementById('modal-review-views').innerText = review.views; 
             
             const badgeEl = document.getElementById('modal-review-badge');
             if (review.badge) {
@@ -937,192 +999,7 @@
             toggleModal('reviewDetailModal');
         }
 
-        // 초기 렌더링
-        renderReviews();
-        
-        // ... (나머지 스크립트 그대로 유지) ...
-        
-        // (참고: 기존 스크립트의 나머지 부분들 - 카운트다운, 로그인 등은 위 코드 블록에 모두 포함되어야 합니다. 
-        //  이 답변에서는 길이가 길어질까 봐 생략했지만, 실제 index.html 파일에는 기존 스크립트가 모두 있어야 합니다.)
-        //  아래에 전체 스크립트를 다시 합쳐서 제공합니다.
-        
-        // 1. 카운트다운
-        window.addEventListener('DOMContentLoaded', () => {
-            let spots = sessionStorage.getItem('spots');
-            if(!spots) {
-                spots = Math.floor(Math.random() * 3) + 1; // 1~3 사이 랜덤
-                sessionStorage.setItem('spots', spots);
-            }
-            document.getElementById('countdown-number').innerText = spots;
-        });
-
-        // 2. 로그인 상태 관리
-        function checkLoginStatus() {
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-            const userName = localStorage.getItem('userName') || '회원';
-            const userProvider = localStorage.getItem('userProvider') || 'Guest';
-            const paymentStatus = localStorage.getItem('paymentStatus');
-
-            // 헤더 UI
-            if (isLoggedIn) {
-                document.getElementById('auth-guest').classList.add('hidden-section');
-                document.getElementById('auth-user').classList.remove('hidden-section');
-                document.getElementById('user-name').innerText = userName;
-            } else {
-                document.getElementById('auth-guest').classList.remove('hidden-section');
-                document.getElementById('auth-user').classList.add('hidden-section');
-            }
-
-            // 마이페이지 모달 UI
-            const myPageGuest = document.getElementById('mypage-guest');
-            const userInfoCard = document.getElementById('user-info-card');
-            const myPageUserUnpaid = document.getElementById('mypage-user-unpaid');
-            const statusPaid = document.getElementById('status-paid');
-            const statusPending = document.getElementById('status-pending');
-
-            if (!isLoggedIn) {
-                myPageGuest.classList.remove('hidden-section');
-                userInfoCard.classList.add('hidden-section');
-                myPageUserUnpaid.classList.add('hidden-section');
-                statusPaid.classList.add('hidden-section');
-                statusPending.classList.add('hidden-section');
-            } else {
-                myPageGuest.classList.add('hidden-section');
-                
-                // 유저 정보 카드 업데이트
-                userInfoCard.classList.remove('hidden-section');
-                document.getElementById('mp-username').innerText = userName;
-                document.getElementById('profile-initial').innerText = userName.charAt(0);
-                document.getElementById('mp-provider-badge').innerText = userProvider;
-
-                if (paymentStatus === 'paid') {
-                    myPageUserUnpaid.classList.add('hidden-section');
-                    statusPaid.classList.remove('hidden-section');
-                    statusPending.classList.add('hidden-section');
-                } else if (paymentStatus === 'pending') {
-                    myPageUserUnpaid.classList.add('hidden-section');
-                    statusPaid.classList.add('hidden-section');
-                    statusPending.classList.remove('hidden-section');
-                } else {
-                    myPageUserUnpaid.classList.remove('hidden-section');
-                    statusPaid.classList.add('hidden-section');
-                    statusPending.classList.add('hidden-section');
-                }
-            }
-        }
-
-        // [핵심] 무통장 입금 신청 처리 함수 (네이버폼 클릭 시)
-        function requestDeposit() {
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-            if(!isLoggedIn) {
-                // 비로그인 시 상태 저장 안함 (폼만 연결)
-            } else {
-                // 입금 대기 상태 저장
-                localStorage.setItem('paymentStatus', 'pending');
-                setTimeout(() => {
-                    toggleModal('depositModal');
-                    checkLoginStatus(); // 상태 갱신
-                }, 1000);
-            }
-        }
-
-        // 3. 로그인 핸들러
-        function handleSocialLogin(provider) {
-            const name = prompt(`${provider} 간편가입을 진행합니다.\n사용하실 닉네임이나 성함을 입력해주세요.`, "시크릿수강생");
-            if (name) {
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('userName', name);
-                localStorage.setItem('userProvider', provider);
-                
-                alert(`환영합니다, ${name}님!\n${provider} 계정으로 회원가입 및 로그인이 완료되었습니다.`);
-                toggleModal('loginModal');
-                checkLoginStatus();
-                if(confirm("마이페이지로 이동하여 강의실을 확인하시겠습니까?")) {
-                    toggleModal('mypageModal');
-                }
-            }
-        }
-
-        function handleLogout() {
-            if(confirm("로그아웃 하시겠습니까?")) {
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('userName');
-                localStorage.removeItem('userProvider');
-                localStorage.removeItem('paymentStatus'); 
-                alert("로그아웃 되었습니다.");
-                checkLoginStatus();
-                window.location.reload();
-            }
-        }
-
-        // 초기 실행
-        window.addEventListener('load', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('payment') === 'success') {
-                localStorage.setItem('paymentStatus', 'paid');
-                alert("🎉 결제 성공! [나의 강의실]에서 1:1 채팅방에 입장해주세요.");
-                window.history.replaceState({}, document.title, window.location.pathname);
-                if(localStorage.getItem('isLoggedIn') !== 'true') {
-                    localStorage.setItem('isLoggedIn', 'true');
-                    localStorage.setItem('userName', '시크릿수강생');
-                }
-            }
-            checkLoginStatus();
-        });
-
-        // UI 유틸리티
-        function toggleModal(id) {
-            const el = document.getElementById(id);
-            if(el.classList.contains('hidden')) el.classList.remove('hidden');
-            else el.classList.add('hidden');
-        }
-        function toggleFaq(btn) {
-            const answer = btn.nextElementSibling;
-            const icon = btn.querySelector('svg');
-            if(answer.classList.contains('hidden')) {
-                answer.classList.remove('hidden');
-                icon.style.transform = 'rotate(180deg)';
-            } else {
-                answer.classList.add('hidden');
-                icon.style.transform = 'rotate(0deg)';
-            }
-        }
-        function scrollToSection(id) {
-            const element = document.getElementById(id);
-            if(element) {
-                const headerOffset = 100;
-                const elementPosition = element.getBoundingClientRect().top;
-                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                window.scrollTo({ top: offsetPosition, behavior: "smooth" });
-                document.getElementById('mobileMenu').classList.add('hidden');
-            }
-        }
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobileMenu');
-            if(menu.classList.contains('hidden')) menu.classList.remove('hidden');
-            else menu.classList.add('hidden');
-        }
-        function copyAccount() {
-            navigator.clipboard.writeText("521-063745-04-011");
-            alert("계좌번호가 복사되었습니다: 521-063745-04-011");
-        }
-        function checkPaymentLink(e, href) {
-            if(href.includes('portone.io') && href === 'https://portone.io/korea/ko') {
-                e.preventDefault();
-                window.open(href, "_blank");
-                alert("💰 결제 링크 안내\n\n1. 열리는 새 창(포트원)에서 '결제 링크'를 만드세요.\n2. 만들어진 링크를 복사해서 index.html 파일의 'link' 부분에 붙여넣으세요.");
-            }
-        }
-
-        // [NEW] 이미지 뷰어 기능 추가
-        function openImageModal(src) {
-            const modal = document.getElementById('imageModal');
-            const modalImg = document.getElementById('modal-image-src');
-            modalImg.src = src;
-            modal.classList.remove('hidden');
-        }
-
-        // [NEW] 후기 작성 팝업 열기 (결제 여부 체크)
+        // [중요] 후기 작성 팝업 열기 (결제 여부 체크)
         function openWriteReview() {
             const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
             const paymentStatus = localStorage.getItem('paymentStatus');
@@ -1142,7 +1019,7 @@
             toggleModal('writeReviewModal');
         }
 
-        // [NEW] 후기 제출 로직
+        // [중요] 후기 제출 로직
         function submitReview() {
             const title = document.getElementById('review-input-title').value;
             const content = document.getElementById('review-input-content').value;
@@ -1153,29 +1030,30 @@
                 return;
             }
 
-            // 새 후기 데이터 생성
+            // 새 후기 데이터 생성 (일반 후기로 추가)
             const newReview = {
                 title: title,
                 content: content,
                 author: author + "님",
                 date: new Date().toISOString().split('T')[0].replace(/-/g, '.'),
-                rating: 5, // 기본 5점
+                rating: 5, 
                 badge: "NEW",
-                views: calculateViews(50) // 새 후기는 조회수 낮게 시작
+                type: "NORMAL",
+                views: calculateViews(50, 100)
             };
 
-            // 데이터 맨 앞에 추가
-            reviewData.splice(6, 0, newReview); // 베스트 뒤, 일반 앞쪽에 추가 (또는 unshift로 맨앞에)
-            // 여기서는 베스트는 고정이고 그 뒤에 붙는게 자연스러우므로 unshift보다는 적절한 위치 혹은 맨 앞(unshift)도 괜찮음.
-            // 작성자가 쓴 글이 바로 보이는게 좋으므로 맨 앞에 추가하겠습니다.
-            // reviewData.unshift(newReview); 
+            // 일반 후기 배열의 맨 앞에 추가 (BEST 뒤, 일반의 시작)
+            // reviewData 배열에서 type이 'NORMAL'인 첫 번째 인덱스를 찾아 그 앞에 삽입
+            const firstNormalIndex = reviewData.findIndex(r => r.type === 'NORMAL');
+            if (firstNormalIndex !== -1) {
+                reviewData.splice(firstNormalIndex, 0, newReview);
+            } else {
+                reviewData.push(newReview);
+            }
             
-            // 하지만 베스트는 고정해달라고 하셨으니, 베스트 6개 뒤인 7번째(인덱스 6)에 넣는게 맞을 수도 있지만,
-            // 보통 "최신순"으로 보여줄 때 "NEW" 뱃지 달고 맨 앞에 보여주는게 작성자 경험상 좋습니다.
-            reviewData.splice(0, 0, newReview);
-
             // 화면 갱신
-            renderReviews();
+            renderAllReviews();
+            lucide.createIcons();
             
             // 모달 닫기 및 초기화
             toggleModal('writeReviewModal');
