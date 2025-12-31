@@ -159,7 +159,6 @@
                             <img src="./3.jpg" alt="시크릿브라더 프로필" class="absolute inset-0 w-full h-full object-cover rounded-xl md:rounded-2xl">
                         </div>
                         <div class="absolute top-8 right-8 md:top-12 md:right-12 bg-white/90 backdrop-blur px-3 py-1.5 md:px-4 md:py-2 rounded-full shadow-lg border border-gray-100 text-xs md:text-sm font-bold text-indigo-600 flex items-center gap-2 animate-bounce">
-                            <!-- [수정완료] 프로필 뱃지 텍스트 변경 -->
                             <i data-lucide="star" class="w-3 h-3 md:w-4 md:h-4 fill-current"></i> ★부동산 강의 경력만 6년★
                         </div>
                     </div>
@@ -569,11 +568,7 @@
                 <h2 id="modal-review-title" class="text-xl font-bold text-gray-900 mb-6 leading-snug"></h2>
                 <div class="text-gray-700 leading-relaxed whitespace-pre-wrap mb-8" id="modal-review-content"></div>
                 <div class="flex items-center justify-between pt-4 border-t border-gray-100 text-sm text-gray-500">
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold" id="modal-review-author"></span>
-                        <span class="text-xs text-gray-400">|</span>
-                        <span class="text-xs text-gray-500 flex items-center gap-1"><i data-lucide="eye" class="w-3 h-3"></i> <span id="modal-review-views"></span></span>
-                    </div>
+                    <span class="font-bold" id="modal-review-author"></span>
                     <span id="modal-review-date"></span>
                 </div>
             </div>
@@ -627,8 +622,60 @@
     <!-- 스크립트 -->
     <script>
         lucide.createIcons();
+        
+        // --- 1. UI 유틸리티 함수 (최상단) ---
+        function toggleModal(id) {
+            const el = document.getElementById(id);
+            if(el.classList.contains('hidden')) el.classList.remove('hidden');
+            else el.classList.add('hidden');
+        }
+        function toggleFaq(btn) {
+            const answer = btn.nextElementSibling;
+            const icon = btn.querySelector('svg');
+            if(answer.classList.contains('hidden')) {
+                answer.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                answer.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+        function scrollToSection(id) {
+            const element = document.getElementById(id);
+            if(element) {
+                const headerOffset = 100;
+                const elementPosition = element.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+                document.getElementById('mobileMenu').classList.add('hidden');
+            }
+        }
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            if(menu.classList.contains('hidden')) menu.classList.remove('hidden');
+            else menu.classList.add('hidden');
+        }
+        function copyAccount() {
+            navigator.clipboard.writeText("521-063745-04-011");
+            alert("계좌번호가 복사되었습니다: 521-063745-04-011");
+        }
+        function checkPaymentLink(e, href) {
+            if(href.includes('portone.io') && href === 'https://portone.io/korea/ko') {
+                e.preventDefault();
+                window.open(href, "_blank");
+                alert("💰 결제 링크 안내\n\n1. 열리는 새 창(포트원)에서 '결제 링크'를 만드세요.\n2. 만들어진 링크를 복사해서 index.html 파일의 'link' 부분에 붙여넣으세요.");
+            }
+        }
+        function openImageModal(src) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modal-image-src');
+            modalImg.src = src;
+            modal.classList.remove('hidden');
+        }
 
-        // 1. 조회수 계산 함수 (매일 증가 + 랜덤성 부여)
+        // --- 2. 데이터 및 로직 ---
+
+        // 조회수 계산 함수 (매일 증가 + 랜덤성 부여)
         function calculateViews(baseMin, baseMax) {
             // 랜덤 베이스 조회수 (최초 로드 시)
             // 실제 구현에서는 서버가 없으므로 로컬스토리지나 랜덤 함수 사용
@@ -636,7 +683,7 @@
             return Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
         }
 
-        // [중요] 후기 데이터 (BEST 6개 + Normal 12개 = 총 18개)
+        // [중요] 후기 데이터: 줄바꿈은 백틱(`)으로 감싸져 있어 안전합니다.
         const reviewData = [
              // --- BEST 리뷰 (1~6) ---
             {
@@ -884,28 +931,25 @@
             }
         ];
 
-        // 렌더링 (BEST / 일반 분리)
+        // 3. 렌더링 로직 (BEST / 일반 분리)
+        const reviewsContainer = document.getElementById('reviews-container');
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        let visibleCount = 6; // 처음에 6개 보여줌
+
         function renderAllReviews() {
             const bestContainer = document.getElementById('best-reviews-container');
             const normalContainer = document.getElementById('normal-reviews-container');
-            const loadMoreBtn = document.getElementById('load-more-btn');
             
-            // 1. BEST 후기 렌더링 (상위 6개 고정)
+            // BEST 후기 렌더링
             const bestReviews = reviewData.filter(r => r.type === 'BEST');
             bestContainer.innerHTML = '';
-            
-            bestReviews.forEach((review, index) => {
-                // 전체 데이터 내에서의 인덱스를 찾음 (상세보기용)
+            bestReviews.forEach((review) => {
                 const realIndex = reviewData.indexOf(review);
                 bestContainer.appendChild(createReviewCard(review, realIndex));
             });
 
-            // 2. 일반 후기 렌더링 (나머지, 더보기 기능 적용)
-            const normalReviews = reviewData.filter(r => r.type === 'NORMAL');
-            
-            // 현재 보여줄 개수만큼 자르기
-            // visibleCount는 일반 후기 갯수 기준
-            // 초기 visibleCount = 6
+            // 일반 후기 렌더링 (더보기 적용)
+            const normalReviews = reviewData.filter(r => r.type !== 'BEST');
             const currentNormalReviews = normalReviews.slice(0, visibleCount);
             
             normalContainer.innerHTML = '';
@@ -914,7 +958,6 @@
                  normalContainer.appendChild(createReviewCard(review, realIndex));
             });
 
-            // 더보기 버튼 처리
             if (visibleCount >= normalReviews.length) {
                 loadMoreBtn.style.display = 'none';
             } else {
@@ -922,7 +965,6 @@
             }
         }
 
-        // 카드 생성 함수
         function createReviewCard(review, index) {
             const card = document.createElement('div');
             card.className = "bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 review-card";
@@ -960,24 +1002,16 @@
             return card;
         }
 
-        // 더보기 버튼 클릭 시
-        let visibleCount = 6; // 일반 후기 초기 6개
         function loadMoreReviews() {
             visibleCount += 6;
             renderAllReviews();
-            lucide.createIcons(); // 아이콘 리로드
+            lucide.createIcons();
         }
 
-        // 초기 실행 시 렌더링
-        renderAllReviews();
-        
-        // ... (나머지 스크립트: 모달, 로그인 등 기존과 동일) ...
-        
-         // 후기 상세 모달 열기
+        // 4. 후기 상세 모달
         function openReviewDetail(index) {
             const review = reviewData[index];
             document.getElementById('modal-review-title').innerText = review.title;
-            // 줄바꿈 반영
             document.getElementById('modal-review-content').innerHTML = review.content.replace(/\n/g, '<br>');
             document.getElementById('modal-review-author').innerText = review.author;
             document.getElementById('modal-review-date').innerText = review.date;
@@ -999,7 +1033,7 @@
             toggleModal('reviewDetailModal');
         }
 
-        // [중요] 후기 작성 팝업 열기 (결제 여부 체크)
+        // 5. 후기 작성 (결제 체크)
         function openWriteReview() {
             const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
             const paymentStatus = localStorage.getItem('paymentStatus');
@@ -1015,11 +1049,9 @@
                 return;
             }
 
-            // 통과 시 모달 열기
             toggleModal('writeReviewModal');
         }
 
-        // [중요] 후기 제출 로직
         function submitReview() {
             const title = document.getElementById('review-input-title').value;
             const content = document.getElementById('review-input-content').value;
@@ -1030,7 +1062,6 @@
                 return;
             }
 
-            // 새 후기 데이터 생성 (일반 후기로 추가)
             const newReview = {
                 title: title,
                 content: content,
@@ -1042,26 +1073,39 @@
                 views: calculateViews(50, 100)
             };
 
-            // 일반 후기 배열의 맨 앞에 추가 (BEST 뒤, 일반의 시작)
-            // reviewData 배열에서 type이 'NORMAL'인 첫 번째 인덱스를 찾아 그 앞에 삽입
-            const firstNormalIndex = reviewData.findIndex(r => r.type === 'NORMAL');
+            // 일반 후기 젤 앞에 추가
+            // type: 'NORMAL'인 첫 번째 요소를 찾아서 그 앞에 넣기
+            // reviewData 전체에서 순서를 바꿔야 함.
+            // BEST는 고정이고, NORMAL의 맨 앞에 넣고 싶다면:
+            // 1. BEST만 따로 뺌
+            // 2. NORMAL만 따로 뺌 -> 맨 앞에 추가
+            // 3. 다시 합침? -> reviewData는 const라 재할당 불가. splice 사용
+            
+            // 간단하게: push하고 다시 렌더링할 때 필터링됨. 하지만 최신순 정렬을 위해선
+            // 배열 내 위치 조정이 필요함.
+            // 여기서는 단순히 push 하고, 렌더링 시 필터링된 배열에서 unshift 하는 효과를 내기 위해
+            // reviewData 배열 자체를 조작하기보다는, 렌더링 로직에서 정렬을 하거나
+            // reviewData에 type='NORMAL'인 첫 인덱스를 찾아 삽입.
+            
+            const firstNormalIndex = reviewData.findIndex(r => r.type !== 'BEST');
             if (firstNormalIndex !== -1) {
                 reviewData.splice(firstNormalIndex, 0, newReview);
             } else {
                 reviewData.push(newReview);
             }
             
-            // 화면 갱신
             renderAllReviews();
             lucide.createIcons();
             
-            // 모달 닫기 및 초기화
             toggleModal('writeReviewModal');
             document.getElementById('review-input-title').value = '';
             document.getElementById('review-input-content').value = '';
             
             alert("소중한 후기가 등록되었습니다! 감사합니다.");
         }
+
+        // 초기 실행
+        renderAllReviews();
     </script>
 </body>
 </html>
