@@ -54,6 +54,10 @@
         .break-keep { word-break: keep-all; word-wrap: break-word; }
         .review-card { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .review-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+        
+        /* 모달 내 본문 스타일 */
+        #modal-review-content { line-height: 1.8; color: #374151; }
+        #modal-review-content p { margin-bottom: 1em; }
     </style>
 </head>
 <body class="bg-white text-gray-900 font-body">
@@ -160,7 +164,6 @@
                             <img src="./3.jpg" alt="시크릿브라더 프로필" class="absolute inset-0 w-full h-full object-cover rounded-xl md:rounded-2xl">
                         </div>
                         <div class="absolute top-8 right-8 md:top-12 md:right-12 bg-white/90 backdrop-blur px-3 py-1.5 md:px-4 md:py-2 rounded-full shadow-lg border border-gray-100 text-xs md:text-sm font-bold text-indigo-600 flex items-center gap-2 animate-bounce">
-                            <!-- [수정완료] 프로필 뱃지 텍스트 변경 -->
                             <i data-lucide="star" class="w-3 h-3 md:w-4 md:h-4 fill-current"></i> ★부동산 강의 경력만 6년★
                         </div>
                     </div>
@@ -186,7 +189,6 @@
                     <div class="space-y-3 bg-gray-50 p-5 md:p-6 rounded-xl border border-gray-100 mb-8 font-body">
                         <h4 class="font-bold text-gray-900 mb-4 flex items-center gap-2 text-base md:text-lg"><i data-lucide="award" class="w-5 h-5 md:w-6 md:h-6 text-yellow-500 fill-current"></i> 주요 경력 및 활동</h4>
                         
-                        <!-- [수정] 서울머니쇼 이미지 경로 (1.jpg) -->
                         <button onclick="openImageModal('./1.jpg')" class="w-full flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100 text-left">
                             <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">1</span>
                             <span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-indigo-600 break-keep flex-grow">서울머니쇼 초청강사</span>
@@ -297,7 +299,6 @@
                     </button>
                 </div>
                 
-                <!-- [NEW] 결제 관련 긴급 안내 문구 -->
                 <div class="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl text-left">
                     <p class="text-sm md:text-base text-red-600 font-bold leading-relaxed break-keep">
                         ※ 현재 사이트 이전 문제로 카드 결제 연동이 원활치 않을 수 있습니다.<br>
@@ -310,7 +311,7 @@
         </div>
     </section>
 
-    <!-- [수정완료] 후기 섹션 -->
+    <!-- 후기 섹션 -->
     <section id="reviews" class="py-24 bg-gray-50">
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-between items-center mb-16">
@@ -325,13 +326,14 @@
                 </button>
             </div>
             
+            <!-- 모바일용 후기 작성 버튼 (상단 배치) -->
             <div class="md:hidden text-right mb-8">
                  <button onclick="openWriteReview()" class="inline-flex items-center gap-2 bg-indigo-900 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-800 transition-colors shadow-md text-sm">
                     <i data-lucide="pen-tool" class="w-4 h-4"></i> 후기 작성하기
                 </button>
             </div>
 
-            <!-- [구조 변경] BEST 후기 섹션 -->
+            <!-- BEST 후기 섹션 -->
             <div class="mb-12">
                 <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                     <i data-lucide="trophy" class="text-yellow-500 fill-current w-6 h-6"></i> 명예의 전당 (BEST)
@@ -341,7 +343,7 @@
                 </div>
             </div>
 
-            <!-- [구조 변경] 최신 후기 섹션 -->
+            <!-- 최신 후기 섹션 -->
             <div>
                 <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                     <i data-lucide="message-square" class="text-indigo-500 w-6 h-6"></i> 최신 수강 후기
@@ -569,7 +571,9 @@
                      <span id="modal-review-badge" class="bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded hidden">BEST</span>
                 </div>
                 <h2 id="modal-review-title" class="text-xl font-bold text-gray-900 mb-6 leading-snug"></h2>
-                <div class="text-gray-700 leading-relaxed whitespace-pre-wrap mb-8" id="modal-review-content"></div>
+                <!-- 후기 내용이 들어가는 곳 (스타일 적용) -->
+                <div id="modal-review-content" class="text-gray-700 leading-relaxed whitespace-pre-wrap mb-8 text-sm md:text-base"></div>
+                
                 <div class="flex items-center justify-between pt-4 border-t border-gray-100 text-sm text-gray-500">
                     <div class="flex items-center gap-2">
                         <span class="font-bold" id="modal-review-author"></span>
@@ -748,192 +752,99 @@
             },
             {
                 title: "큰 돈이 들어가는 만큼, 경험이 적은 만큼 전문가의 조언을 얻어야 한다.",
-                content: `안녕하세요?
-
-이번 시크릿 큐레이팅을 받으며 감사하게도 한 주만에 매도와 매수를 모두 하였고 계약서 작성을 앞두고 있습니다.
-
+                content: `안녕하세요? 이번 시크릿 큐레이팅을 받으며 감사하게도 한 주만에 매도와 매수를 모두 하였고 계약서 작성을 앞두고 있습니다.
 시크릿 큐레이팅 신청을 망설이시는 분들이 계시다면 제 후기가 도움이 되시길 바랍니다^^.
 
- 
-
 1. 신청하게 된 계기
-
 저는 평소 시크릿브라더님 블로그를 보며 공부하고 있던 수강생입니다.
-
 23년도 저는 갈아타기를 했었습니다. 전문가 조언 없이요!
-
 그 당시에는 몇 십만원도 크게 느껴져서 전문가 조언을 얻을 생각도 하지 못했고
-
 제가 나중에 거주할 것이라는 이유로, 또 대출은 부담없는 수준으로 하고 싶다는 이유로
-
 제가 가지고 있는 돈으로, 제가 아는 선에서 매수했었습니다.
 
 하지만 시간이 갈수록 가치가 낮다는 것을 알게 되었고, 그 당시 매수할 수 있었던 다른 물건들은 1-2억씩 먼저 오르는 상황이 되었습니다.
-
 그러다 기존 세입자분께서 2년 계약 만기로 25년 12월 말에 나가겠다고 통보하셨고
-
 저도 세입자를 다시 구해 세를 더 연장할까, 아니면 이참에 갈아타기를 할까 고민을 했었습니다.
 
 그래도 매도하고 갈아타는 게 맞다는 생각에
-
 10월 중순쯤 제 물건을 부동산에 내놓았습니다.
-
 그리고 나서 집을 많이 보러 오는지 확인차 1~2번 부동산에 연락드리니,
-
 모두 현재 세입자가 집을 깨끗하게 쓰지 않아 집 상태가 별로이니 많이 가격을 낮춰야 한다며 같은 말씀을 하셨습니다
-
 하지만 가격을 너무 낮출 경우, 이미 오른 다른 단지로 갈아타기가 쉽지 않을 듯하여 저 스스로도 매도에 확신이 서지 않았습니다.
-
 그래서 제가 생각한 목표 매도가는 꼭 받고 싶은데, 이것이 현 상황을 모르고 억지를 부리는 건것은 아닌지 우려되어
-
 전문가이신 시브님 큐레이팅을 신청하게 되었습니다!
 
- 
-
 2. 진행 과정
-
 아이 하원하러 가기 전에 결제했었는데
-
 매니저님이라고 하시며 결제가 확인되었으니 바로 시브님과의 오픈채팅방 주소를 알려주셨습니다.
-
 아이와 정신없었지만, 우선 첫 인사를 드리고 나니 시브님께서 대략적인 제 상황을 적을 양식을 보내주셨습니다.
-
 그래서 아이들을 모두 재우고
-
 매수 목표 지역, 현재 거주지, 부부 연봉, 현재 투자금, 월 저축액, 가족 구성원, 우선 순위 등등
-
 정말 자세한 질문들에 꼼꼼히 답변하였고, 시브님께서  TMI도 좋으니  쓸데없는 것도 모두 알려달라고 하셔서 현 세입자 상황도 알려드렸었습니다.
-
 그리고 바로 제가 고민하고 있는 매도, 매수, 고려하고 있는 단지에 대해 너무나 상세하게 말씀해주셨습니다.
 
- 
-
 그리고 다음날까지 매수 가능한 가격대의 다른 단지들도 찾아보시겠다고 하셨고
-
 정말 다음날 오전에 시브님께서 3곳을 더 추천해주셨고, 저도 남편도 알고는 있었던 곳이지만 저희 재정상 무리하는 것이 아닐까 싶어 크게 고려하지 않았던 곳이었습니다.
 
- 
-
 그래서 다음날 재차 제 고민을 말씀드렸습니다.
-
 대출 적정 금액, 매도하고 바로 매수하는 어려움, 투자금에 따른 단지 우선순위 등 확신이 부족한 것에 대해
-
 몇 시간도 안 되어 시브님께서 상세히 말씀해주셨고, 덕분에 제 불안을 가라앉힐 수 있었습니다^^
 
- 
-
 그리고 큐레이팅 4일차에 갑자기 부동산에서 매수콜이 들어왔습니다.
-
 제가 마지노선으로 말한 가격에 사려는 사람이 있으니 계좌를 달라는 것이었습니다!
-
 제 물건도 이제서야 상승 바람을 탄 듯 했고, 실제 매수할 만한 물건이 거의 없는 상황에서 너무 싸게 파는 것은 아닌가 걱정이 되었습니다.
-
 그래서 부동산 사장님께는 남편과 상의 후, 다음날 다시 연락드리겠다고 말씀드리고 시브님의 조언을 기다렸습니다.
-
 (정말 이 때는 시크릿 큐레이팅을 며칠 전에 신청한 건 신의 한 수 였다며 스스로를 칭찬햇었습니다 ㅎㅎ)
 
 간절히 기다렸던 시브님의 답변은 여러 사유를 들어가며 매도를 하라는 것이었습니다.
-
 저도 충분히 이해가 되었고, 사장님께 바로 계좌를 보내드려 매도 가계약을 마무리 지었습니다.
 
-
-
- 
-
 그리고 전임을 통해 리스트업 한 단지 10여 개를 그 날 밤 시브님께 보내드렸고
-
 시브님께서 읽어보시고 다음 날 오전에
-
 입지 순서, 매물 우선순위를 꼼꼼하게 정리해주셨습니다.
-
 그걸 토대로 바로 남편이 먼저 부동산을 방문했고 1순위로 보는 매물 상황에 대해 더 구체적으로 여쭈어보았습니다.
 
- 
-
 큐레이팅 7일차, 시브님께서 가격, 조건을 보시며 제가 보고 있는 매물들이 나쁘지 않다며 
-
 시간을 더 끌지 말고, 후보도 늘리지 말고, 네고를 해서 바로 매수하라는 말씀에!!! 
-
 이번엔 제가 부동산으로 달려가서 집을 확인하고 매수를 하려 했습니다
-
 그런데? 매도자분께서 갑자기 계좌를 달라니 고민이 되셨는지 내일까지 더 고민해보시겠다고 하셨고
-
 저도 다른 단지의 여러 매물들을 총정리하며
-
 다음날 한 번 더 시브님께 매물들의 우선순위에 대해 여쭈어보았습니다.
 
- 
-
 그런데 제가 보던 매물이 거래가 안되면 그냥 다른 단지의 매물을 보라고 조언해주셨고,
-
 사실 다른 단지는 제대로 보지 않은 곳이라 약간의 거부감이 있었습니다.
-
 그럼에도 가치가 있고, 현재 가진 투자금으로 투자할 수 있으며, 무리하는 것이 아니라는 말씀에
-
 긍정적으로 검토하며 여러 부동산 사장님과 통화를 했었습니다.
-
 그리고 대략 3개 정도의 매물로 추려졌고, 저도 남편도 그 중에서 정말 치열하게 고민했고
-
 그래도 불안한 마음에 한 번 더 시브님께 문의를 드렸었습니다 (끝없는 불안함 ㅋㅋ)
-
 시브님께서는 어떤 걸 사도 괜찮으니 집상태 그나마 제일 좋은 걸로 하면 된다고
-
 골라서 살 수 있는 이 상황이 좋은 거라며 응원해주셨습니다 ♡
 
- 
-
 이날 저녁엔 가계약금을 반드시 넣고 마무리하겠다고 다짐한 상황인터라
-
 시브님께서 추천해주신 2순위 매물에 연락하여 네고를 요청하였고
-
 5분도 안 되서 네고 가능하다며 바로 가계약금 입금하면 된다는 연락이 왔었습니다 ^^
-
 그 결과 큐레이팅 7일차에 바로 가계약금을 넣어 매수를 완료하였습니다.
 
- 
-
 일 잘하는 부동산 사장님을 만난 운도 있었지만
-
 시간이 갈수록 매수한 물건이 비교군 중에서 조건도 좋고, 상태도 좋고, 환금성이 더 좋은 매물이라는 생각이 듭니다.
-
 시브님의 인사이트가 없었다면
-
 제가 감당할 수 없는 매물이라 생각하여 제대로 검토하지 못했을텐데
-
 좋은 물건을, 좋은 가격에 매수할 수 있었던 건 시크릿 큐레이팅 덕분입니다.
 
-
-
- 
-
 3. 추천하는 이유
-
 최근 읽은 책에서 지혜로운 판단을 하기 위해서는 '지혜로운 사람과 교류하며 물어봐야 한다.'라는 글귀가 있었습니다.
-
 제 개인의 경험과 지식에는 한계가 있다는 점을 인정하고, 시크릿 큐레이팅을 신청한 결과
-
 제 생각을 부동산 전문가인 시브님과 바로 바로 비교할 수 있었고
-
 제가 생각하지 못한 부분은 보완할 수 있었고
-
 그래서 엄청 큰 돈이 들어가는 부동산 매수-매도를 무사히 마무리할 수 있게 되었습니다.
 
- 
-
 더불어 일주일 간 채팅방에서 실시간으로 큐레이팅을 받을 수 있다는 건 참 감사한 일이었습니다^^
-
 보통 전문가 컨설팅의 경우, 1회성으로 조언이 끝나버려 많이 아쉬웠는데 
-
 시크릿 큐레이팅은 일주일이 지나도록, 계약서 작성과 특약까지 검토해주신다고 하셔서 감개무량합니다.
 
- 
-
 귀한 시간 내어
-
 하나부터 열까지 꼼꼼하게 큐레이팅 해주신 시크릿브라더님께 정말 감사드리며
-
 저처럼 부동산 경험이 적으신 분들은 꼭 시크릿 큐레이팅을 이용하여 좋은 자산을 매수하시길 바랍니다.
-
 감사합니다.`,
                 author: "이*연님",
                 date: "2025-11-27",
@@ -945,47 +856,28 @@
             {
                 title: "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기",
                 content: `안녕하세요
-
 전 추석직전 큐레이팅 신청하고 추석연휴동안  갈아타기를 위해 열심히 임장을 다녔습니다.
-
 70일 아기를 데리고 임장을 하는 것이 정말 쉽지 않았는데요. 아기와 나중에 실거주와 투자하기 좋은 곳으로 살고싶다는
-
 목표로 버틴것 같습니다.
-
 추석연휴동안 부동산 사장님들과 연락이 쉽지 않았고 매물을 볼수도 없었기에 제 마음은 굉장히 조급했습니다.
-
 그리고 큐레이팅 일주일이 연휴에 끼어있었기 때문에 종료가되면 난 매물도 잘 못봤는데 제대로 큐레이팅을 이용하지 못한채
-
 종료될까바 걱정되었습니다.
-
 하지만 시부님께서는 큐레이팅기간 종료후에도 제가 계약종료를 마칠때까지 잘 이끌어주셨습니다.
-
 그점이 너무 감사했습니다.
 
 <제가 큐레이팅을 진행하며 가장 좋았던 점은>
-
 1. 나의 사고를 확장시킬 수 있었던점 > 혼자서 부동산 공부를 하거나 시장을 바라보는 것은 한계가 있는데 다양한 사람들을 많이만나고
-
 상담을 해보신 시부님은 현재 부동산 상황과 분위기등을 잘 파악하고 계셔서 현재 상황이 이러니 이렇게 하면 좋겠다 라는 점을 알려주셔서서도움이 되었습니다.
-
 2.평소 부동산에 대해 궁금한 것을 마음껏 질문할 수 있었고 그 답변을 굉장히 성의껏 이유와 함께 답변을 주십니다.
-
 3.다양한 매물중 어떤것이 가장 좋은 매물인지? 그 이유까지 알려주셔서 선택지를 좁히고 시간을 아낄수가 있습니다.
-
 4.나의 전재산이 들어가기때문에 물건을 정할때 마음이 불안합니다. 제가 맞는 선택을 한건가? 그럴때 부동산 전문가가 같이 결정을 해주니 나의 선택에 있어 덜 불안하다는 점
-
 5.나의 현재 상황과 조건들을 들어보고 그것에 맞게 매물 추천을 해주는 점.
 
 이 5가지가 전 가장 도움이 되었습니다.
-
  
-
 덕분에 저는 동탄을 갈아타기 해서 매수할 수 있었고 현재는 풍선효과로 가격이 제가 매수한 가격보다 많이 올랐습니다.
-
 시부님의 큐레이팅은 이가격에 믿을 수 없는 퀄리티 입니다. 큐레이팅을 안 받는것이 솔직히 손해라고 생각이드네요 ㅎㅎㅎㅎㅎ
-
  
-
 시부님 감사했습니다!!`,
                 author: "변*소님",
                 date: "2025-11-12",
@@ -997,7 +889,6 @@
             {
                 title: "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공!",
                 content: `안녕하세요!
-
 결혼을 준비하던 약 3년 전부터 부동산을 째려보던 제가
 시브님을 만나고 약 2주만에 서울에 내집 마련을 했습니다!
 
@@ -1047,45 +938,32 @@
             {
                 title: "큐레이팅 후기",
                 content: `안녕하세요 큐레이팅 후기를 남깁니다.
-
 저는 추석 연휴가 끝나고 큐레이팅을 시작해서 한 주만에 살던 집을 매도하고 새집을 매수하게 되었습니다.
-
 처음에 큐레이팅을 신청할 때는 '정말로 이번 기회에 매도와 매수를 해야겠다' 이런 생각보다는 그간에 부동산에 대해서 제가 생각했던
-
 시나리오를 누군가에게 검증 받아 보자라는 마음으로 시작했습니다.
 
 사실 부동산이라는 것이 예민한 주제라 주변인들과 적극적인 토론을 하기는 좀 꺼려지는 경향이 있고 인터넷 카페에 고민을 올려도
-
 고민에 댓글을 달아주는 분들의 상황이 다 저와 다르기 때문에 객관적인 상담은 어렵겠다고 생각했었습니다.
 
 이때 마침 친구가 추천해준 '나는 1000만원으로 아파트 산다'라는 책의 저자 시크릿브라더가 생각나서 제 손으로 유투브를 검색해서 찾아내고
-
 여기서 큐레이팅이 있다는 것을 보고 신청해서 상담을 받았습니다.
 
 결과는 대만족이었습니다. 사실 이번에 매수까지 성공하지 못했더라도 굉장히 만족스러운 상담이었다고 생각합니다.
-
 특히 저처럼 돌다리도 두드려보고 건너고 싶은 성격의 소유자이면서 또 남들이 하는 한마디에 맘이 크게 흔들릴 수 있는 분들에게 추천합니다.
 
 다들 마음속에 '이렇게 이렇게 해서 이런 아파트를 사는게 좋지 않을까?' 라는 막연한 시나리오 들은 있을 겁니다.
-
 이번에 큐레이팅을 받아 매도매수과정을 함께 해보니 이런 시나리오들을 행동으로 옮기는데
-
 혼자서 해봤다면 (정말 괜찮은 좋은 방향의 시나리오라도) 많은 장애물들을 넘지 못하고 실행하지 못 했을 수도 있었을 거란 생각이 듭니다.
 
 현황의 분석과 나라는 사람의 특수성을 고려한 제안들은 너무 좋았고 특히 직접 다른 사람들과 부딪히면서 해결해 나가게되는
-
 부동산에 매물을 올리는 과정, 네고, 계약서 작성등의 단계에서 혼자 있지 않다는 느낌을 받으며 실시간으로 상담받았던 기억이 지금도 생생합니다.
 
 집을 매수하거나 매도할 때 향후의 결과가 어떻게 될지는100% 예측할 수 있는 사람은 없을 거라고 생각합니다.
-
 짧은 부동산 경력이지만 저는 그렇기 때문에 결과가 좋다면 당연히 좋은거지만 결과가 좋지 않을 때에 대한 마음의 대비가 중요하다고 봅니다.
-
 그러한 마음의 대비는 만약에 시간이 지나 부동산 거래의 성적표가 도달했을 때도 '과거의 나로 돌아간다면 이런 생각과 결정이 그 상황의 나에게 있어선 최선이었어'라는
-
 본인을 납득시킬 수 있는 이유가 있어야한다고 생각합니다.
 
 이번 부동산 거래는 인생에 있어 2번째이지만 가장 큰 부동산 거래 였는데 앞으로 어떻게 될지는 100% 장담할 순 없을 것 같습니다.
-
 하지만 정말로 치열한 고민 끝에 내린 결정이었음을 이미 알고 있고 그러한 치열한 생각의 과정에서 옆에 있어 줬던 시크릿브라더에게 참 감사합니다.`,
                 author: "이*석님",
                 date: "2025-10-27",
@@ -1097,7 +975,6 @@
              {
                 title: "[시크릿브라더] 부동산 큐레이팅 후기",
                 content: `안녕하세요, 
-
 10월 초 추석 연휴 전 큐레이팅을 신청 하였고, 실거주와 갭투자를 고민하는 상황이었습니다. 
 결론을 먼저 말씀 드리자면 시크릿브라더님 큐레이팅 조언을 통해 실거주집을 매수하기로 계약을 한 상태입니다. 
 
@@ -1115,8 +992,7 @@
 마지막으로 여러지역을 고민하느라 매물임장을 여러 군데 보느라 시간이 오래 걸려서 죄송스러웠지만, 끝까지 책임감 있게 큐레이팅 해주시고, 기간이 지났음에도 계약서까지 검토 해주신다는 말씀에 감동을 받았습니다. 
 
 주변에 집을 매수하기를 고민 하는 인원이 있다면 무조건 강추 할 생각이고, 저 또한 다음 집을 매수 할 때 도움을 받고 싶습니다. 
-정말 가성비와 더불아 퀄리티 최상인 부동산 컨설팅이 아닌가 싶습니다. 
-`,
+정말 가성비와 더불아 퀄리티 최상인 부동산 컨설팅이 아닌가 싶습니다.`,
                 author: "김*용님",
                 date: "2025-10-27",
                 rating: 5,
@@ -1128,7 +1004,10 @@
             // --- 일반 리뷰 (SQL 데이터 반영 + 추가) ---
             {
                 title: "시브님 큐레이팅 대박입니다.",
-                content: "평소 블로그랑 유튜브 보면서 공부하고 있었는데, 이번에 큰맘 먹고 큐레이팅 신청했습니다. 제가 고민하던 지역뿐만 아니라 생각지도 못한 저평가 지역까지 알려주셔서 선택의 폭이 넓어졌습니다. 특히 매수 타이밍을 정확하게 짚어주시는 게 소름 돋았습니다. 강력 추천합니다!",
+                content: `<p>평소 블로그랑 유튜브 보면서 공부하고 있었는데, 이번에 큰맘 먹고 큐레이팅 신청했습니다.</p>
+<p>제가 고민하던 지역뿐만 아니라 생각지도 못한 저평가 지역까지 알려주셔서 선택의 폭이 넓어졌습니다.</p>
+<p>특히 매수 타이밍을 정확하게 짚어주시는 게 소름 돋았습니다.</p>
+<p>강력 추천합니다!</p>`,
                 author: "한*수님",
                 date: "2025-12-05",
                 rating: 5,
@@ -1138,7 +1017,8 @@
             },
             {
                 title: "부린이도 이해하기 쉬운 설명 감사합니다",
-                content: "부동산 용어도 잘 모르는 부린이라 걱정 많이 했는데, 제 눈높이에 맞춰서 하나하나 설명해주셔서 너무 감사했습니다. 단순히 물건 추천이 아니라 부동산 공부하는 방법까지 알려주셔서 앞으로 투자하는 데 큰 도움이 될 것 같습니다.",
+                content: `<p>부동산 용어도 잘 모르는 부린이라 걱정 많이 했는데, 제 눈높이에 맞춰서 하나하나 설명해주셔서 너무 감사했습니다.</p>
+<p>단순히 물건 추천이 아니라 부동산 공부하는 방법까지 알려주셔서 앞으로 투자하는 데 큰 도움이 될 것 같습니다.</p>`,
                 author: "박*영님",
                 date: "2025-12-03",
                 rating: 5,
@@ -1148,7 +1028,9 @@
             },
              {
                 title: "갈아타기 성공했습니다!",
-                content: "1주택자인데 상급지로 갈아타기 하려고 1년 넘게 고민만 하다가 시브님 도움받고 드디어 성공했습니다. 매도 타이밍이랑 매수 타이밍을 기가 막히게 잡아주셔서 세금도 아끼고 좋은 가격에 이사 가게 되었습니다. 진작 신청할 걸 그랬어요.",
+                content: `1주택자인데 상급지로 갈아타기 하려고 1년 넘게 고민만 하다가 시브님 도움받고 드디어 성공했습니다.<br>
+매도 타이밍이랑 매수 타이밍을 기가 막히게 잡아주셔서 세금도 아끼고 좋은 가격에 이사 가게 되었습니다.<br>
+진작 신청할 걸 그랬어요.`,
                 author: "최*호님",
                 date: "2025-11-28",
                 rating: 5,
@@ -1158,7 +1040,9 @@
             },
             {
                 title: "데이터 기반의 정확한 분석",
-                content: "감으로 투자하는 게 아니라 철저하게 데이터에 기반해서 분석해주시는 게 인상적이었습니다. 공급 물량, 미분양 추이, 전세가율 등 다양한 지표를 근거로 설명해주시니 신뢰가 갔습니다. 덕분에 불안감 없이 투자 결정 내렸습니다.",
+                content: `감으로 투자하는 게 아니라 철저하게 데이터에 기반해서 분석해주시는 게 인상적이었습니다.<br>
+공급 물량, 미분양 추이, 전세가율 등 다양한 지표를 근거로 설명해주시니 신뢰가 갔습니다.<br>
+덕분에 불안감 없이 투자 결정 내렸습니다.`,
                 author: "정*우님",
                 date: "2025-11-20",
                 rating: 5,
@@ -1296,13 +1180,16 @@
             if(review.badge === 'BEST') badgeHtml = '<span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded">BEST</span>';
             else if(review.badge === 'NEW') badgeHtml = '<span class="bg-indigo-100 text-indigo-600 text-xs font-bold px-2 py-1 rounded">NEW</span>';
 
+            // 카드 미리보기에서는 HTML 태그 제거하고 텍스트만 보여주기
+            const previewContent = review.content.replace(/<[^>]*>?/gm, '');
+
             card.innerHTML = `
                 <div class="flex justify-between items-start mb-4">
                     <div class="flex gap-1">${stars}</div>
                     ${badgeHtml}
                 </div>
                 <h3 class="font-bold text-lg mb-3 text-gray-900 line-clamp-1">"${review.title}"</h3>
-                <p class="text-gray-600 text-sm leading-relaxed mb-6 line-clamp-4 break-keep" style="min-height: 5em;">${review.content}</p>
+                <p class="text-gray-600 text-sm leading-relaxed mb-6 line-clamp-4 break-keep" style="min-height: 5em;">${previewContent}</p>
                 <div class="flex items-center justify-between pt-4 border-t border-gray-50">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">${review.author.charAt(0)}</div>
@@ -1325,12 +1212,19 @@
             lucide.createIcons();
         }
 
-        // 4. 후기 상세 모달
+        // 4. 후기 상세 모달 (수정됨: 줄바꿈/HTML 태그 처리)
         function openReviewDetail(index) {
             const review = reviewData[index];
             document.getElementById('modal-review-title').innerText = review.title;
-            // 줄바꿈 반영
-            document.getElementById('modal-review-content').innerHTML = review.content.replace(/\n/g, '<br>');
+            
+            // [핵심 수정] innerHTML로 넣어서 태그(<p>, <br>)가 작동하도록 함
+            // 만약 태그가 없는 텍스트라면 줄바꿈(\n)을 <br>로 변환
+            let contentHtml = review.content;
+            if (!contentHtml.includes('<p>') && !contentHtml.includes('<br>')) {
+                contentHtml = contentHtml.replace(/\n/g, '<br>');
+            }
+            document.getElementById('modal-review-content').innerHTML = contentHtml;
+            
             document.getElementById('modal-review-author').innerText = review.author;
             document.getElementById('modal-review-date').innerText = review.date;
             document.getElementById('modal-review-views').innerText = review.views; 
@@ -1382,7 +1276,7 @@
 
             const newReview = {
                 title: title,
-                content: content,
+                content: content, // 입력받은 내용 그대로 저장 (줄바꿈 포함)
                 author: author + "님",
                 date: new Date().toISOString().split('T')[0].replace(/-/g, '.'),
                 rating: 5, 
@@ -1391,8 +1285,7 @@
                 views: calculateViews(50, 100)
             };
 
-            // 일반 후기 배열의 맨 앞에 추가 (BEST 뒤, 일반의 시작)
-            // reviewData 배열에서 type이 'NORMAL'인 첫 번째 인덱스를 찾아 그 앞에 삽입
+            // 일반 후기 배열의 맨 앞에 추가
             const firstNormalIndex = reviewData.findIndex(r => r.type === 'NORMAL');
             if (firstNormalIndex !== -1) {
                 reviewData.splice(firstNormalIndex, 0, newReview);
