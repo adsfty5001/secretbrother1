@@ -6,7 +6,7 @@
     <title>전체 수강 후기 - 시크릿클래스</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
+    <!-- Lucide Icons (안전하게 로드) -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @font-face {
@@ -15,38 +15,34 @@
             font-weight: normal;
             font-style: normal;
         }
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
-        
         * { font-family: 'Jalnan', sans-serif !important; }
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
         .font-body { font-family: 'Pretendard', sans-serif !important; }
         body { letter-spacing: -0.02em; }
         
-        /* 카드 스타일 */
         .review-card { transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
-        .review-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
+        .review-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
         
         /* 모달 스크롤바 */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-track { background-color: #f1f5f9; }
         
-        /* 본문 원본 스타일 (모달용) */
-        .raw-content-modal { 
-            line-height: 1.7; 
+        /* 본문 원본 스타일 */
+        .raw-content { 
+            line-height: 1.6; 
             color: #374151; 
             font-size: 0.95rem; 
-            white-space: pre-wrap; /* 줄바꿈 및 공백 유지 */
-            font-family: 'Pretendard', sans-serif !important;
+            white-space: pre-wrap; /* 줄바꿈 보존 */
         }
-
-        /* 리스트 화면에서는 3줄까지만 보여줌 (클릭 유도) */
+        .raw-content p { margin-bottom: 1em; }
+        
+        /* 리스트에서는 3줄까지만 보여줌 */
         .line-clamp-custom {
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            white-space: pre-wrap;
-            font-family: 'Pretendard', sans-serif !important;
         }
     </style>
 </head>
@@ -89,7 +85,6 @@
     <!-- [모달] 후기 상세 보기 (스크롤 가능, 원본 100% 표시) -->
     <div id="reviewDetailModal" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="window.closeDetailModal()">
         <div class="bg-white w-full max-w-2xl max-h-[85vh] rounded-2xl shadow-2xl relative overflow-hidden flex flex-col" onclick="event.stopPropagation()">
-            <!-- 헤더 -->
             <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-shrink-0">
                 <h3 class="text-lg font-bold text-gray-900">후기 상세 보기</h3>
                 <button onclick="window.closeDetailModal()" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-6 h-6"></i></button>
@@ -102,7 +97,7 @@
                 <h2 id="modal-title" class="text-2xl font-bold text-gray-900 mb-6 leading-snug break-keep"></h2>
                 
                 <!-- 원본 내용이 들어가는 곳 -->
-                <div id="modal-content" class="raw-content-modal"></div>
+                <div id="modal-content" class="raw-content"></div>
                 
                 <div class="mt-8 pt-6 border-t border-gray-100 text-sm text-gray-500 flex justify-between items-center">
                     <div class="flex items-center gap-2">
@@ -114,7 +109,6 @@
                 </div>
             </div>
             
-            <!-- 닫기 버튼 -->
             <div class="p-4 border-t border-gray-100 bg-gray-50 text-center flex-shrink-0">
                 <button onclick="window.closeDetailModal()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors">닫기</button>
             </div>
@@ -179,22 +173,14 @@
         const VIEW_KEY = "secretclass_review_views";
         const LAST_UPDATE_KEY = "secretclass_views_last_update";
         
-        function loadViewData() {
-            const stored = localStorage.getItem(VIEW_KEY);
-            return stored ? JSON.parse(stored) : {};
-        }
-
-        function saveViewData(data) {
-            localStorage.setItem(VIEW_KEY, JSON.stringify(data));
-        }
+        function loadViewData() { return JSON.parse(localStorage.getItem(VIEW_KEY) || "{}"); }
+        function saveViewData(data) { localStorage.setItem(VIEW_KEY, JSON.stringify(data)); }
 
         function checkAndUpdateViews(data) {
             const now = Date.now();
             const lastUpdate = parseInt(localStorage.getItem(LAST_UPDATE_KEY) || 0);
             if (now - lastUpdate > 86400000) {
-                for (let key in data) {
-                    data[key] += Math.floor(Math.random() * 5) + 1;
-                }
+                for (let key in data) { data[key] += Math.floor(Math.random() * 5) + 1; }
                 saveViewData(data);
                 localStorage.setItem(LAST_UPDATE_KEY, now.toString());
             }
@@ -216,10 +202,17 @@
 
         function incrementViewCount(title) {
             let data = loadViewData();
-            if (data[title]) {
-                data[title] += 1;
-                saveViewData(data);
+            if (!data[title]) {
+                // 데이터가 없으면 새로 생성 (기본값 일반)
+                data[title] = 100;
             }
+            data[title] += 1;
+            saveViewData(data);
+            return data[title];
+        }
+
+        function calculateViews(isBest) { 
+             return getViewCount("TEMP_" + Math.random(), isBest); // 신규 작성용 임시
         }
 
         // HTML 엔티티 디코딩 및 줄바꿈 처리
@@ -228,7 +221,7 @@
             var txt = document.createElement("textarea");
             txt.innerHTML = html;
             let decoded = txt.value;
-            // 줄바꿈만 있고 태그가 없는 경우 <br>로 변환
+            // 줄바꿈만 있고 태그가 없는 경우 <br>로 변환하여 줄바꿈 유지
             if (!decoded.includes('<p>') && !decoded.includes('<br>')) {
                 decoded = decoded.replace(/\n/g, '<br>');
             }
@@ -341,34 +334,6 @@
                 author: "이서연님", date: "2025-11-27", rating: 5, badge: "BEST"
             },
             {
-                title: "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기",
-                content: `안녕하세요
-전 추석직전 큐레이팅 신청하고 추석연휴동안  갈아타기를 위해 열심히 임장을 다녔습니다.
-70일 아기를 데리고 임장을 하는 것이 정말 쉽지 않았는데요. 아기와 나중에 실거주와 투자하기 좋은 곳으로 살고싶다는
-목표로 버틴것 같습니다.
-추석연휴동안 부동산 사장님들과 연락이 쉽지 않았고 매물을 볼수도 없었기에 제 마음은 굉장히 조급했습니다.
-그리고 큐레이팅 일주일이 연휴에 끼어있었기 때문에 종료가되면 난 매물도 잘 못봤는데 제대로 큐레이팅을 이용하지 못한채
-종료될까바 걱정되었습니다.
-하지만 시부님께서는 큐레이팅기간 종료후에도 제가 계약종료를 마칠때까지 잘 이끌어주셨습니다.
-그점이 너무 감사했습니다.
-
-<제가 큐레이팅을 진행하며 가장 좋았던 점은>
-1. 나의 사고를 확장시킬 수 있었던점 > 혼자서 부동산 공부를 하거나 시장을 바라보는 것은 한계가 있는데 다양한 사람들을 많이만나고
-상담을 해보신 시부님은 현재 부동산 상황과 분위기등을 잘 파악하고 계셔서 현재 상황이 이러니 이렇게 하면 좋겠다 라는 점을 알려주셔서서도움이 되었습니다.
-2.평소 부동산에 대해 궁금한 것을 마음껏 질문할 수 있었고 그 답변을 굉장히 성의껏 이유와 함께 답변을 주십니다.
-3.다양한 매물중 어떤것이 가장 좋은 매물인지? 그 이유까지 알려주셔서 선택지를 좁히고 시간을 아낄수가 있습니다.
-4.나의 전재산이 들어가기때문에 물건을 정할때 마음이 불안합니다. 제가 맞는 선택을 한건가? 그럴때 부동산 전문가가 같이 결정을 해주니 나의 선택에 있어 덜 불안하다는 점
-5.나의 현재 상황과 조건들을 들어보고 그것에 맞게 매물 추천을 해주는 점.
-
-이 5가지가 전 가장 도움이 되었습니다.
- 
-덕분에 저는 동탄을 갈아타기 해서 매수할 수 있었고 현재는 풍선효과로 가격이 제가 매수한 가격보다 많이 올랐습니다.
-시부님의 큐레이팅은 이가격에 믿을 수 없는 퀄리티 입니다. 큐레이팅을 안 받는것이 솔직히 손해라고 생각이드네요 ㅎㅎㅎㅎㅎ
- 
-시부님 감사했습니다!!`,
-                author: "변미소님", date: "2025-11-12", rating: 5, badge: "BEST"
-            },
-            {
                 title: "시크릿큐레이팅후기_막막함에 확신이 생깁니다. 돈 안 아까움 주의!!",
                 content: `안녕하세요, 전 9월 중순에 큐레이팅을 받았습니다.
 아시다시피 큐레이팅은 일주일간 진행되는데, 
@@ -415,6 +380,34 @@
 30만원으로 3000만원의 가치를 줄 수 있다는 시크릿큐레이팅의 홍보문구는 과장이 아닙니다.
 읽어주셔서 감사합니다.`,
                 author: "이수정님", date: "2025-12-01", rating: 5, badge: "BEST"
+            },
+            {
+                title: "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기",
+                content: `안녕하세요
+전 추석직전 큐레이팅 신청하고 추석연휴동안  갈아타기를 위해 열심히 임장을 다녔습니다.
+70일 아기를 데리고 임장을 하는 것이 정말 쉽지 않았는데요. 아기와 나중에 실거주와 투자하기 좋은 곳으로 살고싶다는
+목표로 버틴것 같습니다.
+추석연휴동안 부동산 사장님들과 연락이 쉽지 않았고 매물을 볼수도 없었기에 제 마음은 굉장히 조급했습니다.
+그리고 큐레이팅 일주일이 연휴에 끼어있었기 때문에 종료가되면 난 매물도 잘 못봤는데 제대로 큐레이팅을 이용하지 못한채
+종료될까바 걱정되었습니다.
+하지만 시부님께서는 큐레이팅기간 종료후에도 제가 계약종료를 마칠때까지 잘 이끌어주셨습니다.
+그점이 너무 감사했습니다.
+
+<제가 큐레이팅을 진행하며 가장 좋았던 점은>
+1. 나의 사고를 확장시킬 수 있었던점 > 혼자서 부동산 공부를 하거나 시장을 바라보는 것은 한계가 있는데 다양한 사람들을 많이만나고
+상담을 해보신 시부님은 현재 부동산 상황과 분위기등을 잘 파악하고 계셔서 현재 상황이 이러니 이렇게 하면 좋겠다 라는 점을 알려주셔서서도움이 되었습니다.
+2.평소 부동산에 대해 궁금한 것을 마음껏 질문할 수 있었고 그 답변을 굉장히 성의껏 이유와 함께 답변을 주십니다.
+3.다양한 매물중 어떤것이 가장 좋은 매물인지? 그 이유까지 알려주셔서 선택지를 좁히고 시간을 아낄수가 있습니다.
+4.나의 전재산이 들어가기때문에 물건을 정할때 마음이 불안합니다. 제가 맞는 선택을 한건가? 그럴때 부동산 전문가가 같이 결정을 해주니 나의 선택에 있어 덜 불안하다는 점
+5.나의 현재 상황과 조건들을 들어보고 그것에 맞게 매물 추천을 해주는 점.
+
+이 5가지가 전 가장 도움이 되었습니다.
+ 
+덕분에 저는 동탄을 갈아타기 해서 매수할 수 있었고 현재는 풍선효과로 가격이 제가 매수한 가격보다 많이 올랐습니다.
+시부님의 큐레이팅은 이가격에 믿을 수 없는 퀄리티 입니다. 큐레이팅을 안 받는것이 솔직히 손해라고 생각이드네요 ㅎㅎㅎㅎㅎ
+ 
+시부님 감사했습니다!!`,
+                author: "변미소님", date: "2025-11-12", rating: 5, badge: "BEST"
             },
             {
                 title: "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공!",
@@ -507,7 +500,7 @@
                 author: "이민석님", date: "2025-10-27", rating: 5, badge: "BEST"
             },
             
-            // 2025년 일반 (예시 추가)
+            // 2025년 일반
             { date: "2025-12-05", author: "한철수님", title: "시브님 큐레이팅 대박입니다.", content: "평소 블로그랑 유튜브 보면서 공부하고 있었는데, 이번에 큰맘 먹고 큐레이팅 신청했습니다. 제가 고민하던 지역뿐만 아니라 생각지도 못한 저평가 지역까지 알려주셔서 선택의 폭이 넓어졌습니다. 특히 매수 타이밍을 정확하게 짚어주시는 게 소름 돋았습니다.\n\n강력 추천합니다!", rating: 5 },
             { date: "2025-12-03", author: "박진영님", title: "부린이도 이해하기 쉬운 설명 감사합니다", content: "부동산 용어도 잘 모르는 부린이라 걱정 많이 했는데, 제 눈높이에 맞춰서 하나하나 설명해주셔서 너무 감사했습니다. 단순히 물건 추천이 아니라 부동산 공부하는 방법까지 알려주셔서 앞으로 투자하는 데 큰 도움이 될 것 같습니다.", rating: 4 },
             { date: "2025-11-28", author: "최준호님", title: "갈아타기 성공했습니다!", content: "1주택자인데 상급지로 갈아타기 하려고 1년 넘게 고민만 하다가 시브님 도움받고 드디어 성공했습니다. 매도 타이밍이랑 매수 타이밍을 기가 막히게 잡아주셔서 세금도 아끼고 좋은 가격에 이사 가게 되었습니다. 진작 신청할 걸 그랬어요.", rating: 5 },
@@ -551,7 +544,7 @@
             { date: "2023-03-17", author: "미래소년k님", title: "정규반 2기 미래소년k님 후기", content: `&lt;p id=&quot;SE-2b5d657d-06a3-4d3e-9be4-0aad43137c6f&quot;&gt;시크릿 브라더님은 우연히 블로그를 통해서 알게 되었습니다.&lt;/p&gt;&lt;p&gt;강의를 듣고 들었던 생각은 &#39;안개 낀 산 속에서 나무를 찾게 됐다!&#39;&lt;/p&gt;&lt;p&gt;기존 강의나 책에서 투자할 도시와 지역을 찾는 방법에 대해서는 언급을 많이 하고 방법에 대해서도 알려주고 있습니다. 하지만 투자할 단지에 대한 구체적 접근은 알기 어려웠습니다.&lt;/p&gt;&lt;p&gt;시크릿 브라더님 강의는 그런 안개를 거둬내고 어떤 나무를 택해야 하는지에 대한 기준과 방향을 제시해주었습니다.&lt;/p&gt;`, rating: 5 },
             { date: "2023-03-17", author: "민경인님", title: "정규반 2기 민경인님 후기", content: `&lt;p id=&quot;SE-911b95f4-03d6-4c12-8318-f18316899123&quot;&gt;19년에 얼결에 청약이 당첨되면서 부랴부랴 가입하게 된 부동산 카페! 2년동안 내 집 정보 알아보느라 들락날락 하다 부동산이라는 세로운 세계를 알게 되었다.&lt;/p&gt;&lt;p&gt;시브님 글들을 보면서 저 분은 어떻게 저런생각을 하고, 저런 단지들을 비교하게 되는거지?라고 계속 궁금했는데 그 하나하나의 생각들을 그 생각의 순서를 그대로 보여주는 강의이다. 1-7차 필터링은 공식과도 같이 너무나 명확한 기준이 있고, 첫 과제 할때에는 4차,7차 필터링이 너무나 어려웠는데 3-4주차 강의를 들으면서 반복에 또 반복 해주는 시브님 강의에 지금은 방법적인 부분에 대해서는 완벽히 이해가 된 것 같다.&lt;/p&gt;`, rating: 5 },
             { date: "2023-03-17", author: "루저가이님", title: "정규반 1기 루저가이님 후기", content: `&lt;p id=&quot;SE-5228996a-8fbb-4741-b814-7bb5f2b6cedf&quot;&gt;안녕하세요. 시크릿브라더님 3주차까지 강의 후기입니다.&lt;/p&gt;&lt;p&gt;제 이야기를 아주 짧게 하자면, 저는 2014년 첫 집을 구매하고 (무지성 구매) 7년 동안은 대출 이자 갚고 그냥 아무생각 없이 미래만 불안해하면서 보냈습니다.&lt;/p&gt;&lt;p&gt;그러던 중에 아주 우연히 스크릿브라더님을 알게 되었고, 커리큘럼을 보니깐 아주 새로운 것을 가르쳐준다기 보다는 부동산에서 알아야 되는 아주 기초적인 것부터 차근차근 알려준다는 생각이 들었습니다. 그리고 실습형이라는 게 엄청나게 마음에 들었습니다.&lt;/p&gt;&lt;p&gt;강의를 들어보면 그 방법을 아주 차근차근 한땀한땀 정성스럽게 강의한다는 생각이 듭니다.&lt;/p&gt;`, rating: 5 },
-            { date: "2023-03-17", author: "부자엄마님", title: "정규반 1기 부자엄마님 후기", content: `&lt;p id=&quot;SE-32828f30-14ee-4e3c-b0aa-67ef3e53da77&quot;&gt;안녕하세요~ 저는 시크릿브라더 강의 1기 수강생 입니다.&lt;/p&gt;&lt;p&gt;부동산 투자에 아주 막연한 관심만 가지고 있다가 다른 투자들 하기 시작하면서 결국 기본이 되는 투자는 부동산이라는 생각에 부동산으로 영역을 확장(?)한 부생아 입니다.&lt;/p&gt;&lt;p&gt;장점은 뭐니뭐니해도 시간과 돈이 아깝지 않은 강의! 평생 써먹을 수 있는 강의! 실전형 강의! 시간을 절약해준 강의!&lt;/p&gt;&lt;p&gt;최강의 손품 파는 여러 어플 사용 법, 데이터를 보고 의미 해석 하는 것, 순서대로 필터링 하면서 교집합 만들어가서 미세한 체에 거르듯 투자 하여 잃지 않는, 내가 확신할 수 있어 흔들리지 않는 투자에 대해 알게 된 거 같아요.&lt;/p&gt;`, rating: 4 },
+            { date: "2023-03-17", author: "부자엄마님", title: "정규반 1기 부자엄마님 후기", content: `&lt;p id=&quot;SE-32828f30-14ee-4e3c-b0aa-67ef3e53da77&quot;&gt;안녕하세요~ 저는 시크릿브라더 강의 1기 수강생 입니다.&lt;/p&gt;&lt;p&gt;부동산 투자에 아주 막연한 관심만 가지고 있다가 다른 투자들 하기 시작하면서 결국 기본이 되는 투자는 부동산이라는 생각에 부동산으로 영역을 확장(?)한 부생아 입니다.&lt;/p&gt;&lt;p&gt;장점은 뭐니뭐니해도 시간과 돈이 아깝지 않은 강의! 평생 써먹을 수 있는 강의! 실전형 강의! 시간을 절약해준 강의!&lt;/p&gt;&lt;p&gt;최강의 손품 파는 여러 어플 사용 법, 데이터를 보고 의미 해석 하는 것, 순서대로 필터링 하면서 교집합 만들어가서 미세한 체에 거르듯 투자 하여 잃지 않는, 내가 확신할 수 있어 흔들리지 않는 투자에 대해 알게 된 거 같아요.&lt;/p&gt;`, rating: 4 }, 
             { date: "2023-03-17", author: "꼬밍맘87님", title: "정규반 1기 꼬밍맘87님 후기", content: `&lt;p id=&quot;SE-dd00826b-ea7b-4af3-8df6-0c6a2b75893b&quot;&gt;부동산카페에서 열심히 읽었던 시브님의 강의를 직접 들을 수 있었어서 너무 좋았어요. 안그래도 글 읽으면서 강의는 없으실까 생각도 하고 진짜 다른 부동산 강의는 들어보려고 하니 400ㅡ500 만원대고 아직 제겐 너무 비싼 수강료라 부담 많이 됐었거든요.&lt;/p&gt;&lt;p&gt;근데 이렇게 적은 수강료로 알찬 강의 준비 해주셔서 너무 감사 했습니다.&lt;/p&gt;&lt;p&gt;어쩌다 직접 집을 매수하고 몸소 집값 오르는거 보니 너무 부동산에 대해서 알고 싶은거에요. 그러다 우연히 부동산 카페가서 시브님 글도 보고 이렇게 강의까지 듣게 되서 너무 행복했습니다!!!&lt;/p&gt;`, rating: 5 },
             { date: "2023-03-17", author: "hyun님", title: "정규반 2기 hyun님 후기", content: `&lt;p id=&quot;SE-ec705d27-9ff9-4fdc-adc0-49f500973c29&quot;&gt;부동산 공부를 시작한지 2년정도가 되어가는 50대의 직장인 입니다. 은퇴를 준비해야 할 시간이 많이 남지 않은 현실을 마주하고 보니 일찍 재테크에 눈을 떠 열정적으로 공부하고 투자도 하는 젊은 세대들은 보면 참 부러운일 중에 하나 입니다.&lt;/p&gt;&lt;p&gt;시브님의 1~7차 필터링이라는 방식이 제게는 일회성으로 그치지 않고 두고 두고 써먹을 수 있는 훌륭한 투자기법임에 의심이 없습니다.&lt;/p&gt;&lt;p&gt;그런 문제를 해결하는데 시브님의 기법이 아주 구체적이면서 논리정연하게 해답을 제시한다고 말하고 싶습니다.&lt;/p&gt;`, rating: 5 },
             { date: "2023-03-17", author: "김O아님", title: "정규반 3기 김O아님 후기", content: `&lt;p id=&quot;SE-9ba72f69-d0ed-4173-ac7e-13b4e534cf6f&quot;&gt;대학 졸업 후 직장생활을 하기 위해 수도권으로 거주지를 옮긴 후 줄곧 세입자 생활을 하면서 왜 이 많은 집 가운데 내 집은 없을까라는 생각을 했었던 것 같다.&lt;/p&gt;&lt;p&gt;그렇게 시크릿브라더님이 예전부터 올려주셨던 게시글을 다 찾아읽고 추천해주신 책들을 사서 읽고, 언급해주신 다른 전문가들의 글들을 찾아읽어도 근데 이걸 도대체 어떤 방법으로 해야될까, 진짜 막막하다 라는 생각이 들때쯤 맛보기반 강의를 신청하게 됐고, 결국 정규반 수업까지 듣게 되었다.&lt;/p&gt;&lt;p&gt;수업을 들은 내 심정은 &quot;유레카!!!!!&quot; 였다.&lt;/p&gt;`, rating: 5 },
@@ -621,15 +614,17 @@
         }
 
         window.openDetail = function(renderIndex) {
-            // 현재 화면에 렌더링된 순서(toShow)와 allReviews(정렬됨)의 순서는 일치함 (slice 전까지)
             const review = allReviews[renderIndex];
             
             document.getElementById('modal-title').innerText = review.title;
-            // 줄바꿈이 있으면 <br>로 변경해서 표시
+            // 줄바꿈 처리
             document.getElementById('modal-content').innerHTML = decodeAndFormatHtml(review.content).replace(/\n/g, '<br>');
             document.getElementById('modal-author').innerText = review.author;
             document.getElementById('modal-date').innerText = review.date;
             document.getElementById('modal-views').innerText = review.views.toLocaleString();
+            // 클릭 시 조회수 증가 및 반영
+            incrementViewCount(review.title);
+            document.getElementById('modal-views').innerText = getViewCount(review.title, review.badge === 'BEST').toLocaleString();
 
             let stars = "";
             for(let i=1; i<=5; i++) {
