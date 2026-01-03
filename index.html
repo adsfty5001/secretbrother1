@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>시크릿클래스 - 대한민국 1호 아파트 큐레이터 시크릿브라더</title>
-    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 아이콘 -->
@@ -29,20 +28,20 @@
             100% { transform: scale(1); opacity: 1; }
         }
         .modal-content { animation: modal-pop 0.2s ease-out forwards; }
-        
-        /* 모바일 줄바꿈 방지 (단어 단위 줄바꿈) */
         .break-keep { word-break: keep-all; word-wrap: break-word; }
-        
         .review-card { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .review-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
-        
-        /* 모달 스크롤바 커스텀 */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-track { background-color: #f1f5f9; }
-        
-        /* 후기 본문 스타일 */
         .raw-content { line-height: 1.8; color: #374151; white-space: pre-wrap; }
+        .line-clamp-custom {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            white-space: pre-wrap;
+        }
     </style>
 </head>
 <body class="bg-white text-gray-900 font-body">
@@ -138,7 +137,7 @@
         </div>
     </section>
 
-    <!-- About Section (링크 복구) -->
+    <!-- About Section (링크 복구 및 별표 수정) -->
     <section id="about" class="py-20 md:py-24 bg-white">
          <div class="max-w-6xl mx-auto px-4">
             <div class="flex flex-col lg:flex-row items-start gap-12 lg:gap-16">
@@ -147,6 +146,7 @@
                         <div class="aspect-[4/5] bg-gray-200 rounded-xl md:rounded-2xl flex items-center justify-center mb-6 overflow-hidden relative group border-2 border-gray-300">
                             <img src="./3.jpg" alt="시크릿브라더 프로필" class="absolute inset-0 w-full h-full object-cover rounded-xl md:rounded-2xl">
                         </div>
+                        <!-- [수정] 별표 양옆 1개씩 -->
                         <div class="absolute top-8 right-8 md:top-12 md:right-12 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg border border-gray-100 text-sm font-bold text-indigo-600 flex items-center gap-2 animate-bounce">
                             <i data-lucide="star" class="w-4 h-4 fill-current"></i> 부동산 강의 경력만 6년 <i data-lucide="star" class="w-4 h-4 fill-current"></i>
                         </div>
@@ -226,15 +226,14 @@
         </div>
     </section>
 
-    <!-- 수강신청 섹션 -->
+    <!-- 수강신청 섹션 (할인율 적용 완료) -->
     <section id="pricing" class="py-24 bg-white">
         <div class="max-w-4xl mx-auto px-4 text-center">
             <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6" style="font-family: 'Jalnan', sans-serif !important;">수강 신청</h2>
             <div class="bg-white rounded-3xl p-8 md:p-14 shadow-xl border border-gray-100 relative overflow-hidden transition-all duration-300 transform hover:scale-[1.01] ring-1 ring-indigo-50">
                 <div class="absolute top-0 left-0 w-full h-3 bg-indigo-600"></div>
                 <div class="mb-8"><span class="inline-block py-1 px-3 rounded-full text-xs font-bold mb-4 bg-indigo-100 text-indigo-700">PREMIUM SERVICE</span><h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 font-body">1:1 맞춤형 투자 큐레이팅</h3><p class="text-gray-500 max-w-lg mx-auto leading-relaxed text-sm md:text-base break-keep font-body">당신의 자산 상황과 목표에 맞춘 100% 개인화 포트폴리오 제안 및 심층 상담</p></div>
-                
-                <!-- 할인율 뱃지 추가 -->
+                <!-- 할인율 -->
                 <div class="flex flex-col items-center justify-center mb-10 pb-10 border-b border-gray-100 font-body">
                     <div class="flex items-center gap-3 mb-2">
                         <span class="text-gray-400 text-xl line-through decoration-red-400 decoration-2">699,000원</span>
@@ -242,29 +241,16 @@
                     </div>
                     <span class="text-5xl font-extrabold text-indigo-600">349,000원</span>
                 </div>
-
                 <div class="flex flex-col gap-3 font-body">
-                    <a href="https://portone.io/korea/ko" target="_blank" onclick="checkPaymentLink(event, this.href)" class="block w-full py-5 rounded-xl font-bold text-lg md:text-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 bg-gray-900 text-white hover:bg-gray-800 flex justify-center items-center gap-2">
-                        <i data-lucide="credit-card" class="w-6 h-6"></i> 카드 / 간편결제 신청하기
-                    </a>
-                    <button onclick="toggleModal('depositModal')" class="block w-full py-4 rounded-xl font-bold text-lg border-2 border-gray-200 text-gray-600 hover:border-indigo-500 hover:text-indigo-600 transition-all flex justify-center items-center gap-2">
-                        <i data-lucide="wallet" class="w-5 h-5"></i> 무통장 입금으로 신청하기 (수수료 X)
-                    </button>
+                    <a href="https://portone.io/korea/ko" target="_blank" onclick="checkPaymentLink(event, this.href)" class="block w-full py-5 rounded-xl font-bold text-lg bg-gray-900 text-white hover:bg-gray-800 flex justify-center items-center gap-2"><i data-lucide="credit-card"></i> 카드 / 간편결제 신청하기</a>
+                    <button onclick="toggleModal('depositModal')" class="block w-full py-4 rounded-xl font-bold text-lg border-2 border-gray-200 text-gray-600 hover:border-indigo-500 hover:text-indigo-600 flex justify-center items-center gap-2"><i data-lucide="wallet"></i> 무통장 입금 신청하기</button>
                 </div>
-                
-                <div class="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl text-left">
-                    <p class="text-sm md:text-base text-red-600 font-bold leading-relaxed break-keep">
-                        ※ 현재 사이트 이전 문제로 카드 결제 연동이 원활치 않을 수 있습니다.<br>
-                        만약 카드 결제가 안 될 경우 <span class="underline">'무통장 입금'</span>을 이용해 주시고, 무통장 입금시 현금영수증 & 지출 증빙을 위해 입금 반드시 <span class="underline">'폼' 작성</span>을 완료해 주실 것을 부탁드립니다 ※
-                    </p>
-                </div>
-
-                <p class="mt-4 text-xs text-gray-400">* 안전한 결제를 위해 KG이니시스(PG사) 결제 페이지로 이동합니다.</p>
+                <p class="mt-4 text-xs text-gray-400">* KG이니시스 결제 페이지로 이동합니다.</p>
             </div>
         </div>
     </section>
 
-    <!-- Review Section -->
+    <!-- Review Section (BEST만 - 원본 데이터 사용) -->
     <section id="reviews" class="py-24 bg-gray-50">
         <div class="max-w-6xl mx-auto px-4">
             <div class="text-center mb-16">
@@ -272,29 +258,23 @@
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2" style="font-family: 'Jalnan', sans-serif !important;">수강생 리얼 후기</h2>
                 <p class="text-gray-600 text-lg font-body">조작 없는 100% 실제 수강생들의 이야기입니다.</p>
             </div>
-
-            <!-- BEST 후기 섹션 -->
+            <!-- BEST List -->
             <div class="mb-12">
-                <h3 class="text-2xl font-bold text-gray-800 mb-8 flex items-center justify-center gap-2">
-                    <i data-lucide="trophy" class="text-yellow-500 fill-current w-8 h-8"></i> 명예의 전당 (BEST)
-                </h3>
-                <div id="best-reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- JS로 BEST 후기 로드 -->
-                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-8 flex items-center justify-center gap-2"><i data-lucide="trophy" class="text-yellow-500 fill-current w-8 h-8"></i> 명예의 전당 (BEST)</h3>
+                <div id="best-reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
-
-            <!-- 전체 후기 보러가기 버튼 (줄바꿈 수정) -->
+            <!-- 전체 보기 링크 -->
             <div class="text-center mt-12">
+                <!-- [수정] 줄바꿈 수정 (break-keep 추가) -->
                 <a href="all_reviews.html" class="inline-flex items-center gap-2 bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white px-12 py-5 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-xl group break-keep">
-                    실시간 전체 후기 보러가기 (최신순) 
-                    <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                    실시간 전체 후기 보러가기 (최신순) <i data-lucide="arrow-right" class="group-hover:translate-x-1 transition-transform"></i>
                 </a>
                 <p class="text-gray-400 text-sm mt-3">지금 이 순간에도 후기가 올라오고 있습니다!</p>
             </div>
         </div>
     </section>
 
-    <!-- FAQ 섹션 (복구 및 기능 추가) -->
+    <!-- FAQ (복구 및 기능 추가) -->
     <section id="faq" class="py-24 bg-indigo-50">
         <div class="max-w-3xl mx-auto px-4">
             <h2 class="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12" style="font-family: 'Jalnan', sans-serif !important;">고객센터 (FAQ)</h2>
@@ -317,33 +297,17 @@
             
             <div class="text-center">
                 <p class="text-gray-500 mb-4 font-medium">더 궁금한 점이 있으신가요?</p>
-                <a href="https://open.kakao.com/o/sheKqImd" target="_blank" class="inline-flex items-center gap-2 bg-[#FEE500] text-[#3c1e1e] border-2 border-[#FEE500] px-8 py-4 rounded-full font-bold text-lg hover:bg-[#fdd835] hover:border-[#fdd835] transition-all shadow-md transform hover:scale-105">
-                    <i data-lucide="message-circle" class="w-6 h-6"></i> 1:1 카카오톡 문의하기
-                </a>
+                <a href="https://open.kakao.com/o/sheKqImd" target="_blank" class="inline-flex items-center gap-2 bg-[#FEE500] text-[#3c1e1e] border-2 border-[#FEE500] px-8 py-4 rounded-full font-bold text-lg hover:bg-[#fdd835] hover:border-[#fdd835] transition-all shadow-md transform hover:scale-105"><i data-lucide="message-circle"></i> 1:1 카카오톡 문의하기</a>
             </div>
         </div>
     </section>
 
-    <!-- 푸터 -->
+    <!-- Footer -->
     <footer class="bg-gray-900 text-gray-400 py-16 text-sm font-body">
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="grid md:grid-cols-2 gap-12 mb-12">
-                <div>
-                    <h3 class="text-white text-2xl font-bold mb-4" style="font-family: 'Jalnan', sans-serif !important;">SecretClass</h3>
-                    <p class="mb-6 leading-relaxed opacity-70 break-keep">시크릿클래스는 여러분의 경제적 자유를 응원합니다.<br/>투자는 본인의 판단과 책임하에 이루어져야 하며,<br/>저희는 올바른 투자의 기준과 원칙을 제시합니다.</p>
-                </div>
-                <div class="md:text-right">
-                    <h4 class="text-white font-bold mb-4">Customer Center</h4>
-                    <p class="mb-1">010-8298-4024</p>
-                    <p class="opacity-60 mb-6">평일 10:00 - 18:00 (점심시간 12:00 - 13:00)</p>
-                    <div class="flex flex-col md:items-end gap-1 text-xs opacity-50">
-                        <p>상호명: 주식회사 아율 | 대표: 김아림</p>
-                        <p>사업자등록번호: 458-88-02428</p>
-                        <p>주소: 경기도 김포시 김포한강10로133번길 127</p>
-                    </div>
-                </div>
-            </div>
-            <div class="border-t border-gray-800 pt-8 text-center text-xs opacity-40">© 2025 SecretClass. All rights reserved.</div>
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <h3 class="text-white text-2xl font-bold mb-4" style="font-family: 'Jalnan', sans-serif !important;">SecretClass</h3>
+            <p>상호명: 주식회사 아율 | 대표: 김아림 | 사업자등록번호: 458-88-02428</p>
+            <p class="mt-4 text-xs opacity-40">© 2025 SecretClass. All rights reserved.</p>
         </div>
     </footer>
 
@@ -351,20 +315,17 @@
     <div id="loginModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="toggleModal('loginModal')">
         <div class="bg-white w-full max-w-md rounded-2xl p-8 shadow-2xl relative modal-content overflow-y-auto max-h-[90vh]" onclick="event.stopPropagation()">
             <button onclick="toggleModal('loginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900"><i data-lucide="x" class="h-6 w-6"></i></button>
-            
             <div class="flex border-b border-gray-200 mb-6">
                 <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-3 text-lg font-bold text-indigo-600 border-b-2 border-indigo-600">로그인</button>
                 <button id="tab-signup" onclick="switchAuthTab('signup')" class="flex-1 py-3 text-lg font-bold text-gray-400 hover:text-gray-600">회원가입</button>
             </div>
-
-            <!-- 로그인 폼 -->
+            <!-- Login Form -->
             <div id="form-login" class="space-y-4">
                 <div><label class="block text-sm font-bold text-gray-700 mb-1">아이디</label><input type="text" id="login-id" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none" placeholder="아이디"></div>
                 <div><label class="block text-sm font-bold text-gray-700 mb-1">비밀번호</label><input type="password" id="login-pw" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none" placeholder="비밀번호"></div>
                 <button onclick="processLogin()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-indigo-700 transition-colors shadow-sm mt-2">로그인</button>
             </div>
-
-            <!-- 회원가입 폼 -->
+            <!-- Signup Form -->
             <div id="form-signup" class="hidden space-y-3">
                 <div class="grid grid-cols-2 gap-3">
                     <div><label class="block text-xs font-bold text-gray-700 mb-1">아이디</label><input type="text" id="reg-id" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none"></div>
@@ -400,8 +361,8 @@
         </div>
     </div>
 
-    <!-- Deposit Modal -->
-    <div id="depositModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60" onclick="toggleModal('depositModal')"><div class="bg-white w-full max-w-md rounded-2xl p-8 relative" onclick="event.stopPropagation()"><button onclick="toggleModal('depositModal')" class="absolute top-4 right-4"><i data-lucide="x"></i></button><div class="text-center mb-6"><h3 class="text-2xl font-bold">무통장 입금</h3></div><div class="bg-gray-50 p-5 rounded-xl border mb-4"><p class="text-sm text-gray-500">기업은행</p><p class="font-bold text-lg text-indigo-600 cursor-pointer" onclick="navigator.clipboard.writeText('521-063745-04-011'); alert('복사됨');">521-063745-04-011 (주)아율</p></div><a href="https://naver.me/FeN7ayAf" target="_blank" onclick="localStorage.setItem('paymentStatus','pending'); location.reload();" class="block w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-center">신청서 작성하기</a></div></div>
+    <!-- Deposit Modal (네이버 폼 링크 작동) -->
+    <div id="depositModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60" onclick="toggleModal('depositModal')"><div class="bg-white w-full max-w-md rounded-2xl p-8 relative" onclick="event.stopPropagation()"><button onclick="toggleModal('depositModal')" class="absolute top-4 right-4"><i data-lucide="x"></i></button><div class="text-center mb-6"><h3 class="text-2xl font-bold">무통장 입금</h3></div><div class="bg-gray-50 p-5 rounded-xl border mb-4"><p class="text-sm text-gray-500">기업은행</p><p class="font-bold text-lg text-indigo-600 cursor-pointer" onclick="navigator.clipboard.writeText('521-063745-04-011'); alert('복사됨');">521-063745-04-011 (주)아율</p></div><a href="https://naver.me/FeN7ayAf" target="_blank" onclick="localStorage.setItem('paymentStatus','pending'); location.reload();" class="block w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-center hover:bg-indigo-700">신청서 작성하기</a></div></div>
 
     <!-- My Page Modal -->
     <div id="mypageModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60" onclick="toggleModal('mypageModal')"><div class="bg-white w-full max-w-lg rounded-2xl p-0 shadow-2xl overflow-hidden" onclick="event.stopPropagation()"><div class="p-6 border-b flex justify-between"><h3 class="text-xl font-bold">나의 강의실</h3><button onclick="toggleModal('mypageModal')"><i data-lucide="x"></i></button></div><div class="p-8"><div id="mypage-guest" class="text-center"><button onclick="toggleModal('mypageModal'); openLoginModal('login');" class="bg-indigo-600 text-white px-6 py-2 rounded">로그인</button></div><div id="user-info-card" class="hidden-section"><h4 class="font-bold text-lg"><span id="mp-username"></span>님</h4></div><div id="status-paid" class="hidden-section mt-6"><div class="bg-green-50 p-4 rounded text-green-700 font-bold mb-4">결제 완료</div><a href="https://open.kakao.com/o/sfyp9Qxh" target="_blank" class="block w-full bg-[#FEE500] text-center py-3 rounded font-bold">1:1 채팅방 입장</a></div><div id="status-pending" class="hidden-section mt-6"><div class="bg-yellow-50 p-4 rounded text-yellow-700 font-bold">입금 확인 중</div></div></div></div></div>
@@ -555,77 +516,12 @@
             },
             {
                 title: "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공!",
-                content: `안녕하세요!
-결혼을 준비하던 약 3년 전부터 부동산을 째려보던 제가
-시브님을 만나고 약 2주만에 서울에 내집 마련을 했습니다!
-성격이 좋게 말하면 꼼꼼하고 나쁘게 말하면 의사 결정을 잘 못내리는데,
-좋은 시기에 시브님을 만나 빠르게 의사결정 내려서 드디어 매수에 성공했습니다 :)
-
-평소 부동산 유튜브, 월부 커뮤니티 등 다양한 소스로 부동산 공부를 하다가,
-시브님의 칼럼을 읽고 앗 이분이다! 하는 생각이 들어
-시브님을 알게되고 바로 다음 날에 큐레이팅 컨설팅을 신청하였는데요!
-
-마포, 성동구를 째려보다가 매수 시기를 놓쳐 우울해 했었는데,
-저희 부부의 시드 및 상황을 빠르게 파악하시고
-저희가 가진 금액에서 접근할 수 있는 5개의 단지를 큐레이팅 해주셨습니다!
-
-처음 봤던 단지들이 대부분이라,
-중간에 제가 더 아파트를 서치해보았지만
-시브님이 정말 귀신같이(?) 더 나은 매물들만 골라주셨더라구요 ㅎㅎㅎ
-
-그래서 큐레이팅이 정말 많은 시간을 단축해주는구나! 하는 생각을 했고
-(진행하시는 분들은 믿고 가셔도 좋을 것 같습니다!!!)
-중간 중간 지금 더 찾을 때가 아니라 얼른 가서 임장하고 부동산 볼때다 라고 회초리(?)를 들어주신 것도
-밍기적 거리는 저에게 큰 도움이 됐습니다!
-
-말씀듣고 바로 다음 날 부동산 가서 봤던 매물을
-1015 대책 이후에 급매로 나와서 바로 잡을 수 있었습니다 ㅎㅎㅎ
-
-가장 추천 드리는 부분은 1) 예산에 맞는 최고의 단지를 추천해주시고
-2) 움직일 수 있도록 이끌어주시는 부분이고,
-
-저희 부부에게, 그리고 빠르게 매수가 필요했던 이번 시기에 너무 큰 도움을 받았습니다.
-
-결론적으로 결혼 2년 전부터 3년간 째려봤던 부동산을
-시브님을 만나고 2주 만에 매수 할 수 있게 되었습니다 :)
-
-+) 중간 중간 제 많은 질문들 답변 주셔서 감사드리며,
-좋은 물건 사고 싶으신 분들, 그리고 부린이라서 계약이 무서우신 분들께 강력 추천드립니다!
-
-감사합니다 시브님 :)
-(갈아타기때 또 뵙겠습니다!)`,
+                content: `안녕하세요! 결혼을 준비하던 약 3년 전부터 부동산을 째려보던 제가 시브님을 만나고 약 2주만에 서울에 내집 마련을 했습니다! 성격이 좋게 말하면 꼼꼼하고 나쁘게 말하면 의사 결정을 잘 못내리는데, 좋은 시기에 시브님을 만나 빠르게 의사결정 내려서 드디어 매수에 성공했습니다 :)\n가장 추천 드리는 부분은 1) 예산에 맞는 최고의 단지를 추천해주시고 2) 움직일 수 있도록 이끌어주시는 부분이고, 저희 부부에게, 그리고 빠르게 매수가 필요했던 이번 시기에 너무 큰 도움을 받았습니다.\n결론적으로 결혼 2년 전부터 3년간 째려봤던 부동산을\n시브님을 만나고 2주 만에 매수 할 수 있게 되었습니다 :)`,
                 author: "김아름님", date: "2025-11-04", rating: 5, badge: "BEST"
             },
             {
                 title: "큐레이팅 후기",
-                content: `안녕하세요 큐레이팅 후기를 남깁니다.
-저는 추석 연휴가 끝나고 큐레이팅을 시작해서 한 주만에 살던 집을 매도하고 새집을 매수하게 되었습니다.
-처음에 큐레이팅을 신청할 때는 '정말로 이번 기회에 매도와 매수를 해야겠다' 이런 생각보다는 그간에 부동산에 대해서 제가 생각했던
-시나리오를 누군가에게 검증 받아 보자라는 마음으로 시작했습니다.
-
-사실 부동산이라는 것이 예민한 주제라 주변인들과 적극적인 토론을 하기는 좀 꺼려지는 경향이 있고 인터넷 카페에 고민을 올려도
-고민에 댓글을 달아주는 분들의 상황이 다 저와 다르기 때문에 객관적인 상담은 어렵겠다고 생각했었습니다.
-
-이때 마침 친구가 추천해준 '나는 1000만원으로 아파트 산다'라는 책의 저자 시크릿브라더가 생각나서 제 손으로 유투브를 검색해서 찾아내고
-여기서 큐레이팅이 있다는 것을 보고 신청해서 상담을 받았습니다.
-
-결과는 대만족이었습니다. 사실 이번에 매수까지 성공하지 못했더라도 굉장히 만족스러운 상담이었다고 생각합니다.
-특히 저처럼 돌다리도 두드려보고 건너고 싶은 성격의 소유자이면서 또 남들이 하는 한마디에 맘이 크게 흔들릴 수 있는 분들에게 추천합니다.
-
-다들 마음속에 '이렇게 이렇게 해서 이런 아파트를 사는게 좋지 않을까?' 라는 막연한 시나리오 들은 있을 겁니다.
-이번에 큐레이팅을 받아 매도매수과정을 함께 해보니 이런 시나리오들을 행동으로 옮기는데
-혼자서 해봤다면 (정말 괜찮은 좋은 방향의 시나리오라도) 많은 장애물들을 넘지 못하고 실행하지 못 했을 수도 있었을 거란 생각이 듭니다.
-
-현황의 분석과 나라는 사람의 특수성을 고려한 제안들은 너무 좋았고 특히 직접 다른 사람들과 부딪히면서 해결해 나가게되는
-부동산에 매물을 올리는 과정, 네고, 계약서 작성등의 단계에서 혼자 있지 않다는 느낌을 받으며 실시간으로 상담받았던 기억이 지금도 생생합니다.
-
-집을 매수하거나 매도할 때 향후의 결과가 어떻게 될지는100% 예측할 수 있는 사람은 없을 거라고 생각합니다.
-짧은 부동산 경력이지만 저는 그렇기 때문에 결과가 좋다면 당연히 좋은거지만 결과가 좋지 않을 때에 대한 마음의 대비가 중요하다고 봅니다.
-그러한 마음의 대비는 만약에 시간이 지나 부동산 거래의 성적표가 도달했을 때도 '과거의 나로 돌아간다면 이런 생각과 결정이 그 상황의 나에게 있어선 최선이었어'라는
-본인을 납득시킬 수 있는 이유가 있어야한다고 생각합니다.
-
-이번 부동산 거래는 인생에 있어 2번째이지만 가장 큰 부동산 거래 였는데 앞으로 어떻게 될지는 100% 장담할 순 없을 것 같습니다.
-하지만 정말로 치열한 고민 끝에 내린 결정이었음을 이미 알고 있고 그러한 치열한 생각의 과정에서 옆에 있어 줬던 시크릿브라더에게 참 감사합니다.`,
+                content: `안녕하세요 큐레이팅 후기를 남깁니다.\n저는 추석 연휴가 끝나고 큐레이팅을 시작해서 한 주만에 살던 집을 매도하고 새집을 매수하게 되었습니다.\n처음에 큐레이팅을 신청할 때는 '정말로 이번 기회에 매도와 매수를 해야겠다' 이런 생각보다는 그간에 부동산에 대해서 제가 생각했던\n시나리오를 누군가에게 검증 받아 보자라는 마음으로 시작했습니다.\n\n사실 부동산이라는 것이 예민한 주제라 주변인들과 적극적인 토론을 하기는 좀 꺼려지는 경향이 있고 인터넷 카페에 고민을 올려도\n고민에 댓글을 달아주는 분들의 상황이 다 저와 다르기 때문에 객관적인 상담은 어렵겠다고 생각했었습니다.\n\n이때 마침 친구가 추천해준 '나는 1000만원으로 아파트 산다'라는 책의 저자 시크릿브라더가 생각나서 제 손으로 유투브를 검색해서 찾아내고\n여기서 큐레이팅이 있다는 것을 보고 신청해서 상담을 받았습니다.\n\n결과는 대만족이었습니다. 사실 이번에 매수까지 성공하지 못했더라도 굉장히 만족스러운 상담이었다고 생각합니다.\n특히 저처럼 돌다리도 두드려보고 건너고 싶은 성격의 소유자이면서 또 남들이 하는 한마디에 맘이 크게 흔들릴 수 있는 분들에게 추천합니다.\n\n다들 마음속에 '이렇게 이렇게 해서 이런 아파트를 사는게 좋지 않을까?' 라는 막연한 시나리오 들은 있을 겁니다.\n이번에 큐레이팅을 받아 매도매수과정을 함께 해보니 이런 시나리오들을 행동으로 옮기는데\n혼자서 해봤다면 (정말 괜찮은 좋은 방향의 시나리오라도) 많은 장애물들을 넘지 못하고 실행하지 못 했을 수도 있었을 거란 생각이 듭니다.\n\n이번 부동산 거래는 인생에 있어 2번째이지만 가장 큰 부동산 거래 였는데 앞으로 어떻게 될지는 100% 장담할 순 없을 것 같습니다.\n하지만 정말로 치열한 고민 끝에 내린 결정이었음을 이미 알고 있고 그러한 치열한 생각의 과정에서 옆에 있어 줬던 시크릿브라더에게 참 감사합니다.`,
                 author: "이민석님", date: "2025-10-27", rating: 5, badge: "BEST"
             }
         ];
