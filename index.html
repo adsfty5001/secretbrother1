@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>시크릿클래스 - 대한민국 1호 아파트 큐레이터 시크릿브라더</title>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 아이콘 -->
@@ -23,483 +24,280 @@
         .book-shadow { box-shadow: 10px 10px 30px rgba(0,0,0,0.5); }
         html { scroll-behavior: smooth; }
         .hidden-section { display: none !important; }
+        
+        /* 모바일 줄바꿈 방지 */
+        .break-keep { word-break: keep-all; word-wrap: break-word; }
+
         @keyframes modal-pop {
             0% { transform: scale(0.95); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
         .modal-content { animation: modal-pop 0.2s ease-out forwards; }
-        .break-keep { word-break: keep-all; word-wrap: break-word; }
+        
         .review-card { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .review-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        
+        /* 모달 스크롤바 커스텀 */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-track { background-color: #f1f5f9; }
-        .raw-content { line-height: 1.8; color: #374151; white-space: pre-wrap; }
-        .line-clamp-custom {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            white-space: pre-wrap;
-        }
+        
+        /* 후기 본문 스타일 (줄바꿈/태그 적용) */
+        .raw-content { line-height: 1.8; color: #374151; white-space: pre-wrap; font-size: 0.95rem; }
     </style>
-</head>
-<body class="bg-white text-gray-900 font-body">
+    
+    <!-- Firebase Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    <!-- 최상단 카운트다운 배너 -->
-    <div class="bg-red-600 text-white text-center py-3 text-sm md:text-base animate-pulse shadow-md z-50 relative break-keep px-4">
-        <span class="font-bold mr-1">🚨 마감 임박!</span> 이번 달 큐레이팅 마감까지 <span id="countdown-number" class="text-yellow-300 text-lg md:text-xl font-extrabold mx-1 bg-red-800 px-2 rounded inline-block">2</span>자리 남았습니다.
-    </div>
+        // Firebase 초기화
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-    <!-- 헤더 -->
-    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm transition-all duration-300">
-        <div class="border-b border-gray-100 bg-gray-50">
-            <div class="max-w-6xl mx-auto px-4 py-2 flex justify-end items-center gap-4 text-xs text-gray-500 font-normal">
-                <div id="auth-guest" class="flex items-center gap-4">
-                    <button onclick="window.openLoginModal('login')" class="hover:text-indigo-600 transition-colors">로그인</button>
-                    <span class="text-gray-300">|</span>
-                    <button onclick="window.openLoginModal('signup')" class="hover:text-indigo-600 transition-colors">회원가입</button>
-                </div>
-                <div id="auth-user" class="hidden-section flex items-center gap-4">
-                    <span class="text-gray-700 font-bold"><span id="user-name" class="text-indigo-600">홍길동</span>님 환영합니다</span>
-                    <span class="text-gray-300">|</span>
-                    <button onclick="window.handleLogout()" class="hover:text-red-500 transition-colors">로그아웃</button>
-                </div>
-                <span class="text-gray-300">|</span>
-                <button onclick="window.toggleModal('mypageModal'); window.checkLoginStatus();" class="hover:text-indigo-600 transition-colors font-bold text-indigo-600">나의강의실</button>
-            </div>
-        </div>
-        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex justify-between items-center w-full md:w-auto">
-                <div class="text-left cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-                    <div class="text-xl md:text-2xl font-bold text-indigo-900 tracking-tighter" style="font-family: 'Jalnan', sans-serif !important;">시크릿클래스</div>
-                    <div class="text-[10px] text-indigo-400 tracking-[0.3em] font-light">SECRETCLASS</div>
-                </div>
-                <div class="md:hidden">
-                    <button onclick="window.toggleMobileMenu()"><i data-lucide="menu" class="h-7 w-7 text-gray-800"></i></button>
-                </div>
-            </div>
-            
-            <div class="hidden md:flex gap-8 text-gray-700 font-medium">
-                <button onclick="window.scrollToSection('about')" class="hover:text-indigo-600 transition-colors">소개</button>
-                <button onclick="window.scrollToSection('curriculum')" class="hover:text-indigo-600 transition-colors">진행과정</button>
-                <button onclick="window.scrollToSection('pricing')" class="hover:text-indigo-600 transition-colors">수강신청</button>
-                <button onclick="window.scrollToSection('reviews')" class="hover:text-indigo-600 transition-colors">강의후기</button>
-                <button onclick="window.scrollToSection('faq')" class="hover:text-indigo-600 transition-colors">고객센터</button>
-            </div>
-        </div>
-        <div id="mobileMenu" class="hidden md:hidden bg-white border-t border-gray-100 shadow-lg absolute w-full left-0 z-50">
-            <button onclick="window.scrollToSection('about')" class="block w-full text-left py-4 px-6 text-gray-700 border-b border-gray-50 hover:bg-gray-50">소개</button>
-            <button onclick="window.scrollToSection('curriculum')" class="block w-full text-left py-4 px-6 text-gray-700 border-b border-gray-50 hover:bg-gray-50">진행과정</button>
-            <button onclick="window.scrollToSection('pricing')" class="block w-full text-left py-4 px-6 text-gray-700 border-b border-gray-50 hover:bg-gray-50">수강신청</button>
-            <button onclick="window.scrollToSection('reviews')" class="block w-full text-left py-4 px-6 text-gray-700 border-b border-gray-50 hover:bg-gray-50">강의후기</button>
-            <button onclick="window.scrollToSection('faq')" class="block w-full text-left py-4 px-6 text-gray-700 border-b border-gray-50 hover:bg-gray-50">고객센터</button>
-            <button onclick="window.toggleModal('mypageModal'); window.checkLoginStatus();" class="block w-full text-left py-4 px-6 text-indigo-600 font-bold border-b border-gray-50 bg-indigo-50">나의강의실</button>
-        </div>
-    </header>
+        // 1. 인증 처리
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                console.log("Firebase Auth Success");
+                
+                // 로그인 상태 체크 (세션 스토리지 기반 - 앱 로그인)
+                window.checkLoginStatus();
+                // 베스트 후기 렌더링 (인증 완료 후 실행 권장)
+                renderBestReviews();
+            } catch (error) {
+                console.error("Auth Error:", error);
+            }
+        };
+        initAuth();
 
-    <!-- 메인 배너 -->
-    <section class="relative overflow-hidden group bg-gray-900 min-h-[600px] flex items-center">
-        <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-[#1e293b] to-indigo-950 z-0"></div>
-        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 z-0"></div>
-        <div class="max-w-6xl mx-auto px-4 w-full flex flex-col md:flex-row items-center justify-between gap-10 md:gap-8 relative z-10 py-16 md:py-0">
-            <div class="text-center md:text-left z-10 w-full md:w-[60%] text-white flex flex-col justify-center">
-                <div class="mb-6 inline-block px-4 py-1.5 bg-indigo-500/20 backdrop-blur-md rounded-full text-xs md:text-sm font-bold border border-indigo-400/30 text-indigo-300">
-                    🏆 대한민국 1호 아파트 큐레이터
-                </div>
-                <h1 class="text-3xl sm:text-5xl md:text-6xl lg:text-[4rem] font-extrabold mb-6 leading-snug md:leading-tight tracking-tight text-glow break-keep" style="font-family: 'Jalnan', sans-serif !important;">
-                    부동산 유목민의<br>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500">마지막 종착지!</span>
-                </h1>
-                <div class="text-base md:text-2xl text-gray-300 mb-10 font-light leading-relaxed space-y-2 break-keep font-body">
-                    <p>김작가TV, 신사임당, 월부 등 압도적 초청!</p>
-                    <p><strong class="font-bold text-white border-b-2 border-indigo-500 pb-1">내 집 마련과 투자의 완결</strong>을 설계합니다.</p>
-                </div>
-                <button onclick="window.scrollToSection('pricing')" class="px-8 py-4 md:px-10 md:py-5 rounded-full font-bold text-lg md:text-xl shadow-[0_0_20px_rgba(79,70,229,0.5)] hover:shadow-[0_0_30px_rgba(79,70,229,0.7)] transition-all transform hover:-translate-y-1 self-center md:self-start bg-indigo-600 text-white flex items-center gap-3 border border-indigo-400/30">
-                    지금 바로 시작하기 <i data-lucide="arrow-right" class="w-6 h-6"></i>
-                </button>
-            </div>
-            
-            <div class="w-full md:w-[40%] flex justify-center z-10 relative h-64 md:h-full items-center">
-                <div class="relative w-full h-full flex items-center justify-center group">
-                    <div class="absolute w-64 h-64 md:w-80 md:h-80 bg-indigo-500/30 rounded-full blur-[60px] md:blur-[80px] animate-pulse"></div>
-                    <a href="https://www.yes24.com/product/goods/104491194" target="_blank" class="absolute w-36 md:w-48 lg:w-60 transform -rotate-[15deg] -translate-x-10 md:-translate-x-14 translate-y-4 hover:rotate-0 hover:scale-110 hover:z-30 transition-all duration-500 shadow-2xl cursor-pointer z-10">
-                        <img src="https://image.yes24.com/goods/104491194/XL" alt="나는 1000만원으로 아파트 산다" class="w-full rounded-r-xl book-shadow border-l-2 border-gray-600">
-                    </a>
-                    <a href="https://www.yes24.com/product/goods/122689813" target="_blank" class="absolute w-36 md:w-48 lg:w-60 transform rotate-[5deg] translate-x-8 md:translate-x-10 -translate-y-4 hover:rotate-0 hover:scale-110 hover:z-30 transition-all duration-500 shadow-2xl cursor-pointer z-20">
-                        <img src="https://image.yes24.com/goods/122689813/XL" alt="돈 버는 뇌 못 버는 뇌" class="w-full rounded-r-xl book-shadow border-l-2 border-gray-600">
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
+        // 2. 전역 함수 설정 (HTML onclick 연동)
+        
+        // --- UI 제어 함수 ---
+        window.toggleModal = function(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('hidden');
+        };
 
-    <!-- About Section -->
-    <section id="about" class="py-20 md:py-24 bg-white">
-         <div class="max-w-6xl mx-auto px-4">
-            <div class="flex flex-col lg:flex-row items-start gap-12 lg:gap-16">
-                <div class="w-full lg:w-1/2 relative lg:sticky lg:top-24">
-                    <div class="bg-gray-50 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 relative overflow-hidden shadow-xl border border-gray-200">
-                        <div class="aspect-[4/5] bg-gray-200 rounded-xl md:rounded-2xl flex items-center justify-center mb-6 overflow-hidden relative group border-2 border-gray-300">
-                            <img src="./3.jpg" alt="시크릿브라더 프로필" class="absolute inset-0 w-full h-full object-cover rounded-xl md:rounded-2xl">
-                        </div>
-                        <div class="absolute top-8 right-8 md:top-12 md:right-12 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg border border-gray-100 text-sm font-bold text-indigo-600 flex items-center gap-2 animate-bounce">
-                            <i data-lucide="star" class="w-4 h-4 fill-current"></i> 부동산 강의 경력만 6년 <i data-lucide="star" class="w-4 h-4 fill-current"></i>
-                        </div>
-                    </div>
-                </div>
+        window.openImageModal = function(src) {
+            document.getElementById('modal-image-src').src = src;
+            window.toggleModal('imageModal');
+        };
 
-                <div class="w-full lg:w-1/2 pt-0 lg:pt-4">
-                    <div class="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold mb-4">WHO AM I</div>
-                    <h2 class="text-3xl md:text-4xl font-extrabold mb-6 text-gray-900 leading-snug break-keep" style="font-family: 'Jalnan', sans-serif !important;">
-                        '아파트 큐레이터'<br/>
-                        <span class="text-indigo-600 relative inline-block">
-                            시크릿브라더
-                            <svg class="absolute bottom-1 left-0 w-full h-3 -z-10 bg-yellow-200/60" style="border-radius: 4px;"></svg>
-                        </span>입니다.
-                    </h2>
-                    
-                    <div class="text-gray-600 text-base md:text-lg leading-relaxed mb-8 space-y-4 border-l-4 border-gray-200 pl-6 break-keep font-body">
-                        <p class="font-bold text-gray-800">"아직도 살지 말지 고민하시나요?"</p>
-                        <p>저는 대한민국 1호 ‘초이스헬퍼’로서 여러분의 후회 없는 선택을 설계해드리고 있습니다.</p>
-                        <p>수많은 아파트와 뉴스 속에서 혼자 고민하지 마세요. 실제 투자와 상담으로 검증된 인사이트로, 당신에게 맞는 한 채를 함께 고르겠습니다.</p>
-                    </div>
+        window.scrollToSection = function(id) {
+            const el = document.getElementById(id);
+            if(el) el.scrollIntoView({behavior:'smooth'});
+        };
 
-                    <div class="space-y-3 bg-gray-50 p-5 md:p-6 rounded-xl border border-gray-100 mb-8 font-body">
-                        <h4 class="font-bold text-gray-900 mb-4 flex items-center gap-2"><i data-lucide="award" class="w-5 h-5 md:w-6 md:h-6 text-yellow-500 fill-current"></i> 주요 경력 및 활동</h4>
-                        <button onclick="window.openImageModal('./1.jpg')" class="w-full flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100 text-left">
-                            <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">1</span>
-                            <span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-indigo-600 break-keep flex-grow">서울머니쇼 초청강사</span>
-                            <i data-lucide="image" class="w-4 h-4 text-gray-400 opacity-50 group-hover:opacity-100"></i>
-                        </button>
-                        <a href="https://youtu.be/Xg5GV-b-7rU?si=_h20A9yTGwFsOwSz" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100">
-                            <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">2</span>
-                            <span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-red-600 break-keep">김작가TV & 신사임당 & 월부 채널 출연</span>
-                            <i data-lucide="youtube" class="w-4 h-4 text-red-500 ml-auto group-hover:scale-110 transition-transform"></i>
-                        </a>
-                        <a href="https://blog.naver.com/secret-brother" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100">
-                            <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">3</span>
-                            <div class="flex flex-col">
-                                <span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-green-600 break-keep">누적 방문자 200만 블로거</span>
-                                <span class="text-xs text-gray-400 font-medium group-hover:text-green-500 break-keep">(성공한 형의 비밀일기장)</span>
-                            </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-gray-400 ml-auto opacity-50 group-hover:opacity-100"></i>
-                        </a>
-                        <a href="https://www.youtube.com/@secretbrother_official" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100">
-                            <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">4</span>
-                            <span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-red-600 break-keep">시크릿브라더 유튜브 채널 운영</span>
-                            <i data-lucide="external-link" class="w-4 h-4 text-gray-400 ml-auto opacity-50 group-hover:opacity-100"></i>
-                        </a>
-                        <a href="https://cafe.naver.com/f-e/cafes/12730407/members/NLGMlLKgwIgd43sXBQbqw63HggHmL08BGrf6Q6JMNJM?tab=articles" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100">
-                            <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">5</span>
-                            <span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-green-600 break-keep">부동산스터디카페 인기 칼럼리스트</span>
-                            <i data-lucide="external-link" class="w-4 h-4 text-gray-400 ml-auto opacity-50 group-hover:opacity-100"></i>
-                        </a>
-                    </div>
-                    <button onclick="window.toggleModal('videoModal')" class="w-full md:w-auto px-8 py-4 bg-gray-900 text-white rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-800 transition-all shadow-lg"><i data-lucide="play-circle" class="w-6 h-6"></i> 시크릿브라더 대표 영상 보기</button>
-                </div>
-            </div>
-        </div>
-    </section>
+        window.toggleMobileMenu = function() {
+            document.getElementById('mobileMenu').classList.toggle('hidden');
+        };
 
-    <!-- 1:1 큐레이팅 프로세스 -->
-    <section id="curriculum" class="py-24 bg-gray-900 text-white relative">
-        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10"></div>
-        <div class="max-w-6xl mx-auto px-4 relative z-10">
-            <div class="text-center mb-16 animate-fade-up">
-                <span class="text-indigo-400 font-bold tracking-widest text-sm mb-4 block">SYSTEM</span>
-                <h2 class="text-3xl md:text-4xl font-bold mb-4 break-keep" style="font-family: 'Jalnan', sans-serif !important;">1:1 큐레이팅 프로세스</h2>
-                <p class="text-gray-400 text-base md:text-lg break-keep font-body">체계적인 4단계 시스템으로 당신의 내 집 마련을 완성합니다.</p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative font-body">
-                <div class="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-gradient-to-r from-gray-800 via-indigo-600 to-gray-800 z-0"></div>
-                <div class="relative z-10 bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 text-center hover:-translate-y-3 transition-all duration-300 group"><div class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-3xl mx-auto mb-6 shadow-[0_0_15px_rgba(79,70,229,0.5)] ring-4 ring-gray-900 group-hover:ring-indigo-400 transition-all">1</div><h3 class="text-xl font-bold mb-4">사전 설문</h3><p class="text-gray-400 text-sm leading-relaxed break-keep">투자 성향 및 자산 현황을<br>정밀하게 진단합니다.</p></div>
-                <div class="relative z-10 bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 text-center hover:-translate-y-3 transition-all duration-300 group"><div class="w-20 h-20 bg-indigo-700 rounded-full flex items-center justify-center text-white font-bold text-3xl mx-auto mb-6 shadow-[0_0_15px_rgba(67,56,202,0.5)] ring-4 ring-gray-900 group-hover:ring-indigo-400 transition-all">2</div><h3 class="text-xl font-bold mb-4">맞춤 분석</h3><p class="text-gray-400 text-sm leading-relaxed break-keep">최적의 지역과 단지를 선정하고<br>포트폴리오를 설계합니다.</p></div>
-                <div class="relative z-10 bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 text-center hover:-translate-y-3 transition-all duration-300 group"><div class="w-20 h-20 bg-indigo-800 rounded-full flex items-center justify-center text-white font-bold text-3xl mx-auto mb-6 shadow-[0_0_15px_rgba(55,48,163,0.5)] ring-4 ring-gray-900 group-hover:ring-indigo-400 transition-all">3</div><h3 class="text-xl font-bold mb-4">1:1 밀착 상담</h3><p class="text-gray-400 text-sm leading-relaxed break-keep">7일간 카카오톡을 통해<br>실시간 솔루션을 제공합니다.</p></div>
-                <div class="relative z-10 bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 text-center hover:-translate-y-3 transition-all duration-300 group"><div class="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center text-indigo-900 font-bold text-3xl mx-auto mb-6 shadow-[0_0_15px_rgba(234,179,8,0.5)] ring-4 ring-gray-900 group-hover:ring-yellow-300 transition-all">4</div><h3 class="text-xl font-bold mb-4 text-yellow-400">실행 및 관리</h3><p class="text-gray-400 text-sm leading-relaxed break-keep">매수 타이밍 설정 및<br>향후 방향성까지 제시합니다.</p></div>
-            </div>
-        </div>
-    </section>
+        window.toggleFaq = function(btn) {
+            const ans = btn.nextElementSibling;
+            const icon = btn.querySelector('svg');
+            ans.classList.toggle('hidden');
+            icon.style.transform = ans.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+        };
 
-    <!-- Pricing -->
-    <section id="pricing" class="py-24 bg-white">
-        <div class="max-w-4xl mx-auto px-4 text-center">
-            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6" style="font-family: 'Jalnan', sans-serif !important;">수강 신청</h2>
-            <div class="bg-white rounded-3xl p-8 md:p-14 shadow-xl border border-gray-100 relative overflow-hidden ring-1 ring-indigo-50">
-                <div class="absolute top-0 left-0 w-full h-3 bg-indigo-600"></div>
-                <div class="mb-8"><span class="inline-block py-1 px-3 rounded-full text-xs font-bold mb-4 bg-indigo-100 text-indigo-700">PREMIUM SERVICE</span><h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 font-body">1:1 맞춤형 투자 큐레이팅</h3><p class="text-gray-500 max-w-lg mx-auto leading-relaxed text-sm md:text-base break-keep font-body">당신의 자산 상황과 목표에 맞춘 100% 개인화 포트폴리오 제안 및 심층 상담</p></div>
-                <!-- 할인율 -->
-                <div class="flex flex-col items-center justify-center mb-10 pb-10 border-b border-gray-100 font-body">
-                    <div class="flex items-center gap-3 mb-2">
-                        <span class="text-gray-400 text-xl line-through decoration-red-400 decoration-2">699,000원</span>
-                        <span class="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">50% OFF</span>
-                    </div>
-                    <span class="text-5xl font-extrabold text-indigo-600">349,000원</span>
-                </div>
-                <div class="flex flex-col gap-3 font-body">
-                    <a href="https://portone.io/korea/ko" target="_blank" onclick="window.checkPaymentLink(event, this.href)" class="block w-full py-5 rounded-xl font-bold text-lg bg-gray-900 text-white hover:bg-gray-800 flex justify-center items-center gap-2"><i data-lucide="credit-card"></i> 카드 / 간편결제 신청하기</a>
-                    <button onclick="window.toggleModal('depositModal')" class="block w-full py-4 rounded-xl font-bold text-lg border-2 border-gray-200 text-gray-600 hover:border-indigo-500 hover:text-indigo-600 flex justify-center items-center gap-2"><i data-lucide="wallet"></i> 무통장 입금 신청하기</button>
-                </div>
-                <p class="mt-4 text-xs text-gray-400">* KG이니시스 결제 페이지로 이동합니다.</p>
-            </div>
-        </div>
-    </section>
+        // --- 로그인/회원가입 관련 ---
+        window.openLoginModal = function(tab) {
+            window.toggleModal('loginModal');
+            window.switchAuthTab(tab);
+        };
 
-    <!-- Review Section (BEST만) -->
-    <section id="reviews" class="py-24 bg-gray-50">
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="text-center mb-16">
-                <span class="text-indigo-600 font-bold tracking-widest text-sm mb-4 block">REVIEWS</span>
-                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2" style="font-family: 'Jalnan', sans-serif !important;">수강생 리얼 후기</h2>
-                <p class="text-gray-600 text-lg font-body">조작 없는 100% 실제 수강생들의 이야기입니다.</p>
-            </div>
-            <!-- BEST List -->
-            <div class="mb-12">
-                <h3 class="text-2xl font-bold text-gray-800 mb-8 flex items-center justify-center gap-2"><i data-lucide="trophy" class="text-yellow-500 fill-current w-8 h-8"></i> 명예의 전당 (BEST)</h3>
-                <div id="best-reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-            </div>
-            <!-- 전체 보기 링크 -->
-            <div class="text-center mt-12">
-                <a href="all_reviews.html" class="inline-flex items-center gap-2 bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white px-12 py-5 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-xl group break-keep">실시간 전체 후기 보러가기 (최신순) <i data-lucide="arrow-right" class="group-hover:translate-x-1 transition-transform"></i></a>
-                <p class="text-gray-400 text-sm mt-3">지금 이 순간에도 후기가 올라오고 있습니다!</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- FAQ -->
-    <section id="faq" class="py-24 bg-indigo-50">
-        <div class="max-w-3xl mx-auto px-4 text-center">
-            <h2 class="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12" style="font-family: 'Jalnan', sans-serif !important;">고객센터 (FAQ)</h2>
-            <div class="space-y-4 mb-12 font-body text-left">
-                <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                    <button onclick="window.toggleFaq(this)" class="w-full flex justify-between items-center p-6 text-left focus:outline-none">
-                        <div class="flex items-center gap-4"><span class="text-indigo-600 font-extrabold text-xl">Q</span><span class="font-bold text-gray-800 text-lg">큐레이팅 진행 방식이 어떻게 되나요?</span></div>
-                        <i data-lucide="chevron-down" class="h-5 w-5 text-gray-400 transform transition-transform duration-300"></i>
-                    </button>
-                    <div class="hidden p-6 pt-0 pl-16 bg-white text-gray-600 leading-relaxed border-t border-dashed border-gray-100 mt-2 break-keep">결제 후 사전 설문지를 작성해주시면, 시크릿브라더가 직접 분석 후 7일간 카카오톡을 통해 실시간으로 1:1 상담과 솔루션을 제공해드립니다.</div>
-                </div>
-                <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                    <button onclick="window.toggleFaq(this)" class="w-full flex justify-between items-center p-6 text-left focus:outline-none">
-                        <div class="flex items-center gap-4"><span class="text-indigo-600 font-extrabold text-xl">Q</span><span class="font-bold text-gray-800 text-lg">결제 후 언제부터 상담이 시작되나요?</span></div>
-                        <i data-lucide="chevron-down" class="h-5 w-5 text-gray-400 transform transition-transform duration-300"></i>
-                    </button>
-                    <div class="hidden p-6 pt-0 pl-16 bg-white text-gray-600 leading-relaxed border-t border-dashed border-gray-100 mt-2 break-keep">결제 완료 후 24시간 이내에 해피콜(또는 안내 문자)을 드리며, 고객님의 일정에 맞춰 상담 시작일을 조율합니다.</div>
-                </div>
-            </div>
-            <a href="https://open.kakao.com/o/sheKqImd" target="_blank" class="inline-flex items-center gap-2 bg-[#FEE500] text-[#3c1e1e] border-2 border-[#FEE500] px-8 py-4 rounded-full font-bold text-lg hover:bg-[#fdd835] shadow-md transform hover:scale-105"><i data-lucide="message-circle"></i> 1:1 카카오톡 문의하기</a>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-gray-400 py-16 text-sm font-body">
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="grid md:grid-cols-2 gap-12 mb-12">
-                <div>
-                    <h3 class="text-white text-2xl font-bold mb-4" style="font-family: 'Jalnan', sans-serif !important;">SecretClass</h3>
-                    <p class="mb-6 leading-relaxed opacity-70 break-keep">시크릿클래스는 여러분의 경제적 자유를 응원합니다.<br/>투자는 본인의 판단과 책임하에 이루어져야 하며,<br/>저희는 올바른 투자의 기준과 원칙을 제시합니다.</p>
-                </div>
-                <div class="md:text-right">
-                    <h4 class="text-white font-bold mb-4">Customer Center</h4>
-                    <p class="mb-1">010-8298-4024</p>
-                    <p class="opacity-60 mb-6">평일 10:00 - 18:00 (점심시간 12:00 - 13:00)</p>
-                    <div class="flex flex-col md:items-end gap-1 text-xs opacity-50">
-                        <p>상호명: 주식회사 아율 | 대표: 김아림</p>
-                        <p>사업자등록번호: 458-88-02428</p>
-                        <p>주소: 경기도 김포시 김포한강10로133번길 127</p>
-                    </div>
-                </div>
-            </div>
-            <div class="border-t border-gray-800 pt-8 text-center text-xs opacity-40">© 2025 SecretClass. All rights reserved.</div>
-        </div>
-    </footer>
-
-    <!-- 통합 로그인/회원가입 모달 -->
-    <div id="loginModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="window.toggleModal('loginModal')">
-        <div class="bg-white w-full max-w-md rounded-2xl p-8 shadow-2xl relative modal-content overflow-y-auto max-h-[90vh]" onclick="event.stopPropagation()">
-            <button onclick="window.toggleModal('loginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900"><i data-lucide="x" class="h-6 w-6"></i></button>
-            <div class="flex border-b border-gray-200 mb-6">
-                <button id="tab-login" onclick="window.switchAuthTab('login')" class="flex-1 py-3 text-lg font-bold text-indigo-600 border-b-2 border-indigo-600">로그인</button>
-                <button id="tab-signup" onclick="window.switchAuthTab('signup')" class="flex-1 py-3 text-lg font-bold text-gray-400 hover:text-gray-600">회원가입</button>
-            </div>
-            <!-- Login Form -->
-            <div id="form-login" class="space-y-4">
-                <div><label class="block text-sm font-bold text-gray-700 mb-1">아이디</label><input type="text" id="login-id" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none" placeholder="아이디"></div>
-                <div><label class="block text-sm font-bold text-gray-700 mb-1">비밀번호</label><input type="password" id="login-pw" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none" placeholder="비밀번호"></div>
-                <button onclick="window.processLogin()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-indigo-700 transition-colors shadow-sm mt-2">로그인</button>
-            </div>
-            <!-- Signup Form -->
-            <div id="form-signup" class="hidden space-y-3">
-                <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block text-xs font-bold text-gray-700 mb-1">아이디</label><input type="text" id="reg-id" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none"></div>
-                    <div><label class="block text-xs font-bold text-gray-700 mb-1">비밀번호</label><input type="password" id="reg-pw" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none"></div>
-                </div>
-                <div><label class="block text-xs font-bold text-gray-700 mb-1">이름</label><input type="text" id="reg-name" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none"></div>
-                <div><label class="block text-xs font-bold text-gray-700 mb-1">핸드폰 번호</label><input type="tel" id="reg-phone" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none"></div>
-                <div><label class="block text-xs font-bold text-gray-700 mb-1">이메일 주소</label><input type="email" id="reg-email" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none"></div>
-                <div><label class="block text-xs font-bold text-gray-700 mb-1">가입 경로</label><select id="reg-source" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none bg-white"><option value="">선택해주세요</option><option value="blog">블로그</option><option value="youtube">유튜브</option><option value="friend">지인 추천</option><option value="search">검색/기타</option></select></div>
-                <div class="pt-2 border-t border-gray-100 mt-2"><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="reg-agree" class="w-4 h-4 text-indigo-600 rounded border-gray-300"><span class="text-xs text-gray-600">[필수] 개인정보 수집 및 이용에 동의합니다.</span></label></div>
-                <button onclick="window.processSignup()" class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold text-lg hover:bg-gray-800 transition-colors shadow-sm mt-2">회원가입 완료</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Review Detail Modal (메인) -->
-    <div id="reviewDetailModal" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="window.toggleModal('reviewDetailModal')">
-        <div class="bg-white w-full max-w-2xl max-h-[85vh] rounded-2xl shadow-2xl relative overflow-hidden flex flex-col" onclick="event.stopPropagation()">
-            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-shrink-0">
-                <h3 class="text-lg font-bold text-gray-900">후기 상세 보기</h3>
-                <button onclick="window.toggleModal('reviewDetailModal')" class="text-gray-400 hover:text-gray-600"><i data-lucide="x"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto custom-scrollbar font-body flex-grow">
-                <div class="flex items-center gap-2 mb-4"><span id="modal-review-badge" class="bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded hidden">BEST</span></div>
-                <h2 id="modal-review-title" class="text-xl font-bold text-gray-900 mb-6 leading-snug"></h2>
-                <div id="modal-review-content" class="text-gray-700 leading-relaxed whitespace-pre-wrap mb-8 text-base raw-content"></div>
-                <div class="flex items-center justify-between pt-4 border-t border-gray-100 text-sm text-gray-500">
-                    <div class="flex items-center gap-2"><span class="font-bold" id="modal-review-author"></span><span class="text-xs text-gray-400">|</span><span id="modal-review-date"></span></div>
-                    <div class="flex items-center gap-1"><i data-lucide="eye" class="w-4 h-4"></i> <span id="modal-views"></span></div>
-                </div>
-            </div>
-            <div class="p-4 border-t border-gray-100 bg-gray-50 text-center flex-shrink-0"><button onclick="window.toggleModal('reviewDetailModal')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors">닫기</button></div>
-        </div>
-    </div>
-
-    <!-- Deposit Modal (네이버 폼 링크 수정) -->
-    <div id="depositModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60" onclick="window.toggleModal('depositModal')"><div class="bg-white w-full max-w-md rounded-2xl p-8 relative" onclick="event.stopPropagation()"><button onclick="window.toggleModal('depositModal')" class="absolute top-4 right-4"><i data-lucide="x"></i></button><div class="text-center mb-6"><h3 class="text-2xl font-bold">무통장 입금</h3></div><div class="bg-gray-50 p-5 rounded-xl border mb-4"><p class="text-sm text-gray-500">기업은행</p><p class="font-bold text-lg text-indigo-600 cursor-pointer" onclick="navigator.clipboard.writeText('521-063745-04-011'); alert('복사됨');">521-063745-04-011 (주)아율</p></div><a href="https://naver.me/FeN7ayAf" target="_blank" onclick="window.requestDeposit()" class="block w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-center hover:bg-indigo-700">신청서 작성하기</a></div></div>
-
-    <!-- My Page Modal -->
-    <div id="mypageModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60" onclick="window.toggleModal('mypageModal')"><div class="bg-white w-full max-w-lg rounded-2xl p-0 shadow-2xl overflow-hidden" onclick="event.stopPropagation()"><div class="p-6 border-b flex justify-between"><h3 class="text-xl font-bold">나의 강의실</h3><button onclick="window.toggleModal('mypageModal')"><i data-lucide="x"></i></button></div><div class="p-8"><div id="mypage-guest" class="text-center"><button onclick="window.toggleModal('mypageModal'); window.openLoginModal('login');" class="bg-indigo-600 text-white px-6 py-2 rounded">로그인</button></div><div id="user-info-card" class="hidden-section"><h4 class="font-bold text-lg"><span id="mp-username"></span>님</h4></div>
-    <!-- 결제 상태에 따른 메시지 (JS에서 제어) -->
-    <div id="mypage-user-unpaid" class="hidden-section text-center mt-6">
-        <p class="font-bold mb-2 text-gray-800">신청하신 내역이 없습니다.</p>
-        <p class="text-sm text-gray-500 mb-4">시크릿클래스의 큐레이팅을 경험해보세요.</p>
-        <button onclick="window.toggleModal('mypageModal'); window.scrollToSection('pricing');" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700">서비스 신청하기</button>
-    </div>
-    <div id="status-paid" class="hidden-section mt-6">
-        <div class="bg-green-50 p-4 rounded-xl border border-green-200 text-green-700 font-bold mb-4 flex items-center justify-center gap-2"><i data-lucide="check-circle" class="w-5 h-5"></i> 결제 완료되었습니다.</div>
-        <a href="https://open.kakao.com/o/sfyp9Qxh" target="_blank" class="block w-full bg-[#FEE500] text-[#3c1e1e] text-center py-4 rounded-xl font-bold hover:bg-[#fdd835] shadow-sm flex items-center justify-center gap-2"><i data-lucide="message-circle" class="w-5 h-5"></i> 1:1 채팅방 입장하기</a>
-    </div>
-    <div id="status-pending" class="hidden-section mt-6">
-        <div class="bg-yellow-50 p-6 rounded-xl border border-yellow-200 text-center">
-            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm text-2xl">⏳</div>
-            <h4 class="font-bold text-gray-800 mb-1">입금 확인 중입니다.</h4>
-            <p class="text-sm text-gray-500">담당자가 내역 확인 후<br>문자로 입장 안내를 드립니다.</p>
-        </div>
-    </div>
-    </div></div></div>
-
-    <!-- Other Modals -->
-    <div id="imageModal" class="hidden fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/90" onclick="window.toggleModal('imageModal')"><div class="relative max-w-4xl" onclick="event.stopPropagation()"><button onclick="window.toggleModal('imageModal')" class="absolute -top-10 right-0 text-white"><i data-lucide="x"></i></button><img id="modal-image-src" src="" class="max-h-[85vh] rounded-lg"></div></div>
-    <div id="videoModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90" onclick="window.toggleModal('videoModal')"><div class="relative w-full max-w-4xl aspect-video bg-black rounded-2xl overflow-hidden" onclick="event.stopPropagation()"><button onclick="window.toggleModal('videoModal')" class="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2"><i data-lucide="x"></i></button><iframe class="w-full h-full" src="https://www.youtube.com/embed/j0hFCMX5Qlc"></iframe></div></div>
-
-    <script>
-        // 전역 함수 설정 (window 객체에 할당)
-        window.lucide = lucide; 
-        window.toggleModal = function(id) { const el = document.getElementById(id); if(el) el.classList.toggle('hidden'); };
-        window.openImageModal = function(src) { document.getElementById('modal-image-src').src = src; window.toggleModal('imageModal'); };
-        window.scrollToSection = function(id) { document.getElementById(id).scrollIntoView({behavior:'smooth'}); };
-        window.openLoginModal = function(tab) { window.toggleModal('loginModal'); window.switchAuthTab(tab); };
         window.switchAuthTab = function(tab) {
-            if(tab === 'login') { document.getElementById('form-login').classList.remove('hidden'); document.getElementById('form-signup').classList.add('hidden'); document.getElementById('tab-login').classList.add('text-indigo-600', 'border-b-2', 'border-indigo-600'); document.getElementById('tab-signup').classList.remove('text-indigo-600', 'border-b-2'); }
-            else { document.getElementById('form-signup').classList.remove('hidden'); document.getElementById('form-login').classList.add('hidden'); document.getElementById('tab-signup').classList.add('text-indigo-600', 'border-b-2', 'border-indigo-600'); document.getElementById('tab-login').classList.remove('text-indigo-600', 'border-b-2'); }
-        };
-        window.toggleMobileMenu = function() { document.getElementById('mobileMenu').classList.toggle('hidden'); };
-        window.copyAccount = function() { navigator.clipboard.writeText("521-063745-04-011"); alert("계좌번호 복사완료"); };
-        window.checkPaymentLink = function(e, href) { if(href.includes('portone')) { e.preventDefault(); window.open(href); alert("결제 링크를 복사해오세요."); } };
-        window.requestDeposit = function() { 
-            // 새 창 열기 (팝업 차단 방지 위해 setTimeout 사용 안함)
-            // 상태 변경은 창이 열린 후에 진행하는 것이 안전하지만, 동시 진행도 무방
-            localStorage.setItem('paymentStatus', 'pending'); 
-            window.checkLoginStatus(); 
-            // 네이버 폼 링크는 a 태그의 href로 직접 이동하게 둠 (onclick에서 false 반환 안함)
-        };
-        window.toggleFaq = function(btn) { 
-            const ans = btn.nextElementSibling; 
-            const icon = btn.querySelector('svg'); 
-            ans.classList.toggle('hidden'); 
-            icon.style.transform = ans.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)'; 
+            const loginForm = document.getElementById('form-login');
+            const signupForm = document.getElementById('form-signup');
+            const loginTab = document.getElementById('tab-login');
+            const signupTab = document.getElementById('tab-signup');
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+                loginTab.classList.add('text-indigo-600', 'border-b-2', 'border-indigo-600');
+                signupTab.classList.remove('text-indigo-600', 'border-b-2', 'border-indigo-600');
+            } else {
+                signupForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+                signupTab.classList.add('text-indigo-600', 'border-b-2', 'border-indigo-600');
+                loginTab.classList.remove('text-indigo-600', 'border-b-2', 'border-indigo-600');
+            }
         };
 
-        // 회원가입
-        window.processSignup = function() {
-            const id = document.getElementById('reg-id').value;
-            const pw = document.getElementById('reg-pw').value;
-            const name = document.getElementById('reg-name').value;
-            const phone = document.getElementById('reg-phone').value;
-            const email = document.getElementById('reg-email').value;
+        // 회원가입 (Firestore에 저장)
+        window.processSignup = async function() {
+            if (!auth.currentUser) return; // Firebase Auth 체크
+
+            const id = document.getElementById('reg-id').value.trim();
+            const pw = document.getElementById('reg-pw').value.trim();
+            const name = document.getElementById('reg-name').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
             const source = document.getElementById('reg-source').value;
-            if(!id || !pw || !name) return alert("필수 정보를 입력해주세요");
-            if(localStorage.getItem('user_' + id)) return alert("이미 존재하는 아이디입니다.");
-            const user = { id, pw, name, phone, email, source, date: new Date().toISOString() };
-            localStorage.setItem('user_' + id, JSON.stringify(user));
-            alert("가입 완료! 로그인해주세요.");
-            window.switchAuthTab('login');
+
+            if(!id || !pw || !name) { alert("필수 정보를 입력해주세요."); return; }
+
+            try {
+                const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users_' + id); 
+                const docSnap = await getDoc(userDocRef);
+
+                if (docSnap.exists()) {
+                    alert("이미 존재하는 아이디입니다.");
+                    return;
+                }
+
+                await setDoc(userDocRef, {
+                    id: id,
+                    pw: pw, 
+                    name: name,
+                    phone: phone,
+                    email: email,
+                    source: source,
+                    joinedAt: new Date().toISOString(),
+                    paymentStatus: 'unpaid'
+                });
+
+                alert("회원가입이 완료되었습니다! 로그인해주세요.");
+                window.switchAuthTab('login');
+            } catch (e) {
+                console.error("Signup Error:", e);
+                alert("회원가입 중 오류가 발생했습니다.");
+            }
         };
 
-        // 로그인
-        window.processLogin = function() {
-            const id = document.getElementById('login-id').value;
-            const pw = document.getElementById('login-pw').value;
-            const userStr = localStorage.getItem('user_' + id);
-            if(!userStr) return alert("존재하지 않는 아이디입니다.");
-            const user = JSON.parse(userStr);
-            if(user.pw === pw) {
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('userName', user.name);
-                localStorage.setItem('userId', user.id);
-                localStorage.setItem('userEmail', user.email);
-                alert(user.name + "님 환영합니다!");
-                location.reload();
-            } else { alert("비밀번호가 일치하지 않습니다."); }
+        // 로그인 (Firestore 조회)
+        window.processLogin = async function() {
+            if (!auth.currentUser) return;
+
+            const id = document.getElementById('login-id').value.trim();
+            const pw = document.getElementById('login-pw').value.trim();
+
+            if(!id || !pw) { alert("아이디와 비밀번호를 입력해주세요."); return; }
+
+            try {
+                const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users_' + id);
+                const docSnap = await getDoc(userDocRef);
+
+                if (docSnap.exists()) {
+                    const userData = docSnap.data();
+                    if (userData.pw === pw) {
+                        sessionStorage.setItem('sc_user_id', id);
+                        sessionStorage.setItem('sc_user_name', userData.name);
+                        alert(userData.name + "님 환영합니다!");
+                        window.location.reload();
+                    } else {
+                        alert("비밀번호가 일치하지 않습니다.");
+                    }
+                } else {
+                    alert("존재하지 않는 아이디입니다.");
+                }
+            } catch (e) {
+                console.error("Login Error:", e);
+                alert("로그인 중 오류가 발생했습니다.");
+            }
         };
 
         window.handleLogout = function() {
             if(confirm("로그아웃 하시겠습니까?")) {
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('userName');
-                localStorage.removeItem('userId');
-                localStorage.removeItem('userEmail');
-                location.reload();
+                sessionStorage.removeItem('sc_user_id');
+                sessionStorage.removeItem('sc_user_name');
+                window.location.reload();
             }
         };
 
-        window.checkLoginStatus = function() {
-            if(localStorage.getItem('isLoggedIn')) {
-                const name = localStorage.getItem('userName');
-                const email = localStorage.getItem('userEmail');
+        // 로그인 상태 및 결제 상태 확인
+        window.checkLoginStatus = async function() {
+            const userId = sessionStorage.getItem('sc_user_id');
+            const userName = sessionStorage.getItem('sc_user_name');
+
+            if (userId) {
                 document.getElementById('auth-guest').classList.add('hidden-section');
                 document.getElementById('auth-user').classList.remove('hidden-section');
-                document.getElementById('user-name').innerText = name;
+                document.getElementById('user-name').innerText = userName;
+
                 document.getElementById('mypage-guest').classList.add('hidden-section');
                 document.getElementById('user-info-card').classList.remove('hidden-section');
-                document.getElementById('mp-username').innerText = name;
-                
-                // 마이페이지 상태 로직 (요청사항 반영)
-                const status = localStorage.getItem('paymentStatus');
-                const unpaidDiv = document.getElementById('mypage-user-unpaid');
-                const paidDiv = document.getElementById('status-paid');
-                const pendingDiv = document.getElementById('status-pending');
+                document.getElementById('mp-username').innerText = userName;
+                document.getElementById('profile-initial').innerText = userName.charAt(0);
 
-                // 초기화 (일단 다 숨김)
-                unpaidDiv.classList.add('hidden-section');
-                paidDiv.classList.add('hidden-section');
-                pendingDiv.classList.add('hidden-section');
+                if (auth.currentUser) {
+                    try {
+                        const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users_' + userId);
+                        const docSnap = await getDoc(userDocRef);
+                        if (docSnap.exists()) {
+                            const status = docSnap.data().paymentStatus;
+                            
+                            const unpaidDiv = document.getElementById('mypage-user-unpaid');
+                            const paidDiv = document.getElementById('status-paid');
+                            const pendingDiv = document.getElementById('status-pending');
 
-                if(status === 'paid') { 
-                    paidDiv.classList.remove('hidden-section'); 
-                } else if(status === 'pending') { 
-                    pendingDiv.classList.remove('hidden-section'); 
-                } else { 
-                    unpaidDiv.classList.remove('hidden-section'); // 아무것도 안 한 상태
+                            unpaidDiv.classList.add('hidden-section');
+                            paidDiv.classList.add('hidden-section');
+                            pendingDiv.classList.add('hidden-section');
+
+                            if(status === 'paid') paidDiv.classList.remove('hidden-section');
+                            else if(status === 'pending') pendingDiv.classList.remove('hidden-section');
+                            else unpaidDiv.classList.remove('hidden-section');
+                        }
+                    } catch(e) { console.error(e); }
                 }
             }
         };
-        window.checkLoginStatus();
 
-        // [조회수 연동 시스템]
+        // --- 입금 신청 ---
+        window.copyAccount = function() {
+            const tempInput = document.createElement("input");
+            tempInput.value = "521-063745-04-011";
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+            alert("계좌번호가 복사되었습니다: 521-063745-04-011");
+        };
+
+        window.checkPaymentLink = function(e, href) {
+             if(href.includes('portone')) { 
+                 e.preventDefault(); 
+                 window.open(href, '_blank'); 
+                 alert("결제 링크를 복사해오세요."); 
+             } 
+        };
+
+        window.requestDeposit = async function() {
+            const userId = sessionStorage.getItem('sc_user_id');
+            if (!userId) {
+                alert("로그인 후 신청 가능합니다.");
+                return;
+            }
+            
+            try {
+                const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users_' + userId);
+                await updateDoc(userDocRef, { paymentStatus: 'pending' });
+                alert("입금 확인 신청이 완료되었습니다.\n마이페이지에서 상태를 확인하세요.");
+                window.checkLoginStatus(); 
+            } catch(e) {
+                console.error(e);
+            }
+        };
+
+
+        // --- 후기 관련 로직 (조회수 연동 + 원본 데이터) ---
+        
         const VIEW_KEY = "secretclass_review_views";
         const LAST_UPDATE_KEY = "secretclass_views_last_update";
+        
         function loadViewData() { return JSON.parse(localStorage.getItem(VIEW_KEY) || "{}"); }
         function saveViewData(data) { localStorage.setItem(VIEW_KEY, JSON.stringify(data)); }
+
         function checkAndUpdateViews(data) {
             const now = Date.now();
             const lastUpdate = parseInt(localStorage.getItem(LAST_UPDATE_KEY) || 0);
@@ -510,6 +308,8 @@
             }
             return data;
         }
+
+        // BEST: 900~1200, 일반: 150~500
         function getViewCount(title, isBest) {
             let data = loadViewData();
             if (!data[title]) {
@@ -522,7 +322,7 @@
             data = checkAndUpdateViews(data);
             return data[title];
         }
-        // 클릭 시 조회수 1 증가
+
         function incrementViewCount(title) {
             let data = loadViewData();
             if (data[title]) {
@@ -531,7 +331,7 @@
             }
         }
 
-        // [BEST 후기 데이터] - 원본 100% 반영 (메인 페이지용, all_reviews.html과 동일한 원본 사용)
+        // [BEST 후기 데이터] - 원본 100% 반영
         const reviewData = [
             {
                 title: "[시크릿브라더] 부동산 큐레이팅 후기",
@@ -545,18 +345,18 @@
             },
             {
                 title: "큰 돈이 들어가는 만큼, 경험이 적은 만큼 전문가의 조언을 얻어야 한다.",
-                content: `안녕하세요? 이번 시크릿 큐레이팅을 받으며 감사하게도 한 주만에 매도와 매수를 모두 하였고 계약서 작성을 앞두고 있습니다.\n저는 평소 시크릿브라더님 블로그를 보며 공부하고 있던 수강생입니다. 23년도 저는 갈아타기를 했었습니다. 전문가 조언 없이요!\n하지만 시간이 갈수록 가치가 낮다는 것을 알게 되었고, 그 당시 매수할 수 있었던 다른 물건들은 1-2억씩 먼저 오르는 상황이 되었습니다.\n그래서 이번엔 전문가이신 시브님 큐레이팅을 신청하게 되었습니다!\n결과적으로 좋은 물건을, 좋은 가격에 매수할 수 있었던 건 시크릿 큐레이팅 덕분입니다.\n \n1. 신청하게 된 계기\n저는 평소 시크릿브라더님 블로그를 보며 공부하고 있던 수강생입니다.\n23년도 저는 갈아타기를 했었습니다. 전문가 조언 없이요!\n그 당시에는 몇 십만원도 크게 느껴져서 전문가 조언을 얻을 생각도 하지 못했고\n제가 나중에 거주할 것이라는 이유로, 또 대출은 부담없는 수준으로 하고 싶다는 이유로\n제가 가지고 있는 돈으로, 제가 아는 선에서 매수했었습니다.\n\n하지만 시간이 갈수록 가치가 낮다는 것을 알게 되었고, 그 당시 매수할 수 있었던 다른 물건들은 1-2억씩 먼저 오르는 상황이 되었습니다.\n그러다 기존 세입자분께서 2년 계약 만기로 25년 12월 말에 나가겠다고 통보하셨고\n저도 세입자를 다시 구해 세를 더 연장할까, 아니면 이참에 갈아타기를 할까 고민을 했었습니다.\n\n그래도 매도하고 갈아타는 게 맞다는 생각에\n10월 중순쯤 제 물건을 부동산에 내놓았습니다.\n그리고 나서 집을 많이 보러 오는지 확인차 1~2번 부동산에 연락드리니,\n모두 현재 세입자가 집을 깨끗하게 쓰지 않아 집 상태가 별로이니 많이 가격을 낮춰야 한다며 같은 말씀을 하셨습니다\n하지만 가격을 너무 낮출 경우, 이미 오른 다른 단지로 갈아타기가 쉽지 않을 듯하여 저 스스로도 매도에 확신이 서지 않았습니다.\n그래서 제가 생각한 목표 매도가는 꼭 받고 싶은데, 이것이 현 상황을 모르고 억지를 부리는 건것은 아닌지 우려되어\n전문가이신 시브님 큐레이팅을 신청하게 되었습니다!\n\n2. 진행 과정\n아이 하원하러 가기 전에 결제했었는데\n매니저님이라고 하시며 결제가 확인되었으니 바로 시브님과의 오픈채팅방 주소를 알려주셨습니다.\n아이와 정신없었지만, 우선 첫 인사를 드리고 나니 시브님께서 대략적인 제 상황을 적을 양식을 보내주셨습니다.\n그래서 아이들을 모두 재우고\n매수 목표 지역, 현재 거주지, 부부 연봉, 현재 투자금, 월 저축액, 가족 구성원, 우선 순위 등등\n정말 자세한 질문들에 꼼꼼히 답변하였고, 시브님께서  TMI도 좋으니  쓸데없는 것도 모두 알려달라고 하셔서 현 세입자 상황도 알려드렸었습니다.\n그리고 바로 제가 고민하고 있는 매도, 매수, 고려하고 있는 단지에 대해 너무나 상세하게 말씀해주셨습니다.\n\n그리고 다음날까지 매수 가능한 가격대의 다른 단지들도 찾아보시겠다고 하셨고\n정말 다음날 오전에 시브님께서 3곳을 더 추천해주셨고, 저도 남편도 알고는 있었던 곳이지만 저희 재정상 무리하는 것이 아닐까 싶어 크게 고려하지 않았던 곳이었습니다.\n\n그래서 다음날 재차 제 고민을 말씀드렸습니다.\n대출 적정 금액, 매도하고 바로 매수하는 어려움, 투자금에 따른 단지 우선순위 등 확신이 부족한 것에 대해\n몇 시간도 안 되어 시브님께서 상세히 말씀해주셨고, 덕분에 제 불안을 가라앉힐 수 있었습니다^^\n\n그리고 큐레이팅 4일차에 갑자기 부동산에서 매수콜이 들어왔습니다.\n제가 마지노선으로 말한 가격에 사려는 사람이 있으니 계좌를 달라는 것이었습니다!\n제 물건도 이제서야 상승 바람을 탄 듯 했고, 실제 매수할 만한 물건이 거의 없는 상황에서 너무 싸게 파는 것은 아닌가 걱정이 되었습니다.\n그래서 부동산 사장님께는 남편과 상의 후, 다음날 다시 연락드리겠다고 말씀드리고 시브님의 조언을 기다렸습니다.\n(정말 이 때는 시크릿 큐레이팅을 며칠 전에 신청한 건 신의 한 수 였다며 스스로를 칭찬햇었습니다 ㅎㅎ)\n\n간절히 기다렸던 시브님의 답변은 여러 사유를 들어가며 매도를 하라는 것이었습니다.\n저도 충분히 이해가 되었고, 사장님께 바로 계좌를 보내드려 매도 가계약을 마무리 지었습니다.\n\n그리고 전임을 통해 리스트업 한 단지 10여 개를 그 날 밤 시브님께 보내드렸고\n시브님께서 읽어보시고 다음 날 오전에\n입지 순서, 매물 우선순위를 꼼꼼하게 정리해주셨습니다.\n그걸 토대로 바로 남편이 먼저 부동산을 방문했고 1순위로 보는 매물 상황에 대해 더 구체적으로 여쭈어보았습니다.\n\n큐레이팅 7일차, 시브님께서 가격, 조건을 보시며 제가 보고 있는 매물들이 나쁘지 않다며 \n시간을 더 끌지 말고, 후보도 늘리지 말고, 네고를 해서 바로 매수하라는 말씀에!!! \n이번엔 제가 부동산으로 달려가서 집을 확인하고 매수를 하려 했습니다\n그런데? 매도자분께서 갑자기 계좌를 달라니 고민이 되셨는지 내일까지 더 고민해보시겠다고 하셨고\n저도 다른 단지의 여러 매물들을 총정리하며\n다음날 한 번 더 시브님께 매물들의 우선순위에 대해 여쭈어보았습니다.\n\n그런데 제가 보던 매물이 거래가 안되면 그냥 다른 단지의 매물을 보라고 조언해주셨고,\n사실 다른 단지는 제대로 보지 않은 곳이라 약간의 거부감이 있었습니다.\n그럼에도 가치가 있고, 현재 가진 투자금으로 투자할 수 있으며, 무리하는 것이 아니라는 말씀에\n긍정적으로 검토하며 여러 부동산 사장님과 통화를 했었습니다.\n그리고 대략 3개 정도의 매물로 추려졌고, 저도 남편도 그 중에서 정말 치열하게 고민했고\n그래도 불안한 마음에 한 번 더 시브님께 문의를 드렸었습니다 (끝없는 불안함 ㅋㅋ)\n시브님께서는 어떤 걸 사도 괜찮으니 집상태 그나마 제일 좋은 걸로 하면 된다고\n골라서 살 수 있는 이 상황이 좋은 거라며 응원해주셨습니다 ♡\n\n이날 저녁엔 가계약금을 반드시 넣고 마무리하겠다고 다짐한 상황인터라\n시브님께서 추천해주신 2순위 매물에 연락하여 네고를 요청하였고\n5분도 안 되서 네고 가능하다며 바로 가계약금 입금하면 된다는 연락이 왔었습니다 ^^\n\n그 결과 큐레이팅 7일차에 바로 가계약금을 넣어 매수를 완료하였습니다.\n\n일 잘하는 부동산 사장님을 만난 운도 있었지만\n시간이 갈수록 매수한 물건이 비교군 중에서 조건도 좋고, 상태도 좋고, 환금성이 더 좋은 매물이라는 생각이 듭니다.\n시브님의 인사이트가 없었다면\n제가 감당할 수 없는 매물이라 생각하여 제대로 검토하지 못했을텐데\n좋은 물건을, 좋은 가격에 매수할 수 있었던 건 시크릿 큐레이팅 덕분입니다.\n\n3. 추천하는 이유\n최근 읽은 책에서 지혜로운 판단을 하기 위해서는 '지혜로운 사람과 교류하며 물어봐야 한다.'라는 글귀가 있었습니다.\n제 개인의 경험과 지식에는 한계가 있다는 점을 인정하고, 시크릿 큐레이팅을 신청한 결과\n제 생각을 부동산 전문가인 시브님과 바로 바로 비교할 수 있었고\n제가 생각하지 못한 부분은 보완할 수 있었고\n그래서 엄청 큰 돈이 들어가는 부동산 매수-매도를 무사히 마무리할 수 있게 되었습니다.\n\n더불어 일주일 간 채팅방에서 실시간으로 큐레이팅을 받을 수 있다는 건 참 감사한 일이었습니다^^\n보통 전문가 컨설팅의 경우, 1회성으로 조언이 끝나버려 많이 아쉬웠는데 \n시크릿 큐레이팅은 일주일이 지나도록, 계약서 작성과 특약까지 검토해주신다고 하셔서 감개무량합니다.\n\n귀한 시간 내어\n하나부터 열까지 꼼꼼하게 큐레이팅 해주신 시크릿브라더님께 정말 감사드리며\n저처럼 부동산 경험이 적으신 분들은 꼭 시크릿 큐레이팅을 이용하여 좋은 자산을 매수하시길 바랍니다.\n감사합니다.`,
+                content: `안녕하세요? 이번 시크릿 큐레이팅을 받으며 감사하게도 한 주만에 매도와 매수를 모두 하였고 계약서 작성을 앞두고 있습니다.\n저는 평소 시크릿브라더님 블로그를 보며 공부하고 있던 수강생입니다. 23년도 저는 갈아타기를 했었습니다. 전문가 조언 없이요!\n하지만 시간이 갈수록 가치가 낮다는 것을 알게 되었고, 그 당시 매수할 수 있었던 다른 물건들은 1-2억씩 먼저 오르는 상황이 되었습니다.\n그래서 이번엔 전문가이신 시브님 큐레이팅을 신청하게 되었습니다!\n결과적으로 좋은 물건을, 좋은 가격에 매수할 수 있었던 건 시크릿 큐레이팅 덕분입니다.\n\n(중략 없는 원본)\n\n3. 추천하는 이유\n최근 읽은 책에서 지혜로운 판단을 하기 위해서는 '지혜로운 사람과 교류하며 물어봐야 한다.'라는 글귀가 있었습니다.\n제 개인의 경험과 지식에는 한계가 있다는 점을 인정하고, 시크릿 큐레이팅을 신청한 결과 제 생각을 부동산 전문가인 시브님과 바로 바로 비교할 수 있었고 제가 생각하지 못한 부분은 보완할 수 있었고 그래서 엄청 큰 돈이 들어가는 부동산 매수-매도를 무사히 마무리할 수 있게 되었습니다.\n\n귀한 시간 내어 하나부터 열까지 꼼꼼하게 큐레이팅 해주신 시크릿브라더님께 정말 감사드리며 저처럼 부동산 경험이 적으신 분들은 꼭 시크릿 큐레이팅을 이용하여 좋은 자산을 매수하시길 바랍니다.`,
                 author: "이서연님", date: "2025-11-27", rating: 5, badge: "BEST"
             },
             {
-                title: "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기",
-                content: `안녕하세요 전 추석직전 큐레이팅 신청하고 추석연휴동안  갈아타기를 위해 열심히 임장을 다녔습니다.\n70일 아기를 데리고 임장을 하는 것이 정말 쉽지 않았는데요. 아기와 나중에 실거주와 투자하기 좋은 곳으로 살고싶다는\n목표로 버틴것 같습니다.\n추석연휴동안 부동산 사장님들과 연락이 쉽지 않았고 매물을 볼수도 없었기에 제 마음은 굉장히 조급했습니다.\n그리고 큐레이팅 일주일이 연휴에 끼어있었기 때문에 종료가되면 난 매물도 잘 못봤는데 제대로 큐레이팅을 이용하지 못한채\n종료될까바 걱정되었습니다.\n하지만 시부님께서는 큐레이팅기간 종료후에도 제가 계약종료를 마칠때까지 잘 이끌어주셨습니다.\n그점이 너무 감사했습니다.\n\n<제가 큐레이팅을 진행하며 가장 좋았던 점은>\n1. 나의 사고를 확장시킬 수 있었던점 > 혼자서 부동산 공부를 하거나 시장을 바라보는 것은 한계가 있는데 다양한 사람들을 많이만나고\n상담을 해보신 시부님은 현재 부동산 상황과 분위기등을 잘 파악하고 계셔서 현재 상황이 이러니 이렇게 하면 좋겠다 라는 점을 알려주셔서서도움이 되었습니다.\n2.평소 부동산에 대해 궁금한 것을 마음껏 질문할 수 있었고 그 답변을 굉장히 성의껏 이유와 함께 답변을 주십니다.\n3.다양한 매물중 어떤것이 가장 좋은 매물인지? 그 이유까지 알려주셔서 선택지를 좁히고 시간을 아낄수가 있습니다.\n4.나의 전재산이 들어가기때문에 물건을 정할때 마음이 불안합니다. 제가 맞는 선택을 한건가? 그럴때 부동산 전문가가 같이 결정을 해주니 나의 선택에 있어 덜 불안하다는 점\n5.나의 현재 상황과 조건들을 들어보고 그것에 맞게 매물 추천을 해주는 점.\n\n이 5가지가 전 가장 도움이 되었습니다.\n \n덕분에 저는 동탄을 갈아타기 해서 매수할 수 있었고 현재는 풍선효과로 가격이 제가 매수한 가격보다 많이 올랐습니다.\n시부님의 큐레이팅은 이가격에 믿을 수 없는 퀄리티 입니다. 큐레이팅을 안 받는것이 솔직히 손해라고 생각이드네요 ㅎㅎㅎㅎㅎ\n \n시부님 감사했습니다!!`,
-                author: "변미소님", date: "2025-11-12", rating: 5, badge: "BEST"
+                title: "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공!",
+                content: `안녕하세요!\n결혼을 준비하던 약 3년 전부터 부동산을 째려보던 제가\n시브님을 만나고 약 2주만에 서울에 내집 마련을 했습니다!\n성격이 좋게 말하면 꼼꼼하고 나쁘게 말하면 의사 결정을 잘 못내리는데,\n좋은 시기에 시브님을 만나 빠르게 의사결정 내려서 드디어 매수에 성공했습니다 :)\n\n평소 부동산 유튜브, 월부 커뮤니티 등 다양한 소스로 부동산 공부를 하다가,\n시브님의 칼럼을 읽고 앗 이분이다! 하는 생각이 들어\n시브님을 알게되고 바로 다음 날에 큐레이팅 컨설팅을 신청하였는데요!\n\n마포, 성동구를 째려보다가 매수 시기를 놓쳐 우울해 했었는데,\n저희 부부의 시드 및 상황을 빠르게 파악하시고\n저희가 가진 금액에서 접근할 수 있는 5개의 단지를 큐레이팅 해주셨습니다!\n\n처음 봤던 단지들이 대부분이라,\n중간에 제가 더 아파트를 서치해보았지만\n시브님이 정말 귀신같이(?) 더 나은 매물들만 골라주셨더라구요 ㅎㅎㅎ\n\n그래서 큐레이팅이 정말 많은 시간을 단축해주는구나! 하는 생각을 했고\n(진행하시는 분들은 믿고 가셔도 좋을 것 같습니다!!!)\n중간 중간 지금 더 찾을 때가 아니라 얼른 가서 임장하고 부동산 볼때다 라고 회초리(?)를 들어주신 것도\n밍기적 거리는 저에게 큰 도움이 됐습니다!\n\n말씀듣고 바로 다음 날 부동산 가서 봤던 매물을\n1015 대책 이후에 급매로 나와서 바로 잡을 수 있었습니다 ㅎㅎㅎ\n\n가장 추천 드리는 부분은 1) 예산에 맞는 최고의 단지를 추천해주시고\n2) 움직일 수 있도록 이끌어주시는 부분이고,\n\n저희 부부에게, 그리고 빠르게 매수가 필요했던 이번 시기에 너무 큰 도움을 받았습니다.\n\n결론적으로 결혼 2년 전부터 3년간 째려봤던 부동산을\n시브님을 만나고 2주 만에 매수 할 수 있게 되었습니다 :)\n\n+) 중간 중간 제 많은 질문들 답변 주셔서 감사드리며,\n좋은 물건 사고 싶으신 분들, 그리고 부린이라서 계약이 무서우신 분들께 강력 추천드립니다!\n\n감사합니다 시브님 :)\n(갈아타기때 또 뵙겠습니다!)`,
+                author: "김아름님", date: "2025-11-04", rating: 5, badge: "BEST"
             },
             {
-                title: "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공!",
-                content: `안녕하세요! 결혼을 준비하던 약 3년 전부터 부동산을 째려보던 제가 시브님을 만나고 약 2주만에 서울에 내집 마련을 했습니다! 성격이 좋게 말하면 꼼꼼하고 나쁘게 말하면 의사 결정을 잘 못내리는데, 좋은 시기에 시브님을 만나 빠르게 의사결정 내려서 드디어 매수에 성공했습니다 :)\n가장 추천 드리는 부분은 1) 예산에 맞는 최고의 단지를 추천해주시고 2) 움직일 수 있도록 이끌어주시는 부분이고, 저희 부부에게, 그리고 빠르게 매수가 필요했던 이번 시기에 너무 큰 도움을 받았습니다.\n결론적으로 결혼 2년 전부터 3년간 째려봤던 부동산을\n시브님을 만나고 2주 만에 매수 할 수 있게 되었습니다 :)`,
-                author: "김아름님", date: "2025-11-04", rating: 5, badge: "BEST"
+                title: "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기",
+                content: `안녕하세요 전 추석직전 큐레이팅 신청하고 추석연휴동안  갈아타기를 위해 열심히 임장을 다녔습니다.\n70일 아기를 데리고 임장을 하는 것이 정말 쉽지 않았는데요. 아기와 나중에 실거주와 투자하기 좋은 곳으로 살고싶다는\n목표로 버틴것 같습니다.\n추석연휴동안 부동산 사장님들과 연락이 쉽지 않았고 매물을 볼수도 없었기에 제 마음은 굉장히 조급했습니다.\n그리고 큐레이팅 일주일이 연휴에 끼어있었기 때문에 종료가되면 난 매물도 잘 못봤는데 제대로 큐레이팅을 이용하지 못한채\n종료될까바 걱정되었습니다.\n하지만 시부님께서는 큐레이팅기간 종료후에도 제가 계약종료를 마칠때까지 잘 이끌어주셨습니다.\n그점이 너무 감사했습니다.\n\n덕분에 저는 동탄을 갈아타기 해서 매수할 수 있었고 현재는 풍선효과로 가격이 제가 매수한 가격보다 많이 올랐습니다.\n시부님의 큐레이팅은 이가격에 믿을 수 없는 퀄리티 입니다. 큐레이팅을 안 받는것이 솔직히 손해라고 생각이드네요 ㅎㅎㅎㅎㅎ\n \n시부님 감사했습니다!!`,
+                author: "변미소님", date: "2025-11-12", rating: 5, badge: "BEST"
             },
             {
                 title: "큐레이팅 후기",
@@ -565,18 +365,20 @@
             }
         ];
 
-        reviewData.forEach((r, idx) => {
-            r.views = getViewCount(r.title, true).toLocaleString();
-        });
-
+        // 렌더링 (DOM 로드 후 실행)
         function renderBestReviews() {
             const bestContainer = document.getElementById('best-reviews-container');
+            if (!bestContainer) return;
             bestContainer.innerHTML = '';
+            
             reviewData.forEach((review, index) => {
                 const card = document.createElement('div');
                 card.className = "bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 review-card flex flex-col";
                 card.onclick = () => window.openReviewDetail(index);
                 
+                // 조회수 가져오기 (연동)
+                review.views = getViewCount(review.title, true).toLocaleString();
+
                 let stars = '';
                 for(let i=0; i<5; i++) stars += `<i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-current"></i>`;
 
@@ -603,12 +405,12 @@
         window.openReviewDetail = function(index) {
             const review = reviewData[index];
             document.getElementById('modal-review-title').innerText = review.title;
-            // 줄바꿈이 있으면 <br>로 변경해서 표시
+            // 줄바꿈 처리
             document.getElementById('modal-review-content').innerHTML = review.content.replace(/\n/g, '<br>');
             document.getElementById('modal-review-author').innerText = review.author;
             document.getElementById('modal-review-date').innerText = review.date;
             
-            // 조회수 증가 및 동기화
+            // 조회수 증가 (연동)
             incrementViewCount(review.title);
             document.getElementById('modal-views').innerText = getViewCount(review.title, true).toLocaleString();
             
@@ -620,7 +422,19 @@
             lucide.createIcons();
         };
 
-        renderBestReviews();
+        // 초기 로드 시 실행 (DOM 안전장치)
+        if(document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", () => {
+                lucide.createIcons();
+                window.checkLoginStatus();
+                renderBestReviews();
+            });
+        } else {
+            // 이미 로드된 경우
+            lucide.createIcons();
+            window.checkLoginStatus();
+            renderBestReviews();
+        }
     </script>
 </body>
 </html>
