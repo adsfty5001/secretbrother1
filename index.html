@@ -35,6 +35,13 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-track { background-color: #f1f5f9; }
         .raw-content { line-height: 1.8; color: #374151; white-space: pre-wrap; }
+        .line-clamp-custom {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            white-space: pre-wrap;
+        }
     </style>
 </head>
 <body class="bg-white text-gray-900 font-body">
@@ -221,6 +228,7 @@
             <div class="bg-white rounded-3xl p-8 md:p-14 shadow-xl border border-gray-100 relative overflow-hidden ring-1 ring-indigo-50">
                 <div class="absolute top-0 left-0 w-full h-3 bg-indigo-600"></div>
                 <div class="mb-8"><span class="inline-block py-1 px-3 rounded-full text-xs font-bold mb-4 bg-indigo-100 text-indigo-700">PREMIUM SERVICE</span><h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 font-body">1:1 맞춤형 투자 큐레이팅</h3><p class="text-gray-500 max-w-lg mx-auto leading-relaxed text-sm md:text-base break-keep font-body">당신의 자산 상황과 목표에 맞춘 100% 개인화 포트폴리오 제안 및 심층 상담</p></div>
+                <!-- 할인율 -->
                 <div class="flex flex-col items-center justify-center mb-10 pb-10 border-b border-gray-100 font-body">
                     <div class="flex items-center gap-3 mb-2">
                         <span class="text-gray-400 text-xl line-through decoration-red-400 decoration-2">699,000원</span>
@@ -232,7 +240,6 @@
                     <a href="https://portone.io/korea/ko" target="_blank" onclick="window.checkPaymentLink(event, this.href)" class="block w-full py-5 rounded-xl font-bold text-lg bg-gray-900 text-white hover:bg-gray-800 flex justify-center items-center gap-2"><i data-lucide="credit-card"></i> 카드 / 간편결제 신청하기</a>
                     <button onclick="window.toggleModal('depositModal')" class="block w-full py-4 rounded-xl font-bold text-lg border-2 border-gray-200 text-gray-600 hover:border-indigo-500 hover:text-indigo-600 flex justify-center items-center gap-2"><i data-lucide="wallet"></i> 무통장 입금 신청하기</button>
                 </div>
-                <div class="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl text-left"><p class="text-sm md:text-base text-red-600 font-bold leading-relaxed break-keep">※ 현재 사이트 이전 문제로 카드 결제 연동이 원활치 않을 수 있습니다.<br>만약 카드 결제가 안 될 경우 <span class="underline">'무통장 입금'</span>을 이용해 주시고, 무통장 입금시 현금영수증 & 지출 증빙을 위해 입금 반드시 <span class="underline">'폼' 작성</span>을 완료해 주실 것을 부탁드립니다 ※</p></div>
                 <p class="mt-4 text-xs text-gray-400">* KG이니시스 결제 페이지로 이동합니다.</p>
             </div>
         </div>
@@ -246,10 +253,12 @@
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2" style="font-family: 'Jalnan', sans-serif !important;">수강생 리얼 후기</h2>
                 <p class="text-gray-600 text-lg font-body">조작 없는 100% 실제 수강생들의 이야기입니다.</p>
             </div>
+            <!-- BEST List -->
             <div class="mb-12">
                 <h3 class="text-2xl font-bold text-gray-800 mb-8 flex items-center justify-center gap-2"><i data-lucide="trophy" class="text-yellow-500 fill-current w-8 h-8"></i> 명예의 전당 (BEST)</h3>
                 <div id="best-reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
+            <!-- 전체 보기 링크 -->
             <div class="text-center mt-12">
                 <a href="all_reviews.html" class="inline-flex items-center gap-2 bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white px-12 py-5 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-xl group break-keep">실시간 전체 후기 보러가기 (최신순) <i data-lucide="arrow-right" class="group-hover:translate-x-1 transition-transform"></i></a>
                 <p class="text-gray-400 text-sm mt-3">지금 이 순간에도 후기가 올라오고 있습니다!</p>
