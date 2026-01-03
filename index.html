@@ -24,8 +24,6 @@
         .book-shadow { box-shadow: 10px 10px 30px rgba(0,0,0,0.5); }
         html { scroll-behavior: smooth; }
         .hidden-section { display: none !important; }
-        
-        /* 모바일 줄바꿈 방지 */
         .break-keep { word-break: keep-all; word-wrap: break-word; }
 
         @keyframes modal-pop {
@@ -37,12 +35,10 @@
         .review-card { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .review-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
         
-        /* 모달 스크롤바 커스텀 */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-track { background-color: #f1f5f9; }
         
-        /* 후기 본문 스타일 */
         .raw-content { line-height: 1.8; color: #374151; white-space: pre-wrap; font-size: 0.95rem; }
         .line-clamp-custom {
             display: -webkit-box;
@@ -53,7 +49,7 @@
         }
     </style>
     
-    <!-- 새로고침 시 맨 위로 이동 -->
+    <!-- 새로고침 시 맨 위로 -->
     <script>
         if (history.scrollRestoration) {
             history.scrollRestoration = 'manual';
@@ -220,7 +216,6 @@
                             <i data-lucide="external-link" class="w-4 h-4 text-gray-400 ml-auto opacity-50 group-hover:opacity-100"></i>
                         </a>
                     </div>
-
                     <button onclick="window.toggleModal('videoModal')" class="w-full md:w-auto px-8 py-4 bg-gray-900 text-white rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-800 transition-all shadow-lg">
                         <i data-lucide="play-circle" class="w-6 h-6"></i>
                         시크릿브라더 대표 영상 보기
@@ -249,7 +244,7 @@
         </div>
     </section>
 
-    <!-- Pricing -->
+    <!-- Pricing (할인율 적용 완료) -->
     <section id="pricing" class="py-24 bg-white">
         <div class="max-w-4xl mx-auto px-4 text-center">
             <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6" style="font-family: 'Jalnan', sans-serif !important;">수강 신청</h2>
@@ -274,7 +269,7 @@
         </div>
     </section>
 
-    <!-- Review Section -->
+    <!-- Review Section (BEST만 - 원본 데이터 사용) -->
     <section id="reviews" class="py-24 bg-gray-50">
         <div class="max-w-6xl mx-auto px-4">
             <div class="text-center mb-16">
@@ -285,17 +280,22 @@
             <!-- BEST List -->
             <div class="mb-12">
                 <h3 class="text-2xl font-bold text-gray-800 mb-8 flex items-center justify-center gap-2"><i data-lucide="trophy" class="text-yellow-500 fill-current w-8 h-8"></i> 명예의 전당 (BEST)</h3>
-                <div id="best-reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                <div id="best-reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- JS로 BEST 후기 로드 -->
+                </div>
             </div>
             <!-- 전체 보기 링크 -->
             <div class="text-center mt-12">
-                <a href="all_reviews.html" class="inline-flex items-center gap-2 bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white px-12 py-5 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-xl group break-keep">실시간 전체 후기 보러가기 (최신순) <i data-lucide="arrow-right" class="group-hover:translate-x-1 transition-transform"></i></a>
+                <!-- [수정] 모바일 줄바꿈 방지 (break-keep) -->
+                <a href="all_reviews.html" class="inline-flex items-center gap-2 bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white px-12 py-5 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-xl group break-keep">
+                    실시간 전체 후기 보러가기 (최신순) <i data-lucide="arrow-right" class="group-hover:translate-x-1 transition-transform"></i>
+                </a>
                 <p class="text-gray-400 text-sm mt-3">지금 이 순간에도 후기가 올라오고 있습니다!</p>
             </div>
         </div>
     </section>
 
-    <!-- FAQ -->
+    <!-- FAQ (복구: 질문 2개, 아코디언 기능) -->
     <section id="faq" class="py-24 bg-indigo-50">
         <div class="max-w-3xl mx-auto px-4 text-center">
             <h2 class="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12" style="font-family: 'Jalnan', sans-serif !important;">고객센터 (FAQ)</h2>
@@ -347,7 +347,7 @@
     <!-- 통합 로그인/회원가입 모달 -->
     <div id="loginModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="window.toggleModal('loginModal')">
         <div class="bg-white w-full max-w-md rounded-2xl p-8 shadow-2xl relative modal-content overflow-y-auto max-h-[90vh]" onclick="event.stopPropagation()">
-            <button onclick="window.toggleModal('loginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900"><i data-lucide="x"></i></button>
+            <button onclick="window.toggleModal('loginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900"><i data-lucide="x" class="h-6 w-6"></i></button>
             <div class="flex border-b border-gray-200 mb-6">
                 <button id="tab-login" onclick="window.switchAuthTab('login')" class="flex-1 py-3 text-lg font-bold text-indigo-600 border-b-2 border-indigo-600">로그인</button>
                 <button id="tab-signup" onclick="window.switchAuthTab('signup')" class="flex-1 py-3 text-lg font-bold text-gray-400 hover:text-gray-600">회원가입</button>
@@ -479,7 +479,7 @@
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-        // 2. 전역 함수 설정 (HTML onclick 연동)
+        // 2. 전역 함수 설정 (HTML onclick 연동) - 여기로 이동
         window.lucide = lucide; 
         window.toggleModal = (id) => { const el = document.getElementById(id); if(el) el.classList.toggle('hidden'); };
         window.openImageModal = (src) => { document.getElementById('modal-image-src').src = src; window.toggleModal('imageModal'); };
@@ -684,11 +684,13 @@
             if (!bestContainer) return;
             bestContainer.innerHTML = '';
             
-            reviewData.forEach((review, index) => {
+            // 전역 reviewData 사용 (데이터가 위에 정의되어 있으므로 안전)
+            bestReviews.forEach((review, index) => {
                 const card = document.createElement('div');
                 card.className = "bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 review-card flex flex-col";
                 card.onclick = () => window.openReviewDetail(index);
                 
+                // 조회수 가져오기 (연동)
                 review.views = getViewCount(review.title, true).toLocaleString();
 
                 let stars = '';
@@ -715,7 +717,7 @@
         }
 
         window.openReviewDetail = function(index) {
-            const review = reviewData[index];
+            const review = bestReviews[index];
             document.getElementById('modal-review-title').innerText = review.title;
             // 줄바꿈 처리
             document.getElementById('modal-review-content').innerHTML = decodeAndFormatHtml(review.content).replace(/\n/g, '<br>');

@@ -95,7 +95,7 @@
         </div>
     </main>
 
-    <!-- [모달] 후기 상세 보기 (스크롤 가능, 원본 100% 표시) -->
+    <!-- [모달] 후기 상세 보기 -->
     <div id="reviewDetailModal" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="window.closeDetailModal()">
         <div class="bg-white w-full max-w-2xl max-h-[85vh] rounded-2xl shadow-2xl relative overflow-hidden flex flex-col" onclick="event.stopPropagation()">
             <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-shrink-0">
@@ -103,14 +103,14 @@
                 <button onclick="window.closeDetailModal()" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             
-            <!-- ★★★ 여기가 핵심: 전체 내용이 스크롤되면서 다 보이는 영역 ★★★ -->
+            <!-- 본문 영역 (스크롤 가능) -->
             <div class="p-8 overflow-y-auto custom-scrollbar font-body flex-grow bg-white">
                 <div class="flex items-center gap-2 mb-4" id="modal-stars"></div>
                 <div class="flex items-center gap-2 mb-4"><span id="modal-badge" class="hidden"></span></div>
                 <h2 id="modal-title" class="text-2xl font-bold text-gray-900 mb-6 leading-snug break-keep"></h2>
                 
-                <!-- 원본 내용이 들어가는 곳 (줄바꿈, 길이 제한 없음) -->
-                <div id="modal-content" class="raw-content-modal"></div>
+                <!-- 원본 내용이 들어가는 곳 -->
+                <div id="modal-content" class="raw-content"></div>
                 
                 <div class="mt-8 pt-6 border-t border-gray-100 text-sm text-gray-500 flex justify-between items-center">
                     <div class="flex items-center gap-2">
@@ -157,98 +157,24 @@
         </div>
     </div>
 
-    <script>
-        // 전역 함수 설정
-        window.toggleModal = function(id) { 
-            const el = document.getElementById(id); 
-            if(el) el.classList.toggle('hidden'); 
-        };
+    <!-- Script Block -->
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        window.closeDetailModal = function() {
-            document.getElementById('reviewDetailModal').classList.add('hidden');
-        };
-
-        window.openWriteReview = function() {
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-            if(!isLoggedIn) {
-                alert("로그인이 필요한 서비스입니다.\n메인 페이지에서 로그인 후 이용해주세요.");
-                return;
-            }
-            const paymentStatus = localStorage.getItem('paymentStatus');
-            if (paymentStatus !== 'paid') {
-                alert("수강 신청(결제)을 완료한 회원만 후기를 작성할 수 있습니다.\n(입금 확인 중인 경우 완료 후 작성 가능합니다)");
-                return;
-            }
-            window.toggleModal('writeReviewModal');
-        };
-
-        // 조회수 연동 (index.html과 동일한 로직)
-        const VIEW_KEY = "secretclass_review_views";
-        const LAST_UPDATE_KEY = "secretclass_views_last_update";
-        
-        function loadViewData() { return JSON.parse(localStorage.getItem(VIEW_KEY) || "{}"); }
-        function saveViewData(data) { localStorage.setItem(VIEW_KEY, JSON.stringify(data)); }
-
-        function checkAndUpdateViews(data) {
-            const now = Date.now();
-            const lastUpdate = parseInt(localStorage.getItem(LAST_UPDATE_KEY) || 0);
-            if (now - lastUpdate > 86400000) {
-                for (let key in data) { data[key] += Math.floor(Math.random() * 5) + 1; }
-                saveViewData(data);
-                localStorage.setItem(LAST_UPDATE_KEY, now.toString());
-            }
-            return data;
-        }
-
-        function getViewCount(title, isBest) {
-            let data = loadViewData();
-            if (!data[title]) {
-                const initialView = isBest 
-                    ? Math.floor(Math.random() * (1200 - 900 + 1)) + 900 
-                    : Math.floor(Math.random() * (500 - 150 + 1)) + 150;
-                data[title] = initialView;
-                saveViewData(data);
-            }
-            data = checkAndUpdateViews(data);
-            return data[title];
-        }
-
-        function incrementViewCount(title) {
-            let data = loadViewData();
-            if (data[title]) {
-                data[title] += 1;
-                saveViewData(data);
-            }
-        }
-
-        function calculateViews(isBest) { 
-             return getViewCount("TEMP_" + Math.random(), isBest); 
-        }
-
-        // HTML 엔티티 디코딩 및 줄바꿈 처리
-        function decodeAndFormatHtml(html) {
-            if(!html) return "";
-            var txt = document.createElement("textarea");
-            txt.innerHTML = html;
-            let decoded = txt.value;
-            // 줄바꿈만 있고 태그가 없는 경우 <br>로 변환하여 줄바꿈 유지
-            if (!decoded.includes('<p>') && !decoded.includes('<br>')) {
-                decoded = decoded.replace(/\n/g, '<br>');
-            }
-            return decoded;
-        }
-
-        // [데이터] 80개 이상의 후기 (원본 내용 100% 유지)
+        // [데이터] 100% 원본 유지 (allReviews)
         const allReviews = [
-            // === 2025년 BEST (요청하신 이서연님, 변미소님 등 원본 반영 완료) ===
-            { 
-                title: "큰 돈이 들어가는 만큼, 경험이 적은 만큼 전문가의 조언을 얻어야 한다.", 
+            // === 2025년 BEST (원본 반영) ===
+             {
+                title: "큰 돈이 들어가는 만큼, 경험이 적은 만큼 전문가의 조언을 얻어야 한다.",
                 content: `안녕하세요? 이번 시크릿 큐레이팅을 받으며 감사하게도 한 주만에 매도와 매수를 모두 하였고 계약서 작성을 앞두고 있습니다.
 저는 평소 시크릿브라더님 블로그를 보며 공부하고 있던 수강생입니다. 23년도 저는 갈아타기를 했었습니다. 전문가 조언 없이요!
 하지만 시간이 갈수록 가치가 낮다는 것을 알게 되었고, 그 당시 매수할 수 있었던 다른 물건들은 1-2억씩 먼저 오르는 상황이 되었습니다.
 그래서 이번엔 전문가이신 시브님 큐레이팅을 신청하게 되었습니다!
 결과적으로 좋은 물건을, 좋은 가격에 매수할 수 있었던 건 시크릿 큐레이팅 덕분입니다.
- 
+
 1. 신청하게 된 계기
 저는 평소 시크릿브라더님 블로그를 보며 공부하고 있던 수강생입니다.
 23년도 저는 갈아타기를 했었습니다. 전문가 조언 없이요!
@@ -309,98 +235,18 @@
                 author: "이서연님", date: "2025-11-27", rating: 5, badge: "BEST"
             },
             {
+                title: "시크릿큐레이팅후기_막막함에 확신이 생깁니다. 돈 안 아까움 주의!!",
+                content: `안녕하세요, 전 9월 중순에 큐레이팅을 받았습니다.\n아시다시피 큐레이팅은 일주일간 진행되는데, \n다른 상담들은 한번만 그리고 몇 시간동안만 진행되는 것에 비해\n시크릿큐레이팅은 일주일이라는 시간이 주어지고\n언제든 질문을 하고 답변을 받을 수 있다는 점이 참 좋았습니다.\n \n저는 큐레이팅을 시작했을 당시, 실거주와 투자. 어느 것을 하는 것이 좋을 지도 결정 못하고 있었습니다.\n시브님은 제 의견은 다 들어주시되, 시브님의 의견을 근거를 들어가며 설명해 주시고,\n저에게 선택권을 주셨습니다.\n덕분에 전 실거주로 방향성을 잡게 되었고,\n시브님의 근거들 덕분에 제 방향성에 확신을 더할 수 있었습니다.\n \n그리고, 상담을 많이 해보셔서 그런 걸까요? 아님 책이나 여러 경험들을 통해 그릇이 커서 그런 걸까요?\n저는 큐레이팅 내내 경제적인 것 뿐만이 아니라 인생에 대해서도 저보다 큰 그릇을 갖고 계신 분과 대화 함으로써 \n느끼는 경외감?이 있었습니다.\n실거주다 보니 아이와 남편의 이야기까지 하게 되는데, \n제가 망설이거나 고민하고 있는 부분을 잘 잡아 주셔서 감사했던 기억이 있습니다. \n \n후보지 단지와 지역을 추천해 주시고, 그 곳을 임장하고 나서 느낀점을 적는 숙제를 내 주셨는데,\n단지의 장단점과 주의해서 확인해야 할 점들을 미리 보내주셔서 그 부분을 중점으로 제 눈으로 다시 한번 확인하고\n제가 임장 후기를 보냈을 때, 피드백을 주셨는데 이것이 단지들을 객관적으로 바라보는 기준이 되었습니다.\n그리고 현재 그 지역의 부동산 분위기를 설명해 주셔서 제를 채찍질 해주셨는데,, \n9월에 매수했다면 좋았을 것을 자가에 전세가 끼어있는 집까지 두 개를 동시에 매도하려니 시간이 참 오래걸렸습니다.\n자가 매도시에도 시브님의 채찍질이 참 도움이 많이 됐어요.\n그렇게 일주일이라는 기간이 후딱 가고, 큐레이팅이 끝났죠.\n \n아!!그리고 어쩌다 보니 후기를 늦게 써서 더 느끼게 된건데 \n시브님이 제 추전지역을 바라보고 시장을 바라보며 말씀하신 게 \n그 때 당시에는 정말일까? 라는 의구심?도 아주 조금은 있었는데\n지나고 보니 진짜였어요.\n \n그리고, 몇 달이 지난 이 시점에 전 매도를 다 끝내고 \n제가 원하는 지역에 드디어 매수했습니다.\n9월과 11월 사이에 정책으로 부동산시장은 엄청 혼란스러웠고\n지금도 그 때의 큐레이팅 내용이 유효할까? 생각하며\n나눈 대화를 다시 한번 읽어나가며 \n아직도 유효하다는 판단을 할 수 있었고 괜찮은 가격이다.\n라는 확신으로 매수를 진행할 수 있었습니다.\n \n시크릿큐레이팅은 내가 어떤 질문을 하느냐에 따라 제가 얻고자 하는 대답보다 더 많은 것을 얻어갈 수 있습니다.\n그리고, 혹시 저처럼 질문을 못 하면 어떻하지?라고 생각하셔도 괜찮습니다. \n알아서 물어봐 주시거든요.\n30만원으로 3000만원의 가치를 줄 수 있다는 시크릿큐레이팅의 홍보문구는 과장이 아닙니다.\n읽어주셔서 감사합니다.`,
+                author: "이수정님", date: "2025-12-01", rating: 5, badge: "BEST"
+            },
+            {
                 title: "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기",
                 content: `안녕하세요 전 추석직전 큐레이팅 신청하고 추석연휴동안  갈아타기를 위해 열심히 임장을 다녔습니다.\n70일 아기를 데리고 임장을 하는 것이 정말 쉽지 않았는데요. 아기와 나중에 실거주와 투자하기 좋은 곳으로 살고싶다는\n목표로 버틴것 같습니다.\n추석연휴동안 부동산 사장님들과 연락이 쉽지 않았고 매물을 볼수도 없었기에 제 마음은 굉장히 조급했습니다.\n그리고 큐레이팅 일주일이 연휴에 끼어있었기 때문에 종료가되면 난 매물도 잘 못봤는데 제대로 큐레이팅을 이용하지 못한채\n종료될까바 걱정되었습니다.\n하지만 시부님께서는 큐레이팅기간 종료후에도 제가 계약종료를 마칠때까지 잘 이끌어주셨습니다.\n그점이 너무 감사했습니다.\n\n<제가 큐레이팅을 진행하며 가장 좋았던 점은>\n1. 나의 사고를 확장시킬 수 있었던점 > 혼자서 부동산 공부를 하거나 시장을 바라보는 것은 한계가 있는데 다양한 사람들을 많이만나고\n상담을 해보신 시부님은 현재 부동산 상황과 분위기등을 잘 파악하고 계셔서 현재 상황이 이러니 이렇게 하면 좋겠다 라는 점을 알려주셔서서도움이 되었습니다.\n2.평소 부동산에 대해 궁금한 것을 마음껏 질문할 수 있었고 그 답변을 굉장히 성의껏 이유와 함께 답변을 주십니다.\n3.다양한 매물중 어떤것이 가장 좋은 매물인지? 그 이유까지 알려주셔서 선택지를 좁히고 시간을 아낄수가 있습니다.\n4.나의 전재산이 들어가기때문에 물건을 정할때 마음이 불안합니다. 제가 맞는 선택을 한건가? 그럴때 부동산 전문가가 같이 결정을 해주니 나의 선택에 있어 덜 불안하다는 점\n5.나의 현재 상황과 조건들을 들어보고 그것에 맞게 매물 추천을 해주는 점.\n\n이 5가지가 전 가장 도움이 되었습니다.\n \n덕분에 저는 동탄을 갈아타기 해서 매수할 수 있었고 현재는 풍선효과로 가격이 제가 매수한 가격보다 많이 올랐습니다.\n시부님의 큐레이팅은 이가격에 믿을 수 없는 퀄리티 입니다. 큐레이팅을 안 받는것이 솔직히 손해라고 생각이드네요 ㅎㅎㅎㅎㅎ\n \n시부님 감사했습니다!!`,
                 author: "변미소님", date: "2025-11-12", rating: 5, badge: "BEST"
             },
             {
-                title: "시크릿큐레이팅후기_막막함에 확신이 생깁니다. 돈 안 아까움 주의!!",
-                content: `안녕하세요, 전 9월 중순에 큐레이팅을 받았습니다.\n아시다시피 큐레이팅은 일주일간 진행되는데, 
-다른 상담들은 한번만 그리고 몇 시간동안만 진행되는 것에 비해
-시크릿큐레이팅은 일주일이라는 시간이 주어지고
-언제든 질문을 하고 답변을 받을 수 있다는 점이 참 좋았습니다.
- 
-저는 큐레이팅을 시작했을 당시, 실거주와 투자. 어느 것을 하는 것이 좋을 지도 결정 못하고 있었습니다.
-시브님은 제 의견은 다 들어주시되, 시브님의 의견을 근거를 들어가며 설명해 주시고,
-저에게 선택권을 주셨습니다.
-덕분에 전 실거주로 방향성을 잡게 되었고,
-시브님의 근거들 덕분에 제 방향성에 확신을 더할 수 있었습니다.
- 
-그리고, 상담을 많이 해보셔서 그런 걸까요? 아님 책이나 여러 경험들을 통해 그릇이 커서 그런 걸까요?
-저는 큐레이팅 내내 경제적인 것 뿐만이 아니라 인생에 대해서도 저보다 큰 그릇을 갖고 계신 분과 대화 함으로써 
-느끼는 경외감?이 있었습니다.
-실거주다 보니 아이와 남편의 이야기까지 하게 되는데, 
-제가 망설이거나 고민하고 있는 부분을 잘 잡아 주셔서 감사했던 기억이 있습니다. 
- 
-후보지 단지와 지역을 추천해 주시고, 그 곳을 임장하고 나서 느낀점을 적는 숙제를 내 주셨는데,
-단지의 장단점과 주의해서 확인해야 할 점들을 미리 보내주셔서 그 부분을 중점으로 제 눈으로 다시 한번 확인하고
-제가 임장 후기를 보냈을 때, 피드백을 주셨는데 이것이 단지들을 객관적으로 바라보는 기준이 되었습니다.
-그리고 현재 그 지역의 부동산 분위기를 설명해 주셔서 제를 채찍질 해주셨는데,, 
-9월에 매수했다면 좋았을 것을 자가에 전세가 끼어있는 집까지 두 개를 동시에 매도하려니 시간이 참 오래걸렸습니다.
-자가 매도시에도 시브님의 채찍질이 참 도움이 많이 됐어요.
-그렇게 일주일이라는 기간이 후딱 가고, 큐레이팅이 끝났죠.
- 
-아!!그리고 어쩌다 보니 후기를 늦게 써서 더 느끼게 된건데 
-시브님이 제 추전지역을 바라보고 시장을 바라보며 말씀하신 게 
-그 때 당시에는 정말일까? 라는 의구심?도 아주 조금은 있었는데
-지나고 보니 진짜였어요.
- 
-그리고, 몇 달이 지난 이 시점에 전 매도를 다 끝내고 
-제가 원하는 지역에 드디어 매수했습니다.
-9월과 11월 사이에 정책으로 부동산시장은 엄청 혼란스러웠고
-지금도 그 때의 큐레이팅 내용이 유효할까? 생각하며
-나눈 대화를 다시 한번 읽어나가며 
-아직도 유효하다는 판단을 할 수 있었고 괜찮은 가격이다.
-라는 확신으로 매수를 진행할 수 있었습니다.
- 
-시크릿큐레이팅은 내가 어떤 질문을 하느냐에 따라 제가 얻고자 하는 대답보다 더 많은 것을 얻어갈 수 있습니다.
-그리고, 혹시 저처럼 질문을 못 하면 어떻하지?라고 생각하셔도 괜찮습니다. 
-알아서 물어봐 주시거든요.
-30만원으로 3000만원의 가치를 줄 수 있다는 시크릿큐레이팅의 홍보문구는 과장이 아닙니다.
-읽어주셔서 감사합니다.`,
-                author: "이수정님", date: "2025-12-01", rating: 5, badge: "BEST"
-            },
-            {
                 title: "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공!",
-                content: `안녕하세요!
-결혼을 준비하던 약 3년 전부터 부동산을 째려보던 제가
-시브님을 만나고 약 2주만에 서울에 내집 마련을 했습니다!
-성격이 좋게 말하면 꼼꼼하고 나쁘게 말하면 의사 결정을 잘 못내리는데,
-좋은 시기에 시브님을 만나 빠르게 의사결정 내려서 드디어 매수에 성공했습니다 :)
-
-평소 부동산 유튜브, 월부 커뮤니티 등 다양한 소스로 부동산 공부를 하다가,
-시브님의 칼럼을 읽고 앗 이분이다! 하는 생각이 들어
-시브님을 알게되고 바로 다음 날에 큐레이팅 컨설팅을 신청하였는데요!
-
-마포, 성동구를 째려보다가 매수 시기를 놓쳐 우울해 했었는데,
-저희 부부의 시드 및 상황을 빠르게 파악하시고
-저희가 가진 금액에서 접근할 수 있는 5개의 단지를 큐레이팅 해주셨습니다!
-
-처음 봤던 단지들이 대부분이라,
-중간에 제가 더 아파트를 서치해보았지만
-시브님이 정말 귀신같이(?) 더 나은 매물들만 골라주셨더라구요 ㅎㅎㅎ
-
-그래서 큐레이팅이 정말 많은 시간을 단축해주는구나! 하는 생각을 했고
-(진행하시는 분들은 믿고 가셔도 좋을 것 같습니다!!!)
-중간 중간 지금 더 찾을 때가 아니라 얼른 가서 임장하고 부동산 볼때다 라고 회초리(?)를 들어주신 것도
-밍기적 거리는 저에게 큰 도움이 됐습니다!
-
-말씀듣고 바로 다음 날 부동산 가서 봤던 매물을
-1015 대책 이후에 급매로 나와서 바로 잡을 수 있었습니다 ㅎㅎㅎ
-
-가장 추천 드리는 부분은 1) 예산에 맞는 최고의 단지를 추천해주시고
-2) 움직일 수 있도록 이끌어주시는 부분이고,
-
-저희 부부에게, 그리고 빠르게 매수가 필요했던 이번 시기에 너무 큰 도움을 받았습니다.
-
-결론적으로 결혼 2년 전부터 3년간 째려봤던 부동산을
-시브님을 만나고 2주 만에 매수 할 수 있게 되었습니다 :)
-
-+) 중간 중간 제 많은 질문들 답변 주셔서 감사드리며,
-좋은 물건 사고 싶으신 분들, 그리고 부린이라서 계약이 무서우신 분들께 강력 추천드립니다!
-
-감사합니다 시브님 :)
-(갈아타기때 또 뵙겠습니다!)`,
+                content: `안녕하세요! 결혼을 준비하던 약 3년 전부터 부동산을 째려보던 제가 시브님을 만나고 약 2주만에 서울에 내집 마련을 했습니다! 성격이 좋게 말하면 꼼꼼하고 나쁘게 말하면 의사 결정을 잘 못내리는데, 좋은 시기에 시브님을 만나 빠르게 의사결정 내려서 드디어 매수에 성공했습니다 :)\n가장 추천 드리는 부분은 1) 예산에 맞는 최고의 단지를 추천해주시고 2) 움직일 수 있도록 이끌어주시는 부분이고, 저희 부부에게, 그리고 빠르게 매수가 필요했던 이번 시기에 너무 큰 도움을 받았습니다.\n결론적으로 결혼 2년 전부터 3년간 째려봤던 부동산을\n시브님을 만나고 2주 만에 매수 할 수 있게 되었습니다 :)`,
                 author: "김아름님", date: "2025-11-04", rating: 5, badge: "BEST"
             },
             {
@@ -420,38 +266,11 @@
             },
             {
                 title: "큐레이팅 후기",
-                content: `안녕하세요 큐레이팅 후기를 남깁니다.
-저는 추석 연휴가 끝나고 큐레이팅을 시작해서 한 주만에 살던 집을 매도하고 새집을 매수하게 되었습니다.
-처음에 큐레이팅을 신청할 때는 '정말로 이번 기회에 매도와 매수를 해야겠다' 이런 생각보다는 그간에 부동산에 대해서 제가 생각했던
-시나리오를 누군가에게 검증 받아 보자라는 마음으로 시작했습니다.
-
-사실 부동산이라는 것이 예민한 주제라 주변인들과 적극적인 토론을 하기는 좀 꺼려지는 경향이 있고 인터넷 카페에 고민을 올려도
-고민에 댓글을 달아주는 분들의 상황이 다 저와 다르기 때문에 객관적인 상담은 어렵겠다고 생각했었습니다.
-
-이때 마침 친구가 추천해준 '나는 1000만원으로 아파트 산다'라는 책의 저자 시크릿브라더가 생각나서 제 손으로 유투브를 검색해서 찾아내고
-여기서 큐레이팅이 있다는 것을 보고 신청해서 상담을 받았습니다.
-
-결과는 대만족이었습니다. 사실 이번에 매수까지 성공하지 못했더라도 굉장히 만족스러운 상담이었다고 생각합니다.
-특히 저처럼 돌다리도 두드려보고 건너고 싶은 성격의 소유자이면서 또 남들이 하는 한마디에 맘이 크게 흔들릴 수 있는 분들에게 추천합니다.
-
-다들 마음속에 '이렇게 이렇게 해서 이런 아파트를 사는게 좋지 않을까?' 라는 막연한 시나리오 들은 있을 겁니다.
-이번에 큐레이팅을 받아 매도매수과정을 함께 해보니 이런 시나리오들을 행동으로 옮기는데
-혼자서 해봤다면 (정말 괜찮은 좋은 방향의 시나리오라도) 많은 장애물들을 넘지 못하고 실행하지 못 했을 수도 있었을 거란 생각이 듭니다.
-
-현황의 분석과 나라는 사람의 특수성을 고려한 제안들은 너무 좋았고 특히 직접 다른 사람들과 부딪히면서 해결해 나가게되는
-부동산에 매물을 올리는 과정, 네고, 계약서 작성등의 단계에서 혼자 있지 않다는 느낌을 받으며 실시간으로 상담받았던 기억이 지금도 생생합니다.
-
-집을 매수하거나 매도할 때 향후의 결과가 어떻게 될지는100% 예측할 수 있는 사람은 없을 거라고 생각합니다.
-짧은 부동산 경력이지만 저는 그렇기 때문에 결과가 좋다면 당연히 좋은거지만 결과가 좋지 않을 때에 대한 마음의 대비가 중요하다고 봅니다.
-그러한 마음의 대비는 만약에 시간이 지나 부동산 거래의 성적표가 도달했을 때도 '과거의 나로 돌아간다면 이런 생각과 결정이 그 상황의 나에게 있어선 최선이었어'라는
-본인을 납득시킬 수 있는 이유가 있어야한다고 생각합니다.
-
-이번 부동산 거래는 인생에 있어 2번째이지만 가장 큰 부동산 거래 였는데 앞으로 어떻게 될지는 100% 장담할 순 없을 것 같습니다.
-하지만 정말로 치열한 고민 끝에 내린 결정이었음을 이미 알고 있고 그러한 치열한 생각의 과정에서 옆에 있어 줬던 시크릿브라더에게 참 감사합니다.`,
+                content: `안녕하세요 큐레이팅 후기를 남깁니다.\n저는 추석 연휴가 끝나고 큐레이팅을 시작해서 한 주만에 살던 집을 매도하고 새집을 매수하게 되었습니다.\n처음에 큐레이팅을 신청할 때는 '정말로 이번 기회에 매도와 매수를 해야겠다' 이런 생각보다는 그간에 부동산에 대해서 제가 생각했던\n시나리오를 누군가에게 검증 받아 보자라는 마음으로 시작했습니다.\n\n사실 부동산이라는 것이 예민한 주제라 주변인들과 적극적인 토론을 하기는 좀 꺼려지는 경향이 있고 인터넷 카페에 고민을 올려도\n고민에 댓글을 달아주는 분들의 상황이 다 저와 다르기 때문에 객관적인 상담은 어렵겠다고 생각했었습니다.\n\n이때 마침 친구가 추천해준 '나는 1000만원으로 아파트 산다'라는 책의 저자 시크릿브라더가 생각나서 제 손으로 유투브를 검색해서 찾아내고\n여기서 큐레이팅이 있다는 것을 보고 신청해서 상담을 받았습니다.\n\n결과는 대만족이었습니다. 사실 이번에 매수까지 성공하지 못했더라도 굉장히 만족스러운 상담이었다고 생각합니다.\n특히 저처럼 돌다리도 두드려보고 건너고 싶은 성격의 소유자이면서 또 남들이 하는 한마디에 맘이 크게 흔들릴 수 있는 분들에게 추천합니다.\n\n다들 마음속에 '이렇게 이렇게 해서 이런 아파트를 사는게 좋지 않을까?' 라는 막연한 시나리오 들은 있을 겁니다.\n이번에 큐레이팅을 받아 매도매수과정을 함께 해보니 이런 시나리오들을 행동으로 옮기는데\n혼자서 해봤다면 (정말 괜찮은 좋은 방향의 시나리오라도) 많은 장애물들을 넘지 못하고 실행하지 못 했을 수도 있었을 거란 생각이 듭니다.\n\n이번 부동산 거래는 인생에 있어 2번째이지만 가장 큰 부동산 거래 였는데 앞으로 어떻게 될지는 100% 장담할 순 없을 것 같습니다.\n하지만 정말로 치열한 고민 끝에 내린 결정이었음을 이미 알고 있고 그러한 치열한 생각의 과정에서 옆에 있어 줬던 시크릿브라더에게 참 감사합니다.`,
                 author: "이민석님", date: "2025-10-27", rating: 5, badge: "BEST"
             },
             
-            // 2025년 일반 (예시 추가)
+            // 2025년 일반
             { date: "2025-12-05", author: "한철수님", title: "시브님 큐레이팅 대박입니다.", content: "평소 블로그랑 유튜브 보면서 공부하고 있었는데, 이번에 큰맘 먹고 큐레이팅 신청했습니다. 제가 고민하던 지역뿐만 아니라 생각지도 못한 저평가 지역까지 알려주셔서 선택의 폭이 넓어졌습니다. 특히 매수 타이밍을 정확하게 짚어주시는 게 소름 돋았습니다.\n\n강력 추천합니다!", rating: 5 },
             { date: "2025-12-03", author: "박진영님", title: "부린이도 이해하기 쉬운 설명 감사합니다", content: "부동산 용어도 잘 모르는 부린이라 걱정 많이 했는데, 제 눈높이에 맞춰서 하나하나 설명해주셔서 너무 감사했습니다. 단순히 물건 추천이 아니라 부동산 공부하는 방법까지 알려주셔서 앞으로 투자하는 데 큰 도움이 될 것 같습니다.", rating: 4 },
             { date: "2025-11-28", author: "최준호님", title: "갈아타기 성공했습니다!", content: "1주택자인데 상급지로 갈아타기 하려고 1년 넘게 고민만 하다가 시브님 도움받고 드디어 성공했습니다. 매도 타이밍이랑 매수 타이밍을 기가 막히게 잡아주셔서 세금도 아끼고 좋은 가격에 이사 가게 되었습니다. 진작 신청할 걸 그랬어요.", rating: 5 },
@@ -506,39 +325,235 @@
             { date: "2023-03-17", author: "한O경님", title: "정규반 4기 한O경님 후기", content: `&lt;p id=&quot;SE-fdee4770-f1b3-44fb-a590-913d49f4e1fd&quot;&gt;저의 소중했던 꿈이 카드 값을 갚는 수단이 되는 순간, 철부지 기혼녀에서 100일 아가의 엄마가된 순간 더 이상은 다음 달 월급을 저당 잡아 이번 달을 풍족하게 사는 못난 모습으로 살고 싶지 않았고 제 삶의 가치와 가족을 위해 경제적 자유를 실현해야겠다고 마음먹었습니다.&lt;/p&gt;&lt;p&gt;그러던 중 우연히 신사임당 유튜브에서 스마일 얼굴로 나온 시브님을 보게 됐고, 7차 필터링이 제가 찾던 답이라는 것을 알게 됐습니다. 바로 “나는 1000만원으로 아파트를 산다” 책을 단숨에 읽고 강의를 신청하게 되었습니다.&lt;/p&gt;&lt;p&gt;어려웠던 시간만큼 얻은 것도 많았습니다. 부동산 사이트 활용하는 것들이 손에 익혀지게 되었고, 시브님의 2강 내용을 조금 더 깊이 있게 이해하게 되었고, 이해하게 되면서 새로운 궁금증들도 생겼습니다.&lt;/p&gt;`, rating: 5 }
         ];
 
-        // 날짜순 정렬 (최신순)
-        allReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Firebase 초기화 및 전역 함수 설정
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-        // 조회수 연동 (index.html과 동일한 Key 사용)
-        allReviews.forEach(r => r.views = getViewCount(r.title, r.badge === 'BEST'));
+        // 2. 전역 함수 설정 (HTML onclick 연동) - 여기로 이동
+        window.lucide = lucide; 
+        window.toggleModal = (id) => { const el = document.getElementById(id); if(el) el.classList.toggle('hidden'); };
+        window.openImageModal = (src) => { document.getElementById('modal-image-src').src = src; window.toggleModal('imageModal'); };
+        window.scrollToSection = (id) => { document.getElementById(id).scrollIntoView({behavior:'smooth'}); };
+        window.openLoginModal = (tab) => { window.toggleModal('loginModal'); window.switchAuthTab(tab); };
+        window.switchAuthTab = (tab) => {
+            const loginForm = document.getElementById('form-login');
+            const signupForm = document.getElementById('form-signup');
+            const loginTab = document.getElementById('tab-login');
+            const signupTab = document.getElementById('tab-signup');
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden'); signupForm.classList.add('hidden');
+                loginTab.classList.add('text-indigo-600', 'border-b-2', 'border-indigo-600'); signupTab.classList.remove('text-indigo-600', 'border-b-2');
+            } else {
+                signupForm.classList.remove('hidden'); loginForm.classList.add('hidden');
+                signupTab.classList.add('text-indigo-600', 'border-b-2', 'border-indigo-600'); loginTab.classList.remove('text-indigo-600', 'border-b-2');
+            }
+        };
+        window.toggleMobileMenu = () => { document.getElementById('mobileMenu').classList.toggle('hidden'); };
+        window.copyAccount = () => { navigator.clipboard.writeText("521-063745-04-011"); alert("계좌번호 복사완료"); };
+        window.checkPaymentLink = (e, href) => { if(href.includes('portone')) { e.preventDefault(); window.open(href, '_blank'); alert("결제 링크를 복사해오세요."); } };
+        window.toggleFaq = (btn) => { 
+            const ans = btn.nextElementSibling; 
+            const icon = btn.querySelector('svg'); 
+            ans.classList.toggle('hidden'); 
+            icon.style.transform = ans.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)'; 
+        };
 
-        let visibleCount = 12;
-        const container = document.getElementById('all-reviews-container');
-        document.getElementById('review-count').innerText = allReviews.length;
+        // --- Firebase Actions ---
+        window.processSignup = async () => {
+            const id = document.getElementById('reg-id').value.trim();
+            const pw = document.getElementById('reg-pw').value.trim();
+            const name = document.getElementById('reg-name').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const source = document.getElementById('reg-source').value;
 
-        function renderAllReviews() {
-            container.innerHTML = '';
-            const toShow = allReviews.slice(0, visibleCount);
-            
-            toShow.forEach((review, index) => {
-                const card = document.createElement('div');
-                card.className = "bg-white p-6 rounded-2xl shadow-sm border border-gray-100 review-card flex flex-col justify-between";
-                // 중요: ID로 찾아서 열기 (인덱스 꼬임 방지)
-                // 현재 정렬된 상태에서 slice한 인덱스와 1:1 매칭됨
-                card.onclick = function() { window.openDetail(index); };
-                
-                let badge = "";
-                if(review.badge === "BEST" || review.type === "BEST") badge = `<span class="text-red-500 font-bold text-xs bg-red-50 px-2 py-1 rounded">BEST</span>`;
-                else if(review.date.startsWith("2025")) badge = `<span class="text-indigo-500 font-bold text-xs bg-indigo-50 px-2 py-1 rounded">NEW</span>`;
-                else badge = `<span class="text-gray-400 font-bold text-xs bg-gray-100 px-2 py-1 rounded">REVIEW</span>`;
-                
-                let stars = "";
-                for(let i=1; i<=5; i++) {
-                    if(i <= review.rating) stars += `<i data-lucide="star" class="w-3 h-3 fill-current text-yellow-400"></i>`;
-                    else stars += `<i data-lucide="star" class="w-3 h-3 text-gray-300"></i>`;
+            if(!id || !pw || !name) { alert("필수 정보를 입력해주세요."); return; }
+
+            try {
+                const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users_' + id); 
+                const docSnap = await getDoc(userDocRef);
+
+                if (docSnap.exists()) {
+                    alert("이미 존재하는 아이디입니다.");
+                    return;
                 }
 
-                // 리스트 화면: 3줄 요약 (line-clamp)
+                await setDoc(userDocRef, {
+                    id, pw, name, phone, email, source,
+                    joinedAt: new Date().toISOString(),
+                    paymentStatus: 'unpaid'
+                });
+
+                alert("회원가입이 완료되었습니다! 로그인해주세요.");
+                window.switchAuthTab('login');
+            } catch (e) {
+                console.error("Signup Error:", e);
+                alert("회원가입 중 오류가 발생했습니다.");
+            }
+        };
+
+        window.processLogin = async () => {
+            const id = document.getElementById('login-id').value.trim();
+            const pw = document.getElementById('login-pw').value.trim();
+
+            if(!id || !pw) { alert("아이디와 비밀번호를 입력해주세요."); return; }
+
+            try {
+                const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users_' + id);
+                const docSnap = await getDoc(userDocRef);
+
+                if (docSnap.exists()) {
+                    const userData = docSnap.data();
+                    if (userData.pw === pw) {
+                        sessionStorage.setItem('sc_user_id', id);
+                        sessionStorage.setItem('sc_user_name', userData.name);
+                        alert(userData.name + "님 환영합니다!");
+                        window.location.reload();
+                    } else {
+                        alert("비밀번호가 일치하지 않습니다.");
+                    }
+                } else {
+                    alert("존재하지 않는 아이디입니다.");
+                }
+            } catch (e) {
+                console.error("Login Error:", e);
+                alert("로그인 중 오류가 발생했습니다.");
+            }
+        };
+
+        window.handleLogout = () => {
+            if(confirm("로그아웃 하시겠습니까?")) {
+                sessionStorage.removeItem('sc_user_id');
+                sessionStorage.removeItem('sc_user_name');
+                window.location.reload();
+            }
+        };
+
+        window.checkLoginStatus = async () => {
+            const userId = sessionStorage.getItem('sc_user_id');
+            const userName = sessionStorage.getItem('sc_user_name');
+
+            if (userId) {
+                document.getElementById('auth-guest').classList.add('hidden-section');
+                document.getElementById('auth-user').classList.remove('hidden-section');
+                document.getElementById('user-name').innerText = userName;
+
+                document.getElementById('mypage-guest').classList.add('hidden-section');
+                document.getElementById('user-info-card').classList.remove('hidden-section');
+                document.getElementById('mp-username').innerText = userName;
+
+                // DB 결제 상태 확인
+                if (auth.currentUser) {
+                    try {
+                        const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users_' + userId);
+                        const docSnap = await getDoc(userDocRef);
+                        
+                        document.getElementById('mypage-user-unpaid').classList.add('hidden-section');
+                        document.getElementById('status-paid').classList.add('hidden-section');
+                        document.getElementById('status-pending').classList.add('hidden-section');
+
+                        if (docSnap.exists()) {
+                            const status = docSnap.data().paymentStatus;
+                            if(status === 'paid') document.getElementById('status-paid').classList.remove('hidden-section');
+                            else if(status === 'pending') document.getElementById('status-pending').classList.remove('hidden-section');
+                            else document.getElementById('mypage-user-unpaid').classList.remove('hidden-section');
+                        } else {
+                             document.getElementById('mypage-user-unpaid').classList.remove('hidden-section');
+                        }
+                    } catch(e) { console.error("Status Check Error:", e); }
+                }
+            }
+        };
+
+        window.requestDeposit = async () => {
+            const userId = sessionStorage.getItem('sc_user_id');
+            if (!userId) {
+                alert("로그인 후 신청 가능합니다.");
+                // 네이버 폼 이동은 막지 않음
+                return;
+            }
+            try {
+                const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users_' + userId);
+                await updateDoc(userDocRef, { paymentStatus: 'pending' });
+                // alert는 새 창 닫고 돌아왔을 때 확인
+            } catch(e) {
+                console.error("Deposit Error:", e);
+            }
+        };
+
+
+        // --- 조회수 연동 로직 ---
+        const VIEW_KEY = "secretclass_review_views";
+        const LAST_UPDATE_KEY = "secretclass_views_last_update";
+        function loadViewData() { return JSON.parse(localStorage.getItem(VIEW_KEY) || "{}"); }
+        function saveViewData(data) { localStorage.setItem(VIEW_KEY, JSON.stringify(data)); }
+        function checkAndUpdateViews(data) {
+            const now = Date.now();
+            const lastUpdate = parseInt(localStorage.getItem(LAST_UPDATE_KEY) || 0);
+            if (now - lastUpdate > 86400000) {
+                for (let key in data) { data[key] += Math.floor(Math.random() * 5) + 1; }
+                saveViewData(data);
+                localStorage.setItem(LAST_UPDATE_KEY, now.toString());
+            }
+            return data;
+        }
+        function getViewCount(title, isBest) {
+            let data = loadViewData();
+            if (!data[title]) {
+                const initialView = isBest 
+                    ? Math.floor(Math.random() * (1200 - 900 + 1)) + 900 
+                    : Math.floor(Math.random() * (500 - 150 + 1)) + 150;
+                data[title] = initialView;
+                saveViewData(data);
+            }
+            data = checkAndUpdateViews(data);
+            return data[title];
+        }
+        function incrementViewCount(title) {
+            let data = loadViewData();
+            if (data[title]) {
+                data[title] += 1;
+                saveViewData(data);
+            }
+        }
+
+        function decodeAndFormatHtml(html) {
+            if(!html) return "";
+            var txt = document.createElement("textarea");
+            txt.innerHTML = html;
+            let decoded = txt.value;
+            if (!decoded.includes('<p>') && !decoded.includes('<br>')) {
+                decoded = decoded.replace(/\n/g, '<br>');
+            }
+            return decoded;
+        }
+
+        // 렌더링 함수
+        function renderAllReviews() {
+            const bestContainer = document.getElementById('all-reviews-container');
+            if (!bestContainer) return;
+            bestContainer.innerHTML = '';
+            
+            // 전역 reviewData 사용 (데이터가 위에 정의되어 있으므로 안전)
+            allReviews.forEach((review, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-6 rounded-2xl shadow-sm border border-gray-100 review-card flex flex-col justify-between";
+                card.onclick = () => window.openReviewDetail(index);
+                
+                // 조회수 가져오기 (연동)
+                review.views = getViewCount(review.title, review.badge === 'BEST').toLocaleString();
+
+                let stars = '';
+                for(let i=0; i<5; i++) stars += `<i data-lucide="star" class="w-3 h-3 text-yellow-400 fill-current"></i>`;
+
+                let badge = "";
+                if(review.badge === "BEST") badge = `<span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded">BEST</span>`;
+                else if(review.date.startsWith("2025")) badge = `<span class="bg-indigo-50 text-indigo-500 text-xs font-bold px-2 py-1 rounded">NEW</span>`;
+                else badge = `<span class="bg-gray-100 text-gray-400 text-xs font-bold px-2 py-1 rounded">REVIEW</span>`;
+
                 card.innerHTML = `
                     <div>
                         <div class="flex justify-between mb-2">${badge}<span class="text-xs text-gray-400">${review.date}</span></div>
@@ -551,43 +566,25 @@
                     </div>
                     <div class="mt-1 text-right text-xs text-gray-400 flex justify-end items-center gap-1"><i data-lucide="eye" class="w-3 h-3"></i> ${review.views.toLocaleString()}</div>
                 `;
-                container.appendChild(card);
+                bestContainer.appendChild(card);
             });
-
-            if(visibleCount >= allReviews.length) {
-                document.getElementById('load-more-btn').style.display = 'none';
-            }
             lucide.createIcons();
         }
 
-        window.loadMore = function() {
-            visibleCount += 12;
-            renderAllReviews();
-        }
-
-        window.openDetail = function(renderIndex) {
-            // 현재 화면에 렌더링된 순서(toShow)와 allReviews(정렬됨)의 순서는 일치함 (slice 전까지)
-            const review = allReviews[renderIndex];
-            
+        window.openReviewDetail = function(index) {
+            const review = allReviews[index];
             document.getElementById('modal-title').innerText = review.title;
-            // 줄바꿈이 있으면 <br>로 변경해서 표시
+            // 줄바꿈 처리
             document.getElementById('modal-content').innerHTML = decodeAndFormatHtml(review.content).replace(/\n/g, '<br>');
             document.getElementById('modal-author').innerText = review.author;
             document.getElementById('modal-date').innerText = review.date;
-            document.getElementById('modal-views').innerText = review.views.toLocaleString();
-            // 클릭 시 조회수 증가 및 반영
+            
+            // 조회수 증가 및 동기화
             incrementViewCount(review.title);
             document.getElementById('modal-views').innerText = getViewCount(review.title, review.badge === 'BEST').toLocaleString();
-
-            let stars = "";
-            for(let i=1; i<=5; i++) {
-                if(i <= review.rating) stars += `<i data-lucide="star" class="w-4 h-4 fill-current text-yellow-400"></i>`;
-                else stars += `<i data-lucide="star" class="w-4 h-4 text-gray-300"></i>`;
-            }
-            document.getElementById('modal-stars').innerHTML = stars;
-
+            
             const badge = document.getElementById('modal-badge');
-            if(review.badge === 'BEST' || review.type === 'BEST') {
+            if(review.badge === 'BEST') {
                 badge.className = "bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded";
                 badge.innerText = "BEST";
                 badge.classList.remove('hidden');
@@ -597,8 +594,32 @@
             
             window.toggleModal('reviewDetailModal');
             lucide.createIcons();
+        };
+
+        // 3. 인증 초기화 실행 (가장 마지막에 실행)
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                // 로그인 상태 체크는 여기선 필요 없음 (헤더가 없어서)
+                renderAllReviews();
+            } catch (error) {
+                console.error("Auth Error:", error);
+            }
+        };
+        initAuth();
+
+        // 초기 로드
+        if(document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", () => {
+                lucide.createIcons();
+            });
+        } else {
+            lucide.createIcons();
         }
-        renderAllReviews();
     </script>
 </body>
 </html>
