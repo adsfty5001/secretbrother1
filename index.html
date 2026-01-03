@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>시크릿클래스 - 대한민국 1호 아파트 큐레이터 시크릿브라더</title>
-    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 아이콘 -->
@@ -380,8 +379,8 @@
     </div></div></div>
 
     <!-- Other Modals -->
-    <div id="imageModal" class="hidden fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/90" onclick="window.toggleModal('imageModal')"><div class="relative max-w-4xl" onclick="event.stopPropagation()"><button onclick="window.toggleModal('imageModal')" class="absolute -top-10 right-0 text-white"><i data-lucide="x" class="w-8 h-8"></i></button><img id="modal-image-src" src="" class="max-h-[85vh] rounded-lg"></div></div>
-    <div id="videoModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90" onclick="window.toggleModal('videoModal')"><div class="relative w-full max-w-4xl aspect-video bg-black rounded-2xl overflow-hidden" onclick="event.stopPropagation()"><button onclick="window.toggleModal('videoModal')" class="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2"><i data-lucide="x" class="h-6 w-6"></i></button><iframe class="w-full h-full" src="https://www.youtube.com/embed/j0hFCMX5Qlc"></iframe></div></div>
+    <div id="imageModal" class="hidden fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/90" onclick="window.toggleModal('imageModal')"><div class="relative max-w-4xl" onclick="event.stopPropagation()"><button onclick="window.toggleModal('imageModal')" class="absolute -top-10 right-0 text-white"><i data-lucide="x"></i></button><img id="modal-image-src" src="" class="max-h-[85vh] rounded-lg"></div></div>
+    <div id="videoModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90" onclick="window.toggleModal('videoModal')"><div class="relative w-full max-w-4xl aspect-video bg-black rounded-2xl overflow-hidden" onclick="event.stopPropagation()"><button onclick="window.toggleModal('videoModal')" class="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2"><i data-lucide="x"></i></button><iframe class="w-full h-full" src="https://www.youtube.com/embed/j0hFCMX5Qlc"></iframe></div></div>
 
     <script>
         // 전역 함수 설정 (window 객체에 할당)
@@ -398,9 +397,11 @@
         window.copyAccount = function() { navigator.clipboard.writeText("521-063745-04-011"); alert("계좌번호 복사완료"); };
         window.checkPaymentLink = function(e, href) { if(href.includes('portone')) { e.preventDefault(); window.open(href); alert("결제 링크를 복사해오세요."); } };
         window.requestDeposit = function() { 
+            // 새 창 열기 (팝업 차단 방지 위해 setTimeout 사용 안함)
+            // 상태 변경은 창이 열린 후에 진행하는 것이 안전하지만, 동시 진행도 무방
             localStorage.setItem('paymentStatus', 'pending'); 
-            alert("입금 확인 신청이 완료되었습니다.\n마이페이지에서 상태를 확인하세요.");
             window.checkLoginStatus(); 
+            // 네이버 폼 링크는 a 태그의 href로 직접 이동하게 둠 (onclick에서 false 반환 안함)
         };
         window.toggleFaq = function(btn) { 
             const ans = btn.nextElementSibling; 
@@ -582,7 +583,7 @@
                             <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">${review.author.charAt(0)}</div>
                             <div><p class="text-xs font-bold text-gray-900">${review.author}</p><p class="text-[10px] text-gray-400">${review.date}</p></div>
                         </div>
-                        <div class="flex items-center gap-1 text-xs text-gray-400 font-medium"><i data-lucide="eye" class="w-4 h-4"></i> ${review.views}</div>
+                        <div class="flex items-center gap-1 text-xs text-gray-400 font-medium"><i data-lucide="eye" class="w-4 h-4"></i> ${review.views.toLocaleString()}</div>
                     </div>
                 `;
                 bestContainer.appendChild(card);
