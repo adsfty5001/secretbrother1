@@ -81,7 +81,7 @@
                     <button onclick="window.openLoginModal('signup')" class="hover:text-indigo-600 transition-colors">회원가입</button>
                 </div>
                 <div id="auth-user" class="hidden-section flex items-center gap-4">
-                    <span class="text-gray-700 font-bold"><span id="user-name" class="text-indigo-600">홍길동</span>님 환영합니다</span>
+                    <span class="text-gray-700 font-bold"><span id="user-name" class="text-indigo-600"></span>님 환영합니다</span>
                     <span class="text-gray-300">|</span>
                     <button onclick="window.handleLogout()" class="hover:text-red-500 transition-colors">로그아웃</button>
                 </div>
@@ -118,7 +118,7 @@
         </div>
     </header>
 
-    <!-- 메인 배너 (책 겹침 복구) -->
+    <!-- 메인 배너 -->
     <section class="relative overflow-hidden group bg-gray-900 min-h-[600px] flex items-center">
         <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-[#1e293b] to-indigo-950 z-0"></div>
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 z-0"></div>
@@ -147,7 +147,7 @@
                     <a href="https://www.yes24.com/product/goods/104491194" target="_blank" class="absolute w-36 md:w-48 lg:w-60 transform -rotate-[15deg] -translate-x-6 hover:rotate-0 hover:scale-110 hover:z-30 transition-all duration-500 shadow-2xl cursor-pointer z-10">
                         <img src="https://image.yes24.com/goods/104491194/XL" alt="나는 1000만원으로 아파트 산다" class="w-full rounded-r-xl book-shadow border-l-2 border-gray-600">
                     </a>
-                    <!-- 오른쪽 책 -->
+                    <!-- 오른쪽 책 (겹치게) -->
                     <a href="https://www.yes24.com/product/goods/122689813" target="_blank" class="absolute w-36 md:w-48 lg:w-60 transform rotate-[5deg] translate-x-6 hover:rotate-0 hover:scale-110 hover:z-30 transition-all duration-500 shadow-2xl cursor-pointer z-20">
                         <img src="https://image.yes24.com/goods/122689813/XL" alt="돈 버는 뇌 못 버는 뇌" class="w-full rounded-r-xl book-shadow border-l-2 border-gray-600">
                     </a>
@@ -170,24 +170,60 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="w-full lg:w-1/2 pt-0 lg:pt-4">
                     <div class="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold mb-4">WHO AM I</div>
-                    <h2 class="text-3xl md:text-4xl font-extrabold mb-6 text-gray-900 leading-snug break-keep" style="font-family: 'Jalnan', sans-serif !important;">'아파트 큐레이터'<br/><span class="text-indigo-600 relative inline-block">시크릿브라더<svg class="absolute bottom-1 left-0 w-full h-3 -z-10 bg-yellow-200/60" style="border-radius: 4px;"></svg></span>입니다.</h2>
+                    <h2 class="text-3xl md:text-4xl font-extrabold mb-6 text-gray-900 leading-snug break-keep" style="font-family: 'Jalnan', sans-serif !important;">
+                        '아파트 큐레이터'<br/>
+                        <span class="text-indigo-600 relative inline-block">
+                            시크릿브라더
+                            <svg class="absolute bottom-1 left-0 w-full h-3 -z-10 bg-yellow-200/60" style="border-radius: 4px;"></svg>
+                        </span>입니다.
+                    </h2>
+                    
                     <div class="text-gray-600 text-base md:text-lg leading-relaxed mb-8 space-y-4 border-l-4 border-gray-200 pl-6 break-keep font-body">
                         <p class="font-bold text-gray-800">"아직도 살지 말지 고민하시나요?"</p>
                         <p>저는 대한민국 1호 ‘초이스헬퍼’로서 여러분의 후회 없는 선택을 설계해드리고 있습니다.</p>
                         <p>수많은 아파트와 뉴스 속에서 혼자 고민하지 마세요. 실제 투자와 상담으로 검증된 인사이트로, 당신에게 맞는 한 채를 함께 고르겠습니다.</p>
                     </div>
-                    <!-- 링크 복구 완료 -->
+
                     <div class="space-y-3 bg-gray-50 p-5 md:p-6 rounded-xl border border-gray-100 mb-8 font-body">
                         <h4 class="font-bold text-gray-900 mb-4 flex items-center gap-2"><i data-lucide="award" class="w-5 h-5 md:w-6 md:h-6 text-yellow-500 fill-current"></i> 주요 경력 및 활동</h4>
-                        <button onclick="window.openImageModal('./1.jpg')" class="w-full flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100 text-left"><span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">1</span><span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-indigo-600 break-keep flex-grow">서울머니쇼 초청강사</span><i data-lucide="image" class="w-4 h-4 text-gray-400 opacity-50 group-hover:opacity-100"></i></button>
-                        <a href="https://youtu.be/Xg5GV-b-7rU?si=_h20A9yTGwFsOwSz" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100"><span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">2</span><span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-red-600 break-keep">김작가TV & 신사임당 & 월부 채널 출연</span><i data-lucide="youtube" class="w-4 h-4 text-red-500 ml-auto group-hover:scale-110 transition-transform"></i></a>
-                        <a href="https://blog.naver.com/secret-brother" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100"><span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">3</span><div class="flex flex-col"><span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-green-600 break-keep">누적 방문자 200만 블로거</span><span class="text-xs text-gray-400 font-medium group-hover:text-green-500 break-keep">(성공한 형의 비밀일기장)</span></div><i data-lucide="external-link" class="w-4 h-4 text-gray-400 ml-auto opacity-50 group-hover:opacity-100"></i></a>
-                        <a href="https://www.youtube.com/@secretbrother_official" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100"><span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">4</span><span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-red-600 break-keep">시크릿브라더 유튜브 채널 운영</span><i data-lucide="external-link" class="w-4 h-4 text-gray-400 ml-auto opacity-50 group-hover:opacity-100"></i></a>
-                        <a href="https://cafe.naver.com/f-e/cafes/12730407/members/NLGMlLKgwIgd43sXBQbqw63HggHmL08BGrf6Q6JMNJM?tab=articles" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100"><span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">5</span><span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-green-600 break-keep">부동산스터디카페 인기 칼럼리스트</span><i data-lucide="external-link" class="w-4 h-4 text-gray-400 ml-auto opacity-50 group-hover:opacity-100"></i></a>
+                        
+                        <button onclick="window.openImageModal('./1.jpg')" class="w-full flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100 text-left">
+                            <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">1</span>
+                            <span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-indigo-600 break-keep flex-grow">서울머니쇼 초청강사</span>
+                            <i data-lucide="image" class="w-4 h-4 text-gray-400 opacity-50 group-hover:opacity-100"></i>
+                        </button>
+                        <a href="https://youtu.be/Xg5GV-b-7rU?si=_h20A9yTGwFsOwSz" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100">
+                            <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">2</span>
+                            <span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-red-600 break-keep">김작가TV & 신사임당 & 월부 채널 출연</span>
+                            <i data-lucide="youtube" class="w-4 h-4 text-red-500 ml-auto group-hover:scale-110 transition-transform"></i>
+                        </a>
+                        <a href="https://blog.naver.com/secret-brother" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100">
+                            <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">3</span>
+                            <div class="flex flex-col">
+                                <span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-green-600 break-keep">누적 방문자 200만 블로거</span>
+                                <span class="text-xs text-gray-400 font-medium group-hover:text-green-500 break-keep">(성공한 형의 비밀일기장)</span>
+                            </div>
+                            <i data-lucide="external-link" class="w-4 h-4 text-gray-400 ml-auto opacity-50 group-hover:opacity-100"></i>
+                        </a>
+                        <a href="https://www.youtube.com/@secretbrother_official" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100">
+                            <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">4</span>
+                            <span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-red-600 break-keep">시크릿브라더 유튜브 채널 운영</span>
+                            <i data-lucide="external-link" class="w-4 h-4 text-gray-400 ml-auto opacity-50 group-hover:opacity-100"></i>
+                        </a>
+                        <a href="https://cafe.naver.com/f-e/cafes/12730407/members/NLGMlLKgwIgd43sXBQbqw63HggHmL08BGrf6Q6JMNJM?tab=articles" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100">
+                            <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">5</span>
+                            <span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-green-600 break-keep">부동산스터디카페 인기 칼럼리스트</span>
+                            <i data-lucide="external-link" class="w-4 h-4 text-gray-400 ml-auto opacity-50 group-hover:opacity-100"></i>
+                        </a>
                     </div>
-                    <button onclick="window.toggleModal('videoModal')" class="w-full md:w-auto px-8 py-4 bg-gray-900 text-white rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-800 transition-all shadow-lg"><i data-lucide="play-circle" class="w-6 h-6"></i> 시크릿브라더 대표 영상 보기</button>
+
+                    <button onclick="window.toggleModal('videoModal')" class="w-full md:w-auto px-8 py-4 bg-gray-900 text-white rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-800 transition-all shadow-lg">
+                        <i data-lucide="play-circle" class="w-6 h-6"></i>
+                        시크릿브라더 대표 영상 보기
+                    </button>
                 </div>
             </div>
         </div>
@@ -212,11 +248,11 @@
         </div>
     </section>
 
-    <!-- 수강신청 섹션 (할인율 적용 완료) -->
+    <!-- Pricing -->
     <section id="pricing" class="py-24 bg-white">
         <div class="max-w-4xl mx-auto px-4 text-center">
             <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6" style="font-family: 'Jalnan', sans-serif !important;">수강 신청</h2>
-            <div class="bg-white rounded-3xl p-8 md:p-14 shadow-xl border border-gray-100 relative overflow-hidden transition-all duration-300 transform hover:scale-[1.01] ring-1 ring-indigo-50">
+            <div class="bg-white rounded-3xl p-8 md:p-14 shadow-xl border border-gray-100 relative overflow-hidden ring-1 ring-indigo-50">
                 <div class="absolute top-0 left-0 w-full h-3 bg-indigo-600"></div>
                 <div class="mb-8"><span class="inline-block py-1 px-3 rounded-full text-xs font-bold mb-4 bg-indigo-100 text-indigo-700">PREMIUM SERVICE</span><h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 font-body">1:1 맞춤형 투자 큐레이팅</h3><p class="text-gray-500 max-w-lg mx-auto leading-relaxed text-sm md:text-base break-keep font-body">당신의 자산 상황과 목표에 맞춘 100% 개인화 포트폴리오 제안 및 심층 상담</p></div>
                 <!-- 할인율 -->
@@ -248,13 +284,10 @@
             <!-- BEST List -->
             <div class="mb-12">
                 <h3 class="text-2xl font-bold text-gray-800 mb-8 flex items-center justify-center gap-2"><i data-lucide="trophy" class="text-yellow-500 fill-current w-8 h-8"></i> 명예의 전당 (BEST)</h3>
-                <div id="best-reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- JS로 BEST 후기 로드 -->
-                </div>
+                <div id="best-reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
             <!-- 전체 보기 링크 -->
             <div class="text-center mt-12">
-                <!-- [수정] 줄바꿈 수정 (break-keep 추가) -->
                 <a href="all_reviews.html" class="inline-flex items-center gap-2 bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white px-12 py-5 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-xl group break-keep">
                     실시간 전체 후기 보러가기 (최신순) <i data-lucide="arrow-right" class="group-hover:translate-x-1 transition-transform"></i>
                 </a>
@@ -263,7 +296,7 @@
         </div>
     </section>
 
-    <!-- FAQ (복구: 질문 2개, 아코디언 기능) -->
+    <!-- FAQ -->
     <section id="faq" class="py-24 bg-indigo-50">
         <div class="max-w-3xl mx-auto px-4 text-center">
             <h2 class="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12" style="font-family: 'Jalnan', sans-serif !important;">고객센터 (FAQ)</h2>
@@ -342,7 +375,7 @@
         </div>
     </div>
 
-    <!-- Review Detail Modal (메인) -->
+    <!-- Review Detail Modal -->
     <div id="reviewDetailModal" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="window.toggleModal('reviewDetailModal')">
         <div class="bg-white w-full max-w-2xl max-h-[85vh] rounded-2xl shadow-2xl relative overflow-hidden flex flex-col" onclick="event.stopPropagation()">
             <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-shrink-0">
@@ -366,38 +399,19 @@
     <div id="depositModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60" onclick="window.toggleModal('depositModal')"><div class="bg-white w-full max-w-md rounded-2xl p-8 relative" onclick="event.stopPropagation()"><button onclick="window.toggleModal('depositModal')" class="absolute top-4 right-4"><i data-lucide="x"></i></button><div class="text-center mb-6"><h3 class="text-2xl font-bold">무통장 입금</h3></div><div class="bg-gray-50 p-5 rounded-xl border mb-4"><p class="text-sm text-gray-500">기업은행</p><p class="font-bold text-lg text-indigo-600 cursor-pointer" onclick="window.copyAccount()">521-063745-04-011 (주)아율</p></div><a href="https://naver.me/FeN7ayAf" target="_blank" onclick="window.requestDeposit()" class="block w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-center hover:bg-indigo-700">신청서 작성하기</a></div></div>
 
     <!-- My Page Modal -->
-    <div id="mypageModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60" onclick="window.toggleModal('mypageModal')"><div class="bg-white w-full max-w-lg rounded-2xl p-0 shadow-2xl overflow-hidden" onclick="event.stopPropagation()"><div class="p-6 border-b flex justify-between"><h3 class="text-xl font-bold">나의 강의실</h3><button onclick="window.toggleModal('mypageModal')"><i data-lucide="x"></i></button></div><div class="p-8"><div id="mypage-guest" class="text-center"><button onclick="window.toggleModal('mypageModal'); window.openLoginModal('login');" class="bg-indigo-600 text-white px-6 py-2 rounded">로그인</button></div><div id="user-info-card" class="hidden-section"><h4 class="font-bold text-lg"><span id="mp-username"></span>님</h4></div>
-    <!-- 결제 상태에 따른 메시지 (JS에서 제어) -->
-    <div id="mypage-user-unpaid" class="hidden-section text-center mt-6">
-        <p class="font-bold mb-2 text-gray-800">신청하신 내역이 없습니다.</p>
-        <p class="text-sm text-gray-500 mb-4">시크릿클래스의 큐레이팅을 경험해보세요.</p>
-        <button onclick="window.toggleModal('mypageModal'); window.scrollToSection('pricing');" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700">서비스 신청하기</button>
-    </div>
-    <div id="status-paid" class="hidden-section mt-6">
-        <div class="bg-green-50 p-4 rounded-xl border border-green-200 text-green-700 font-bold mb-4 flex items-center justify-center gap-2"><i data-lucide="check-circle" class="w-5 h-5"></i> 결제 완료되었습니다.</div>
-        <a href="https://open.kakao.com/o/sfyp9Qxh" target="_blank" class="block w-full bg-[#FEE500] text-[#3c1e1e] text-center py-4 rounded-xl font-bold hover:bg-[#fdd835] shadow-sm flex items-center justify-center gap-2"><i data-lucide="message-circle" class="w-5 h-5"></i> 1:1 채팅방 입장하기</a>
-    </div>
-    <div id="status-pending" class="hidden-section mt-6">
-        <div class="bg-yellow-50 p-6 rounded-xl border border-yellow-200 text-center">
-            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm text-2xl">⏳</div>
-            <h4 class="font-bold text-gray-800 mb-1">입금 확인 중입니다.</h4>
-            <p class="text-sm text-gray-500">담당자가 내역 확인 후<br>문자로 입장 안내를 드립니다.</p>
-        </div>
-    </div>
-    </div></div></div>
+    <div id="mypageModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60" onclick="window.toggleModal('mypageModal')"><div class="bg-white w-full max-w-lg rounded-2xl p-0 shadow-2xl overflow-hidden" onclick="event.stopPropagation()"><div class="p-6 border-b flex justify-between"><h3 class="text-xl font-bold">나의 강의실</h3><button onclick="window.toggleModal('mypageModal')"><i data-lucide="x"></i></button></div><div class="p-8"><div id="mypage-guest" class="text-center"><button onclick="window.toggleModal('mypageModal'); window.openLoginModal('login');" class="bg-indigo-600 text-white px-6 py-2 rounded">로그인</button></div><div id="user-info-card" class="hidden-section"><h4 class="font-bold text-lg"><span id="mp-username"></span>님</h4></div><div id="mypage-user-unpaid" class="hidden-section text-center mt-6"><p class="font-bold mb-2 text-gray-800">신청하신 내역이 없습니다.</p><p class="text-sm text-gray-500 mb-4">시크릿클래스의 큐레이팅을 경험해보세요.</p><button onclick="window.toggleModal('mypageModal'); window.scrollToSection('pricing');" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700">서비스 신청하기</button></div><div id="status-paid" class="hidden-section mt-6"><div class="bg-green-50 p-4 rounded-xl border border-green-200 text-green-700 font-bold mb-4 flex items-center justify-center gap-2"><i data-lucide="check-circle" class="w-5 h-5"></i> 결제 완료되었습니다.</div><a href="https://open.kakao.com/o/sfyp9Qxh" target="_blank" class="block w-full bg-[#FEE500] text-[#3c1e1e] text-center py-4 rounded-xl font-bold hover:bg-[#fdd835] shadow-sm flex items-center justify-center gap-2"><i data-lucide="message-circle" class="w-5 h-5"></i> 1:1 채팅방 입장하기</a></div><div id="status-pending" class="hidden-section mt-6"><div class="bg-yellow-50 p-6 rounded-xl border border-yellow-200 text-center"><div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm text-2xl">⏳</div><h4 class="font-bold text-gray-800 mb-1">입금 확인 중입니다.</h4><p class="text-sm text-gray-500">담당자가 내역 확인 후<br>문자로 입장 안내를 드립니다.</p></div></div></div></div></div>
 
     <!-- Other Modals -->
     <div id="imageModal" class="hidden fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/90" onclick="window.toggleModal('imageModal')"><div class="relative max-w-4xl" onclick="event.stopPropagation()"><button onclick="window.toggleModal('imageModal')" class="absolute -top-10 right-0 text-white"><i data-lucide="x"></i></button><img id="modal-image-src" src="" class="max-h-[85vh] rounded-lg"></div></div>
     <div id="videoModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90" onclick="window.toggleModal('videoModal')"><div class="relative w-full max-w-4xl aspect-video bg-black rounded-2xl overflow-hidden" onclick="event.stopPropagation()"><button onclick="window.toggleModal('videoModal')" class="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2"><i data-lucide="x"></i></button><iframe class="w-full h-full" src="https://www.youtube.com/embed/j0hFCMX5Qlc"></iframe></div></div>
 
-    <!-- Script Block -->
     <script type="module">
         // Firebase Imports (필수 함수 포함)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 1. 데이터 정의 (최상단 배치)
+        // 1. 데이터 정의 (최상단 배치) - all_reviews.html과 100% 동일한 원본
         const bestReviews = [
             {
                 title: "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공!",
@@ -561,6 +575,7 @@
                 document.getElementById('user-info-card').classList.remove('hidden-section');
                 document.getElementById('mp-username').innerText = userName;
 
+                // DB 결제 상태 확인
                 if (auth.currentUser) {
                     try {
                         const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users_' + userId);
@@ -587,6 +602,7 @@
             const userId = sessionStorage.getItem('sc_user_id');
             if (!userId) {
                 alert("로그인 후 신청 가능합니다.");
+                // 네이버 폼 이동은 막지 않음
                 return;
             }
             try {
@@ -684,10 +700,12 @@
         window.openReviewDetail = function(index) {
             const review = reviewData[index];
             document.getElementById('modal-review-title').innerText = review.title;
+            // 줄바꿈 처리
             document.getElementById('modal-review-content').innerHTML = decodeAndFormatHtml(review.content).replace(/\n/g, '<br>');
             document.getElementById('modal-review-author').innerText = review.author;
             document.getElementById('modal-review-date').innerText = review.date;
             
+            // 조회수 증가 및 동기화
             incrementViewCount(review.title);
             document.getElementById('modal-views').innerText = getViewCount(review.title, true).toLocaleString();
             
