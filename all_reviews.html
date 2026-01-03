@@ -30,22 +30,23 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-track { background-color: #f1f5f9; }
         
-        /* 본문 원본 스타일 (HTML 태그 해석 및 줄바꿈) */
-        .raw-content { 
+        /* 본문 원본 스타일 (모달용) */
+        .raw-content-modal { 
             line-height: 1.7; 
             color: #374151; 
             font-size: 0.95rem; 
-            white-space: pre-wrap; /* 줄바꿈 보존 */
+            white-space: pre-wrap; /* 줄바꿈 및 공백 유지 */
             font-family: 'Pretendard', sans-serif !important;
         }
-        .raw-content p { margin-bottom: 1em; }
-        
-        /* 리스트에서는 3줄까지만 보여주고 모달에서 전체 보여줌 */
+
+        /* 리스트 화면에서는 3줄까지만 보여줌 (클릭 유도) */
         .line-clamp-custom {
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            white-space: pre-wrap;
+            font-family: 'Pretendard', sans-serif !important;
         }
     </style>
 </head>
@@ -68,12 +69,13 @@
                 <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">실시간 수강 후기</h1>
                 <p class="text-gray-600">지금 이 순간에도 새로운 후기가 올라오고 있습니다. (총 <span id="review-count" class="font-bold text-indigo-600">0</span>개)</p>
             </div>
+            <!-- 후기 쓰기 버튼 -->
             <button onclick="window.openWriteReview()" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg flex items-center gap-2">
                 <i data-lucide="pen-tool" class="w-4 h-4"></i> 나도 후기 쓰기
             </button>
         </div>
 
-        <!-- 후기 리스트 -->
+        <!-- 후기 리스트 (Grid) -->
         <div id="all-reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         
         <!-- 더보기 버튼 -->
@@ -87,19 +89,20 @@
     <!-- [모달] 후기 상세 보기 (스크롤 가능, 원본 100% 표시) -->
     <div id="reviewDetailModal" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="window.closeDetailModal()">
         <div class="bg-white w-full max-w-2xl max-h-[85vh] rounded-2xl shadow-2xl relative overflow-hidden flex flex-col" onclick="event.stopPropagation()">
+            <!-- 헤더 -->
             <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-shrink-0">
                 <h3 class="text-lg font-bold text-gray-900">후기 상세 보기</h3>
                 <button onclick="window.closeDetailModal()" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             
-            <!-- ★★★ 여기가 핵심: 전체 내용이 스크롤되면서 다 보이는 영역 ★★★ -->
+            <!-- 본문 영역 (스크롤 가능) -->
             <div class="p-8 overflow-y-auto custom-scrollbar font-body flex-grow bg-white">
                 <div class="flex items-center gap-2 mb-4" id="modal-stars"></div>
                 <div class="flex items-center gap-2 mb-4"><span id="modal-badge" class="hidden"></span></div>
                 <h2 id="modal-title" class="text-2xl font-bold text-gray-900 mb-6 leading-snug break-keep"></h2>
                 
-                <!-- 원본 내용이 들어가는 곳 (줄바꿈, 길이 제한 없음) -->
-                <div id="modal-content" class="text-gray-700 leading-relaxed text-base raw-content"></div>
+                <!-- 원본 내용이 들어가는 곳 -->
+                <div id="modal-content" class="raw-content-modal"></div>
                 
                 <div class="mt-8 pt-6 border-t border-gray-100 text-sm text-gray-500 flex justify-between items-center">
                     <div class="flex items-center gap-2">
@@ -111,6 +114,7 @@
                 </div>
             </div>
             
+            <!-- 닫기 버튼 -->
             <div class="p-4 border-t border-gray-100 bg-gray-50 text-center flex-shrink-0">
                 <button onclick="window.closeDetailModal()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors">닫기</button>
             </div>
@@ -171,11 +175,52 @@
             window.toggleModal('writeReviewModal');
         };
 
-        // 조회수: BEST는 1000~3000, 일반은 100~500 사이 랜덤
-        window.calculateViews = function(isBest) { 
-            if(isBest) return Math.floor(Math.random() * (3000 - 1000 + 1)) + 1000;
-            else return Math.floor(Math.random() * (500 - 100 + 1)) + 100;
-        };
+        // 조회수 연동 (index.html과 동일한 로직)
+        const VIEW_KEY = "secretclass_review_views";
+        const LAST_UPDATE_KEY = "secretclass_views_last_update";
+        
+        function loadViewData() {
+            const stored = localStorage.getItem(VIEW_KEY);
+            return stored ? JSON.parse(stored) : {};
+        }
+
+        function saveViewData(data) {
+            localStorage.setItem(VIEW_KEY, JSON.stringify(data));
+        }
+
+        function checkAndUpdateViews(data) {
+            const now = Date.now();
+            const lastUpdate = parseInt(localStorage.getItem(LAST_UPDATE_KEY) || 0);
+            if (now - lastUpdate > 86400000) {
+                for (let key in data) {
+                    data[key] += Math.floor(Math.random() * 5) + 1;
+                }
+                saveViewData(data);
+                localStorage.setItem(LAST_UPDATE_KEY, now.toString());
+            }
+            return data;
+        }
+
+        function getViewCount(title, isBest) {
+            let data = loadViewData();
+            if (!data[title]) {
+                const initialView = isBest 
+                    ? Math.floor(Math.random() * (1200 - 900 + 1)) + 900 
+                    : Math.floor(Math.random() * (500 - 150 + 1)) + 150;
+                data[title] = initialView;
+                saveViewData(data);
+            }
+            data = checkAndUpdateViews(data);
+            return data[title];
+        }
+
+        function incrementViewCount(title) {
+            let data = loadViewData();
+            if (data[title]) {
+                data[title] += 1;
+                saveViewData(data);
+            }
+        }
 
         // HTML 엔티티 디코딩 및 줄바꿈 처리
         function decodeAndFormatHtml(html) {
@@ -192,15 +237,15 @@
 
         // [데이터] 80개 이상의 후기 (원본 내용 100% 유지)
         const allReviews = [
-            // === 2025년 BEST (요청하신 이서연님, 변미소님 등 원본 반영 완료) ===
-            { 
-                title: "큰 돈이 들어가는 만큼, 경험이 적은 만큼 전문가의 조언을 얻어야 한다.", 
+            // === 2025년 BEST (원본) ===
+             {
+                title: "큰 돈이 들어가는 만큼, 경험이 적은 만큼 전문가의 조언을 얻어야 한다.",
                 content: `안녕하세요? 이번 시크릿 큐레이팅을 받으며 감사하게도 한 주만에 매도와 매수를 모두 하였고 계약서 작성을 앞두고 있습니다.
 저는 평소 시크릿브라더님 블로그를 보며 공부하고 있던 수강생입니다. 23년도 저는 갈아타기를 했었습니다. 전문가 조언 없이요!
 하지만 시간이 갈수록 가치가 낮다는 것을 알게 되었고, 그 당시 매수할 수 있었던 다른 물건들은 1-2억씩 먼저 오르는 상황이 되었습니다.
 그래서 이번엔 전문가이신 시브님 큐레이팅을 신청하게 되었습니다!
 결과적으로 좋은 물건을, 좋은 가격에 매수할 수 있었던 건 시크릿 큐레이팅 덕분입니다.
- 
+
 1. 신청하게 된 계기
 저는 평소 시크릿브라더님 블로그를 보며 공부하고 있던 수강생입니다.
 23년도 저는 갈아타기를 했었습니다. 전문가 조언 없이요!
@@ -269,6 +314,7 @@
 이날 저녁엔 가계약금을 반드시 넣고 마무리하겠다고 다짐한 상황인터라
 시브님께서 추천해주신 2순위 매물에 연락하여 네고를 요청하였고
 5분도 안 되서 네고 가능하다며 바로 가계약금 입금하면 된다는 연락이 왔었습니다 ^^
+
 그 결과 큐레이팅 7일차에 바로 가계약금을 넣어 매수를 완료하였습니다.
 
 일 잘하는 부동산 사장님을 만난 운도 있었지만
@@ -296,7 +342,8 @@
             },
             {
                 title: "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기",
-                content: `안녕하세요 전 추석직전 큐레이팅 신청하고 추석연휴동안  갈아타기를 위해 열심히 임장을 다녔습니다.
+                content: `안녕하세요
+전 추석직전 큐레이팅 신청하고 추석연휴동안  갈아타기를 위해 열심히 임장을 다녔습니다.
 70일 아기를 데리고 임장을 하는 것이 정말 쉽지 않았는데요. 아기와 나중에 실거주와 투자하기 좋은 곳으로 살고싶다는
 목표로 버틴것 같습니다.
 추석연휴동안 부동산 사장님들과 연락이 쉽지 않았고 매물을 볼수도 없었기에 제 마음은 굉장히 조급했습니다.
@@ -460,7 +507,7 @@
                 author: "이민석님", date: "2025-10-27", rating: 5, badge: "BEST"
             },
             
-            // 2025년 일반
+            // 2025년 일반 (예시 추가)
             { date: "2025-12-05", author: "한철수님", title: "시브님 큐레이팅 대박입니다.", content: "평소 블로그랑 유튜브 보면서 공부하고 있었는데, 이번에 큰맘 먹고 큐레이팅 신청했습니다. 제가 고민하던 지역뿐만 아니라 생각지도 못한 저평가 지역까지 알려주셔서 선택의 폭이 넓어졌습니다. 특히 매수 타이밍을 정확하게 짚어주시는 게 소름 돋았습니다.\n\n강력 추천합니다!", rating: 5 },
             { date: "2025-12-03", author: "박진영님", title: "부린이도 이해하기 쉬운 설명 감사합니다", content: "부동산 용어도 잘 모르는 부린이라 걱정 많이 했는데, 제 눈높이에 맞춰서 하나하나 설명해주셔서 너무 감사했습니다. 단순히 물건 추천이 아니라 부동산 공부하는 방법까지 알려주셔서 앞으로 투자하는 데 큰 도움이 될 것 같습니다.", rating: 4 },
             { date: "2025-11-28", author: "최준호님", title: "갈아타기 성공했습니다!", content: "1주택자인데 상급지로 갈아타기 하려고 1년 넘게 고민만 하다가 시브님 도움받고 드디어 성공했습니다. 매도 타이밍이랑 매수 타이밍을 기가 막히게 잡아주셔서 세금도 아끼고 좋은 가격에 이사 가게 되었습니다. 진작 신청할 걸 그랬어요.", rating: 5 },
@@ -518,16 +565,8 @@
         // 날짜순 정렬 (최신순)
         allReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        // 조회수 랜덤
-        allReviews.forEach((r, idx) => {
-            r.id = idx; // 고유 ID 부여
-            const isBest = (r.badge === 'BEST' || r.type === 'BEST');
-            if (isBest) {
-                r.views = Math.floor(Math.random() * (3000 - 1000 + 1)) + 1000;
-            } else {
-                r.views = Math.floor(Math.random() * (500 - 100 + 1)) + 100;
-            }
-        });
+        // 조회수 연동 (index.html과 동일한 Key 사용)
+        allReviews.forEach(r => r.views = getViewCount(r.title, r.badge === 'BEST'));
 
         let visibleCount = 12;
         const container = document.getElementById('all-reviews-container');
@@ -537,11 +576,11 @@
             container.innerHTML = '';
             const toShow = allReviews.slice(0, visibleCount);
             
-            toShow.forEach((review) => {
+            toShow.forEach((review, index) => {
                 const card = document.createElement('div');
                 card.className = "bg-white p-6 rounded-2xl shadow-sm border border-gray-100 review-card flex flex-col justify-between";
-                // 중요: ID로 찾아서 열기 (인덱스 꼬임 방지)
-                card.onclick = function() { window.openDetail(review.id); };
+                // 클릭 이벤트 직접 연결 - 중요! (인덱스 기반)
+                card.onclick = function() { window.openDetail(index); };
                 
                 let badge = "";
                 if(review.badge === "BEST" || review.type === "BEST") badge = `<span class="text-red-500 font-bold text-xs bg-red-50 px-2 py-1 rounded">BEST</span>`;
@@ -581,13 +620,13 @@
             renderAllReviews();
         }
 
-        window.openDetail = function(id) {
-            const review = allReviews.find(r => r.id === id);
-            if(!review) return;
-
+        window.openDetail = function(renderIndex) {
+            // 현재 화면에 렌더링된 순서(toShow)와 allReviews(정렬됨)의 순서는 일치함 (slice 전까지)
+            const review = allReviews[renderIndex];
+            
             document.getElementById('modal-title').innerText = review.title;
-            // 줄바꿈 처리
-            document.getElementById('modal-content').innerHTML = decodeAndFormatHtml(review.content);
+            // 줄바꿈이 있으면 <br>로 변경해서 표시
+            document.getElementById('modal-content').innerHTML = decodeAndFormatHtml(review.content).replace(/\n/g, '<br>');
             document.getElementById('modal-author').innerText = review.author;
             document.getElementById('modal-date').innerText = review.date;
             document.getElementById('modal-views').innerText = review.views.toLocaleString();
@@ -611,52 +650,6 @@
             window.toggleModal('reviewDetailModal');
             lucide.createIcons();
         }
-
-        // [작성 권한 체크]
-        window.openWriteReview = function() {
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-            if(!isLoggedIn) {
-                alert("로그인이 필요한 서비스입니다.\n메인 페이지에서 로그인 후 이용해주세요.");
-                return;
-            }
-            const paymentStatus = localStorage.getItem('paymentStatus');
-            if (paymentStatus !== 'paid') {
-                alert("수강 신청(결제)을 완료한 회원만 후기를 작성할 수 있습니다.\n(입금 확인 중인 경우 완료 후 작성 가능합니다)");
-                return;
-            }
-            window.toggleModal('writeReviewModal');
-        }
-
-        window.submitReview = function() {
-            const title = document.getElementById('review-input-title').value;
-            const content = document.getElementById('review-input-content').value;
-            const rating = parseInt(document.getElementById('review-input-rating').value);
-            const author = localStorage.getItem('userName') || '익명';
-            
-            if(!title || !content) return alert("내용을 입력해주세요");
-
-            const newRev = {
-                id: Date.now(),
-                title: title,
-                content: content,
-                author: author + "님",
-                date: new Date().toISOString().split('T')[0],
-                type: "NORMAL",
-                rating: rating,
-                views: Math.floor(Math.random() * (500 - 100 + 1)) + 100
-            };
-            allReviews.unshift(newRev); // 최신글로 추가
-            allReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            renderAllReviews();
-            window.toggleModal('writeReviewModal');
-            alert("후기가 등록되었습니다!");
-            
-            document.getElementById('review-input-title').value = '';
-            document.getElementById('review-input-content').value = '';
-        }
-        
-        // 초기 실행
         renderAllReviews();
     </script>
 </body>

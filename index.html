@@ -31,15 +31,26 @@
         .break-keep { word-break: keep-all; word-wrap: break-word; }
         .review-card { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .review-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        
+        /* 모달 스크롤바 커스텀 */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-track { background-color: #f1f5f9; }
+        
+        /* 후기 본문 스타일 (줄바꿈/태그 적용) */
         .raw-content { line-height: 1.8; color: #374151; white-space: pre-wrap; }
+        .line-clamp-custom {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            white-space: pre-wrap;
+        }
     </style>
 </head>
 <body class="bg-white text-gray-900 font-body">
 
-    <!-- 배너 -->
+    <!-- 최상단 카운트다운 배너 -->
     <div class="bg-red-600 text-white text-center py-3 text-sm md:text-base animate-pulse shadow-md z-50 relative break-keep px-4">
         <span class="font-bold mr-1">🚨 마감 임박!</span> 이번 달 큐레이팅 마감까지 <span id="countdown-number" class="text-yellow-300 text-lg md:text-xl font-extrabold mx-1 bg-red-800 px-2 rounded inline-block">2</span>자리 남았습니다.
     </div>
@@ -397,10 +408,13 @@
         <div class="bg-white w-full max-w-2xl max-h-[85vh] rounded-2xl shadow-2xl relative overflow-hidden flex flex-col" onclick="event.stopPropagation()">
             <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-shrink-0">
                 <h3 class="text-lg font-bold text-gray-900">후기 상세 보기</h3>
-                <button onclick="toggleModal('reviewDetailModal')" class="text-gray-400 hover:text-gray-600"><i data-lucide="x"></i></button>
+                <button onclick="toggleModal('reviewDetailModal')" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <div class="p-6 overflow-y-auto custom-scrollbar font-body flex-grow">
-                <div class="flex items-center gap-2 mb-4"><span id="modal-review-badge" class="bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded hidden">BEST</span></div>
+                <div class="flex items-center gap-2 mb-4">
+                     <div class="flex text-yellow-400"><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i></div>
+                     <span id="modal-review-badge" class="bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded hidden">BEST</span>
+                </div>
                 <h2 id="modal-review-title" class="text-xl font-bold text-gray-900 mb-6 leading-snug"></h2>
                 <div id="modal-review-content" class="text-gray-700 leading-relaxed whitespace-pre-wrap mb-8 text-base raw-content"></div>
                 <div class="flex items-center justify-between pt-4 border-t border-gray-100 text-sm text-gray-500">
@@ -518,26 +532,20 @@
         const VIEW_KEY = "secretclass_review_views";
         const LAST_UPDATE_KEY = "secretclass_views_last_update";
         
-        // 1. 조회수 데이터 로드 (없으면 초기화)
         function loadViewData() {
             const stored = localStorage.getItem(VIEW_KEY);
             return stored ? JSON.parse(stored) : {};
         }
 
-        // 2. 조회수 저장
         function saveViewData(data) {
             localStorage.setItem(VIEW_KEY, JSON.stringify(data));
         }
 
-        // 3. 시간 경과 체크 및 업데이트 (24시간마다 증가)
         function checkAndUpdateViews(data) {
             const now = Date.now();
             const lastUpdate = parseInt(localStorage.getItem(LAST_UPDATE_KEY) || 0);
-            
-            // 24시간(86400000ms) 지났으면 증가
             if (now - lastUpdate > 86400000) {
                 for (let key in data) {
-                    // 1~5 랜덤 증가
                     data[key] += Math.floor(Math.random() * 5) + 1;
                 }
                 saveViewData(data);
@@ -546,25 +554,27 @@
             return data;
         }
 
-        // 4. 개별 리뷰 조회수 가져오기 (없으면 생성)
         function getViewCount(title, isBest) {
             let data = loadViewData();
-            
             if (!data[title]) {
-                // 초기값 생성: BEST(900~1200), 일반(150~500)
                 const initialView = isBest 
                     ? Math.floor(Math.random() * (1200 - 900 + 1)) + 900 
                     : Math.floor(Math.random() * (500 - 150 + 1)) + 150;
                 data[title] = initialView;
                 saveViewData(data);
             }
-            
-            // 시간 경과 체크 (한번만 호출해도 됨)
             data = checkAndUpdateViews(data);
-            
             return data[title];
         }
 
+        // 5. 클릭 시 조회수 1 증가 (동기화)
+        function incrementViewCount(title) {
+            let data = loadViewData();
+            if (data[title]) {
+                data[title] += 1;
+                saveViewData(data);
+            }
+        }
 
         // [BEST 후기 데이터] - 원본 100% 반영
         const reviewData = [
@@ -695,7 +705,7 @@
                             <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">${review.author.charAt(0)}</div>
                             <div><p class="text-xs font-bold text-gray-900">${review.author}</p><p class="text-[10px] text-gray-400">${review.date}</p></div>
                         </div>
-                        <div class="flex items-center gap-1 text-xs text-gray-400 font-medium"><i data-lucide="eye" class="w-4 h-4"></i> ${review.views.toLocaleString()}</div>
+                        <div class="flex items-center gap-1 text-xs text-gray-400 font-medium"><i data-lucide="eye" class="w-4 h-4"></i> ${review.views}</div>
                     </div>
                 `;
                 bestContainer.appendChild(card);
@@ -710,6 +720,9 @@
             document.getElementById('modal-review-content').innerHTML = review.content.replace(/\n/g, '<br>');
             document.getElementById('modal-review-author').innerText = review.author;
             document.getElementById('modal-review-date').innerText = review.date;
+            // [중요] 조회수 1 증가 및 UI 업데이트
+            incrementViewCount(review.title);
+            document.getElementById('modal-views').innerText = getViewCount(review.title, true).toLocaleString();
             
             const badge = document.getElementById('modal-review-badge');
             badge.innerText = "BEST";
