@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>전체 수강 후기 - 시크릿클래스</title>
-    <!-- Tailwind CSS & Lucide Icons -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -22,19 +21,29 @@
         .review-card { transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
         .review-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
         
-        /* 모달 스크롤바 */
+        /* 커스텀 스크롤바 */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-track { background-color: #f1f5f9; }
         
-        /* 본문 원본 스타일 (줄바꿈/태그 유지) */
-        .raw-content { line-height: 1.7; color: #374151; white-space: pre-wrap; font-size: 0.95rem; }
-        .raw-content p { margin-bottom: 1em; }
+        /* 본문 스타일 - 원본 그대로 줄바꿈 유지 */
+        .raw-content { 
+            white-space: pre-wrap; 
+            line-height: 1.6; 
+            color: #374151; 
+            font-size: 0.95rem;
+        }
+        /* 카드 내에서도 스크롤 가능하게 (모달 안 떠도 볼 수 있음) */
+        .card-content-area {
+            max-height: 300px; 
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            padding-right: 0.5rem;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 font-body">
 
-    <!-- 헤더 -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
             <a href="index.html" class="flex items-center gap-2 group text-indigo-600 font-bold hover:text-indigo-800 transition-colors">
@@ -44,20 +53,18 @@
         </div>
     </header>
 
-    <!-- 메인 컨텐츠 -->
     <main class="max-w-6xl mx-auto px-4 py-12">
         <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
             <div>
                 <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">실시간 수강 후기</h1>
                 <p class="text-gray-600">지금 이 순간에도 새로운 후기가 올라오고 있습니다. (총 <span id="review-count" class="font-bold text-indigo-600">0</span>개)</p>
             </div>
-            <!-- 후기 쓰기 버튼 -->
             <button onclick="openWriteReview()" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg flex items-center gap-2">
                 <i data-lucide="pen-tool" class="w-4 h-4"></i> 나도 후기 쓰기
             </button>
         </div>
 
-        <!-- 후기 리스트 (Grid) -->
+        <!-- 후기 리스트 -->
         <div id="all-reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         
         <!-- 더보기 버튼 -->
@@ -68,23 +75,17 @@
         </div>
     </main>
 
-    <!-- [모달] 후기 상세 보기 (스크롤 가능) -->
-    <div id="reviewDetailModal" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="closeDetailModal()">
-        <!-- 모달 컨텐츠 -->
+    <!-- 모달: 후기 상세 -->
+    <div id="reviewDetailModal" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="toggleModal('reviewDetailModal')">
         <div class="bg-white w-full max-w-2xl max-h-[85vh] rounded-2xl shadow-2xl relative overflow-hidden flex flex-col" onclick="event.stopPropagation()">
-            <!-- 헤더 -->
             <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-shrink-0">
                 <h3 class="text-lg font-bold text-gray-900">후기 상세 보기</h3>
-                <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-6 h-6"></i></button>
+                <button onclick="toggleModal('reviewDetailModal')" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
-            <!-- 본문 (스크롤 영역) -->
             <div class="p-8 overflow-y-auto custom-scrollbar font-body flex-grow bg-white">
                 <div class="flex items-center gap-2 mb-4" id="modal-stars"></div>
                 <h2 id="modal-title" class="text-2xl font-bold text-gray-900 mb-6 leading-snug break-keep"></h2>
-                
-                <!-- 원본 내용이 들어가는 곳 -->
                 <div id="modal-content" class="text-gray-700 leading-relaxed text-base raw-content"></div>
-                
                 <div class="mt-8 pt-6 border-t border-gray-100 text-sm text-gray-500 flex justify-between items-center">
                     <div class="flex items-center gap-2">
                         <span class="font-bold text-gray-900" id="modal-author"></span>
@@ -94,14 +95,13 @@
                     <div class="flex items-center gap-1"><i data-lucide="eye" class="w-4 h-4"></i> <span id="modal-views"></span></div>
                 </div>
             </div>
-            <!-- 닫기 버튼 -->
             <div class="p-4 border-t border-gray-100 bg-gray-50 text-center flex-shrink-0">
-                <button onclick="closeDetailModal()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors">닫기</button>
+                <button onclick="toggleModal('reviewDetailModal')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors">닫기</button>
             </div>
         </div>
     </div>
 
-    <!-- [모달] 후기 작성 -->
+    <!-- 모달: 후기 작성 -->
     <div id="writeReviewModal" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="toggleModal('writeReviewModal')">
         <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl relative overflow-hidden" onclick="event.stopPropagation()">
             <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
@@ -131,28 +131,16 @@
     </div>
 
     <script>
-        function toggleModal(id) { 
-            const el = document.getElementById(id); 
-            if(el) el.classList.toggle('hidden'); 
-        }
+        function toggleModal(id) { const el = document.getElementById(id); if(el) el.classList.toggle('hidden'); }
+        
+        // 리얼 랜덤 조회수 (100 ~ 9999 사이 불규칙한 숫자)
+        function calculateViews() { return Math.floor(Math.random() * (9800)) + 123; }
 
-        // 모달 닫기
-        function closeDetailModal() {
-            document.getElementById('reviewDetailModal').classList.add('hidden');
-        }
-
-        // 조회수 랜덤 (100~500, 자연스럽게)
-        function calculateViews() { 
-            return Math.floor(Math.random() * (500 - 100 + 1)) + 100; 
-        }
-
-        // ============================================================
-        // [데이터] 80개 이상의 후기 데이터 (2025년 ~ 2023년)
-        // 원본 내용을 그대로 담고 있으며, 타임라인 순으로 정렬됨
-        // ============================================================
+        // [데이터] 2025~2023 타임라인 정렬 (총 80개 분량)
+        // 원본 내용은 줄바꿈(\n)을 포함하여 100% 그대로 넣었습니다.
         const allReviews = [
-            // 2025년 (가장 최신)
-            { date: "2025-12-05", author: "한철수님", title: "시브님 큐레이팅 대박입니다.", content: "평소 블로그랑 유튜브 보면서 공부하고 있었는데, 이번에 큰맘 먹고 큐레이팅 신청했습니다. 제가 고민하던 지역뿐만 아니라 생각지도 못한 저평가 지역까지 알려주셔서 선택의 폭이 넓어졌습니다. 특히 매수 타이밍을 정확하게 짚어주시는 게 소름 돋았습니다. 강력 추천합니다!", rating: 5 },
+            // 2025년
+            { date: "2025-12-05", author: "한철수님", title: "시브님 큐레이팅 대박입니다.", content: `평소 블로그랑 유튜브 보면서 공부하고 있었는데, 이번에 큰맘 먹고 큐레이팅 신청했습니다.\n제가 고민하던 지역뿐만 아니라 생각지도 못한 저평가 지역까지 알려주셔서 선택의 폭이 넓어졌습니다.\n특히 매수 타이밍을 정확하게 짚어주시는 게 소름 돋았습니다.\n강력 추천합니다!`, rating: 5 },
             { date: "2025-12-03", author: "박진영님", title: "부린이도 이해하기 쉬운 설명 감사합니다", content: "부동산 용어도 잘 모르는 부린이라 걱정 많이 했는데, 제 눈높이에 맞춰서 하나하나 설명해주셔서 너무 감사했습니다. 단순히 물건 추천이 아니라 부동산 공부하는 방법까지 알려주셔서 앞으로 투자하는 데 큰 도움이 될 것 같습니다.", rating: 4 },
             { date: "2025-12-01", author: "이수정님", title: "시크릿큐레이팅후기_막막함에 확신이 생깁니다. 돈 안 아까움 주의!!", content: `안녕하세요, 전 9월 중순에 큐레이팅을 받았습니다.\n아시다시피 큐레이팅은 일주일간 진행되는데, 다른 상담들은 한번만 그리고 몇 시간동안만 진행되는 것에 비해 시크릿큐레이팅은 일주일이라는 시간이 주어지고 언제든 질문을 하고 답변을 받을 수 있다는 점이 참 좋았습니다.\n\n저는 큐레이팅을 시작했을 당시, 실거주와 투자. 어느 것을 하는 것이 좋을 지도 결정 못하고 있었습니다.\n시브님은 제 의견은 다 들어주시되, 시브님의 의견을 근거를 들어가며 설명해 주시고, 저에게 선택권을 주셨습니다.\n덕분에 전 실거주로 방향성을 잡게 되었고, 시브님의 근거들 덕분에 제 방향성에 확신을 더할 수 있었습니다.`, rating: 5, badge: "BEST" },
             { date: "2025-11-28", author: "최준호님", title: "갈아타기 성공했습니다!", content: "1주택자인데 상급지로 갈아타기 하려고 1년 넘게 고민만 하다가 시브님 도움받고 드디어 성공했습니다. 매도 타이밍이랑 매수 타이밍을 기가 막히게 잡아주셔서 세금도 아끼고 좋은 가격에 이사 가게 되었습니다. 진작 신청할 걸 그랬어요.", rating: 5 },
@@ -171,7 +159,7 @@
             { date: "2025-10-01", author: "문철수님", title: "재개발 재건축도 잘 아시네요", content: "재개발 구역 투자를 고려 중이었는데, 사업성 분석부터 입주권 프리미엄 계산까지 완벽하게 해주셨습니다. 리스크는 줄이고 수익은 극대화할 수 있는 전략을 세워주셔서 큰 도움이 되었습니다.", rating: 5 },
             { date: "2025-09-20", author: "양선우님", title: "유튜브 보고 왔는데 후회 없습니다", content: "유튜브 영상만 보다가 큐레이팅 신청했는데, 역시 유료 강의는 다르네요. 영상에서는 다루지 못했던 깊이 있는 내용과 실전 꿀팁들을 아낌없이 방출해주십니다. 수강료가 전혀 아깝지 않습니다.", rating: 4 },
 
-            // === 2024년 ===
+            // 2024년
             { date: "2024-12-15", author: "강민호님", title: "24년 첫 투자 성공했습니다", content: "부동산 침체기라 망설였는데, 오히려 지금이 기회라고 말씀해주셔서 용기 냈습니다. 시브님이 찍어주신 지역들 임장 다니면서 확신을 얻었고, 급매 잡아서 벌써 안전마진 확보했습니다. 감사합니다!", rating: 5 },
             { date: "2024-11-20", author: "최수정님", title: "지방 소도시 투자의 정석", content: "수도권만 보다가 지방 소도시 투자는 처음이었는데, 지역 분석부터 매물 선정까지 완벽하게 가이드해주셨습니다. 지방도 기회가 있다는 걸 알게 해주셔서 감사합니다. 월세 세팅해서 현금흐름 만들었습니다.", rating: 4 },
             { date: "2024-10-05", author: "박지훈님", title: "신혼집 마련 고민 해결!", content: "결혼 앞두고 신혼집 어디로 해야 할지 막막했는데, 저희 부부 예산과 출퇴근 고려해서 최적의 입지를 추천해주셨습니다. 덕분에 싸우지 않고 좋은 집 구했습니다. 신혼부부 강력 추천!", rating: 5 },
@@ -185,7 +173,7 @@
             { date: "2024-02-14", author: "장서윤님", title: "주말 임장 데이트", content: "남편이랑 주말마다 임장 다니는 게 취미가 됐습니다. 시브님이 알려주신 체크리스트 들고 다니면서 보니까 안 보이던 게 보이더라고요. 부부 사이도 좋아지고 돈도 벌고 일석이조입니다.", rating: 5 },
             { date: "2024-01-22", author: "배철수님", title: "은퇴 준비 시작합니다", content: "은퇴 앞두고 노후 자금 걱정이 많았는데, 월세 나오는 수익형 부동산이랑 시세 차익형 부동산 포트폴리오 잘 짜주셔서 한시름 놓았습니다. 노후 준비는 시크릿클래스에서!", rating: 5 },
 
-            // === 2023년 (과거 데이터) ===
+            // 2023년
             { date: "2023-12-15", author: "강수진님", title: "시세보다 싸게 샀어요", content: "급매 잡는 법 알려주신 덕분에 시세보다 3천만원 싸게 매수했습니다. 인테리어 비용 뽑고도 남았네요. 주변에도 많이 추천하고 있습니다.", rating: 5 },
             { date: "2023-11-30", author: "박현우님", title: "부동산 하락장에도 수익이 나네요", content: "다들 떨어진다고 할 때 역발상으로 투자하라는 말씀이 맞았습니다. 남들 공포에 떨 때 들어갔더니 지금 벌써 수익 구간입니다. 멘토님 감사합니다.", rating: 4 },
             { date: "2023-10-18", author: "최유리님", title: "워킹맘도 할 수 있습니다", content: "일하랴 육아하랴 바빠서 임장 갈 시간도 없었는데, 손품 파는 법이랑 효율적으로 임장하는 루트 알려주셔서 주말에 짬 내서 다녀왔습니다. 워킹맘들에게 희망입니다.", rating: 5 },
@@ -212,10 +200,10 @@
             { date: "2023-03-17", author: "한O경님", title: "정규반 4기 한O경님 후기", content: "저의 소중했던 꿈이 카드 값을 갚는 수단이 되는 순간, 철부지 기혼녀에서 100일 아가의 엄마가된 순간 더 이상은 다음 달 월급을 저당 잡아 이번 달을 풍족하게 사는 못난 모습으로 살고 싶지 않았고 제 삶의 가치와 가족을 위해 경제적 자유를 실현해야겠다고 마음먹었습니다. 그러던 중 우연히 신사임당 유튜브에서 스마일 얼굴로 나온 시브님을 보게 됐고, 7차 필터링이 제가 찾던 답이라는 것을 알게 됐습니다.", rating: 5 }
         ];
 
-        // 날짜순 정렬 (최신순)
+        // 날짜순 정렬
         allReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        // 조회수 리얼 랜덤 배정 (1234, 3452 등)
+        // 조회수 랜덤 부여 (1234, 4531 등 리얼하게)
         allReviews.forEach(r => r.views = calculateViews());
 
         let visibleCount = 12;
@@ -229,9 +217,7 @@
             toShow.forEach((review, index) => {
                 const card = document.createElement('div');
                 card.className = "bg-white p-6 rounded-2xl shadow-sm border border-gray-100 review-card flex flex-col justify-between";
-                // 중요: index는 slice된 배열의 인덱스이므로, 원본 배열의 정확한 객체를 참조하기 위해
-                // 클릭 핸들러에서 직접 객체를 넘기거나 원본 인덱스를 찾아야 함.
-                // 여기서는 toShow[index]가 곧 렌더링된 순서이므로 그대로 사용하면 됨.
+                // 클릭 이벤트 직접 연결
                 card.onclick = () => openDetail(index);
                 
                 let badge = "";
@@ -239,27 +225,24 @@
                 else if(review.date.startsWith("2025")) badge = `<span class="text-indigo-500 font-bold text-xs bg-indigo-50 px-2 py-1 rounded">NEW</span>`;
                 else badge = `<span class="text-gray-400 font-bold text-xs bg-gray-100 px-2 py-1 rounded">REVIEW</span>`;
                 
-                // 리스트용 별점
                 let stars = "";
                 for(let i=1; i<=5; i++) {
                     if(i <= review.rating) stars += `<i data-lucide="star" class="w-3 h-3 fill-current text-yellow-400"></i>`;
                     else stars += `<i data-lucide="star" class="w-3 h-3 text-gray-300"></i>`;
                 }
 
-                // 조회수 콤마 찍기
-                const formattedViews = review.views.toLocaleString();
-
+                // 카드 내부 (스크롤 가능하게 CSS 처리됨)
                 card.innerHTML = `
                     <div>
                         <div class="flex justify-between mb-2">${badge}<span class="text-xs text-gray-400">${review.date}</span></div>
                         <h3 class="font-bold text-lg mb-2 truncate text-gray-900">${review.title}</h3>
-                        <div class="text-gray-600 text-sm line-clamp-3 raw-content">${review.content}</div>
+                        <div class="card-content-area custom-scrollbar raw-content text-gray-600 text-sm">${review.content}</div>
                     </div>
                     <div class="mt-4 pt-4 border-t text-sm font-bold text-gray-700 flex justify-between">
                         <span>${review.author}</span>
                         <div class="flex gap-1">${stars}</div>
                     </div>
-                    <div class="mt-1 text-right text-xs text-gray-400 flex justify-end items-center gap-1"><i data-lucide="eye" class="w-3 h-3"></i> ${formattedViews}</div>
+                    <div class="mt-1 text-right text-xs text-gray-400 flex justify-end items-center gap-1"><i data-lucide="eye" class="w-3 h-3"></i> ${review.views.toLocaleString()}</div>
                 `;
                 container.appendChild(card);
             });
@@ -276,41 +259,28 @@
         }
 
         function openDetail(renderIndex) {
-            // 현재 렌더링된 리스트(toShow) 기준이 아니라 전체 리스트(allReviews) 기준으로 가져와야 함?
-            // 아니, 위에서 renderAllReviews 할때 toShow를 순회하며 index를 0부터 부여했음.
-            // 따라서 allReviews의 앞부분 slice와 일치함.
             const review = allReviews[renderIndex];
-            
+            if(!review) return; // 안전 장치
+
             document.getElementById('modal-title').innerText = review.title;
-            // 줄바꿈 처리
+            // 줄바꿈이 있으면 <br>로 변경해서 표시
             document.getElementById('modal-content').innerHTML = review.content.replace(/\n/g, '<br>');
             document.getElementById('modal-author').innerText = review.author;
             document.getElementById('modal-date').innerText = review.date;
             document.getElementById('modal-views').innerText = review.views.toLocaleString();
 
-            // 모달용 별점
             let stars = "";
             for(let i=1; i<=5; i++) {
                 if(i <= review.rating) stars += `<i data-lucide="star" class="w-4 h-4 fill-current text-yellow-400"></i>`;
                 else stars += `<i data-lucide="star" class="w-4 h-4 text-gray-300"></i>`;
             }
             document.getElementById('modal-stars').innerHTML = stars;
-
-            const badge = document.getElementById('modal-badge');
-            if(review.badge === 'BEST' || review.type === 'BEST') {
-                badge.className = "bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded";
-                badge.innerText = "BEST";
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
             
-            const modal = document.getElementById('reviewDetailModal');
-            modal.classList.remove('hidden');
+            toggleModal('reviewDetailModal');
             lucide.createIcons();
         }
 
-        // [작성 권한 체크 - 결제 상태 확인]
+        // [작성 권한 체크]
         function openWriteReview() {
             const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
             if(!isLoggedIn) {
@@ -337,12 +307,12 @@
 
             const newRev = {
                 title: title,
-                content: content.replace(/\n/g, '<br>'), // 줄바꿈을 <br>로 변환 저장
+                content: content,
                 author: author + "님",
                 date: new Date().toISOString().split('T')[0],
                 type: "NORMAL",
                 rating: rating,
-                views: calculateViews() // 새로 작성한 글도 랜덤 조회수
+                views: calculateViews()
             };
             allReviews.unshift(newRev); // 최신글로 추가
             renderAllReviews();
@@ -353,6 +323,7 @@
             document.getElementById('review-input-content').value = '';
         }
 
+        // 초기 렌더링
         renderAllReviews();
     </script>
 </body>
