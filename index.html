@@ -42,7 +42,7 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-track { background-color: #f1f5f9; }
         
-        /* 후기 본문 스타일 (줄바꿈/태그 적용) */
+        /* 후기 본문 스타일 */
         .raw-content { line-height: 1.8; color: #374151; white-space: pre-wrap; font-size: 0.95rem; }
         .line-clamp-custom {
             display: -webkit-box;
@@ -81,7 +81,7 @@
                     <button onclick="window.openLoginModal('signup')" class="hover:text-indigo-600 transition-colors">회원가입</button>
                 </div>
                 <div id="auth-user" class="hidden-section flex items-center gap-4">
-                    <span class="text-gray-700 font-bold"><span id="user-name" class="text-indigo-600"></span>님 환영합니다</span>
+                    <span class="text-gray-700 font-bold"><span id="user-name" class="text-indigo-600">홍길동</span>님 환영합니다</span>
                     <span class="text-gray-300">|</span>
                     <button onclick="window.handleLogout()" class="hover:text-red-500 transition-colors">로그아웃</button>
                 </div>
@@ -140,6 +140,7 @@
                 </button>
             </div>
             
+            <!-- 책 겹침 배치 -->
             <div class="w-full md:w-[40%] flex justify-center z-10 relative h-64 md:h-full items-center">
                 <div class="relative w-full h-full flex items-center justify-center group">
                     <div class="absolute w-64 h-64 md:w-80 md:h-80 bg-indigo-500/30 rounded-full blur-[60px] md:blur-[80px] animate-pulse"></div>
@@ -273,7 +274,7 @@
         </div>
     </section>
 
-    <!-- Review Section (BEST만) -->
+    <!-- Review Section -->
     <section id="reviews" class="py-24 bg-gray-50">
         <div class="max-w-6xl mx-auto px-4">
             <div class="text-center mb-16">
@@ -288,9 +289,7 @@
             </div>
             <!-- 전체 보기 링크 -->
             <div class="text-center mt-12">
-                <a href="all_reviews.html" class="inline-flex items-center gap-2 bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white px-12 py-5 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-xl group break-keep">
-                    실시간 전체 후기 보러가기 (최신순) <i data-lucide="arrow-right" class="group-hover:translate-x-1 transition-transform"></i>
-                </a>
+                <a href="all_reviews.html" class="inline-flex items-center gap-2 bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white px-12 py-5 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-xl group break-keep">실시간 전체 후기 보러가기 (최신순) <i data-lucide="arrow-right" class="group-hover:translate-x-1 transition-transform"></i></a>
                 <p class="text-gray-400 text-sm mt-3">지금 이 순간에도 후기가 올라오고 있습니다!</p>
             </div>
         </div>
@@ -348,7 +347,7 @@
     <!-- 통합 로그인/회원가입 모달 -->
     <div id="loginModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="window.toggleModal('loginModal')">
         <div class="bg-white w-full max-w-md rounded-2xl p-8 shadow-2xl relative modal-content overflow-y-auto max-h-[90vh]" onclick="event.stopPropagation()">
-            <button onclick="window.toggleModal('loginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900"><i data-lucide="x" class="h-6 w-6"></i></button>
+            <button onclick="window.toggleModal('loginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900"><i data-lucide="x"></i></button>
             <div class="flex border-b border-gray-200 mb-6">
                 <button id="tab-login" onclick="window.switchAuthTab('login')" class="flex-1 py-3 text-lg font-bold text-indigo-600 border-b-2 border-indigo-600">로그인</button>
                 <button id="tab-signup" onclick="window.switchAuthTab('signup')" class="flex-1 py-3 text-lg font-bold text-gray-400 hover:text-gray-600">회원가입</button>
@@ -375,7 +374,7 @@
         </div>
     </div>
 
-    <!-- Review Detail Modal -->
+    <!-- Review Detail Modal (메인) -->
     <div id="reviewDetailModal" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="window.toggleModal('reviewDetailModal')">
         <div class="bg-white w-full max-w-2xl max-h-[85vh] rounded-2xl shadow-2xl relative overflow-hidden flex flex-col" onclick="event.stopPropagation()">
             <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-shrink-0">
@@ -399,19 +398,37 @@
     <div id="depositModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60" onclick="window.toggleModal('depositModal')"><div class="bg-white w-full max-w-md rounded-2xl p-8 relative" onclick="event.stopPropagation()"><button onclick="window.toggleModal('depositModal')" class="absolute top-4 right-4"><i data-lucide="x"></i></button><div class="text-center mb-6"><h3 class="text-2xl font-bold">무통장 입금</h3></div><div class="bg-gray-50 p-5 rounded-xl border mb-4"><p class="text-sm text-gray-500">기업은행</p><p class="font-bold text-lg text-indigo-600 cursor-pointer" onclick="window.copyAccount()">521-063745-04-011 (주)아율</p></div><a href="https://naver.me/FeN7ayAf" target="_blank" onclick="window.requestDeposit()" class="block w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-center hover:bg-indigo-700">신청서 작성하기</a></div></div>
 
     <!-- My Page Modal -->
-    <div id="mypageModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60" onclick="window.toggleModal('mypageModal')"><div class="bg-white w-full max-w-lg rounded-2xl p-0 shadow-2xl overflow-hidden" onclick="event.stopPropagation()"><div class="p-6 border-b flex justify-between"><h3 class="text-xl font-bold">나의 강의실</h3><button onclick="window.toggleModal('mypageModal')"><i data-lucide="x"></i></button></div><div class="p-8"><div id="mypage-guest" class="text-center"><button onclick="window.toggleModal('mypageModal'); window.openLoginModal('login');" class="bg-indigo-600 text-white px-6 py-2 rounded">로그인</button></div><div id="user-info-card" class="hidden-section"><h4 class="font-bold text-lg"><span id="mp-username"></span>님</h4></div><div id="mypage-user-unpaid" class="hidden-section text-center mt-6"><p class="font-bold mb-2 text-gray-800">신청하신 내역이 없습니다.</p><p class="text-sm text-gray-500 mb-4">시크릿클래스의 큐레이팅을 경험해보세요.</p><button onclick="window.toggleModal('mypageModal'); window.scrollToSection('pricing');" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700">서비스 신청하기</button></div><div id="status-paid" class="hidden-section mt-6"><div class="bg-green-50 p-4 rounded-xl border border-green-200 text-green-700 font-bold mb-4 flex items-center justify-center gap-2"><i data-lucide="check-circle" class="w-5 h-5"></i> 결제 완료되었습니다.</div><a href="https://open.kakao.com/o/sfyp9Qxh" target="_blank" class="block w-full bg-[#FEE500] text-[#3c1e1e] text-center py-4 rounded-xl font-bold hover:bg-[#fdd835] shadow-sm flex items-center justify-center gap-2"><i data-lucide="message-circle" class="w-5 h-5"></i> 1:1 채팅방 입장하기</a></div><div id="status-pending" class="hidden-section mt-6"><div class="bg-yellow-50 p-6 rounded-xl border border-yellow-200 text-center"><div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm text-2xl">⏳</div><h4 class="font-bold text-gray-800 mb-1">입금 확인 중입니다.</h4><p class="text-sm text-gray-500">담당자가 내역 확인 후<br>문자로 입장 안내를 드립니다.</p></div></div></div></div></div>
+    <div id="mypageModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60" onclick="window.toggleModal('mypageModal')"><div class="bg-white w-full max-w-lg rounded-2xl p-0 shadow-2xl overflow-hidden" onclick="event.stopPropagation()"><div class="p-6 border-b flex justify-between"><h3 class="text-xl font-bold">나의 강의실</h3><button onclick="window.toggleModal('mypageModal')"><i data-lucide="x"></i></button></div><div class="p-8"><div id="mypage-guest" class="text-center"><button onclick="window.toggleModal('mypageModal'); window.openLoginModal('login');" class="bg-indigo-600 text-white px-6 py-2 rounded">로그인</button></div><div id="user-info-card" class="hidden-section"><h4 class="font-bold text-lg"><span id="mp-username"></span>님</h4></div>
+    <!-- 결제 상태에 따른 메시지 (JS에서 제어) -->
+    <div id="mypage-user-unpaid" class="hidden-section text-center mt-6">
+        <p class="font-bold mb-2 text-gray-800">신청하신 내역이 없습니다.</p>
+        <p class="text-sm text-gray-500 mb-4">시크릿클래스의 큐레이팅을 경험해보세요.</p>
+        <button onclick="window.toggleModal('mypageModal'); window.scrollToSection('pricing');" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700">서비스 신청하기</button>
+    </div>
+    <div id="status-paid" class="hidden-section mt-6">
+        <div class="bg-green-50 p-4 rounded-xl border border-green-200 text-green-700 font-bold mb-4 flex items-center justify-center gap-2"><i data-lucide="check-circle" class="w-5 h-5"></i> 결제 완료되었습니다.</div>
+        <a href="https://open.kakao.com/o/sfyp9Qxh" target="_blank" class="block w-full bg-[#FEE500] text-[#3c1e1e] text-center py-4 rounded-xl font-bold hover:bg-[#fdd835] shadow-sm flex items-center justify-center gap-2"><i data-lucide="message-circle" class="w-5 h-5"></i> 1:1 채팅방 입장하기</a>
+    </div>
+    <div id="status-pending" class="hidden-section mt-6">
+        <div class="bg-yellow-50 p-6 rounded-xl border border-yellow-200 text-center">
+            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm text-2xl">⏳</div>
+            <h4 class="font-bold text-gray-800 mb-1">입금 확인 중입니다.</h4>
+            <p class="text-sm text-gray-500">담당자가 내역 확인 후<br>문자로 입장 안내를 드립니다.</p>
+        </div>
+    </div>
+    </div></div></div>
 
     <!-- Other Modals -->
     <div id="imageModal" class="hidden fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/90" onclick="window.toggleModal('imageModal')"><div class="relative max-w-4xl" onclick="event.stopPropagation()"><button onclick="window.toggleModal('imageModal')" class="absolute -top-10 right-0 text-white"><i data-lucide="x"></i></button><img id="modal-image-src" src="" class="max-h-[85vh] rounded-lg"></div></div>
     <div id="videoModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90" onclick="window.toggleModal('videoModal')"><div class="relative w-full max-w-4xl aspect-video bg-black rounded-2xl overflow-hidden" onclick="event.stopPropagation()"><button onclick="window.toggleModal('videoModal')" class="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2"><i data-lucide="x"></i></button><iframe class="w-full h-full" src="https://www.youtube.com/embed/j0hFCMX5Qlc"></iframe></div></div>
 
+    <!-- Script Block -->
     <script type="module">
-        // Firebase Imports (필수 함수 포함)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 1. 데이터 정의 (최상단 배치) - all_reviews.html과 100% 동일한 원본
+        // [핵심] 데이터 정의를 최상단에 배치 (undefined 오류 방지)
         const bestReviews = [
             {
                 title: "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공!",
@@ -462,7 +479,7 @@
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-        // 2. 전역 함수 설정 (HTML onclick 연동) - 여기로 이동
+        // 2. 전역 함수 설정 (HTML onclick 연동)
         window.lucide = lucide; 
         window.toggleModal = (id) => { const el = document.getElementById(id); if(el) el.classList.toggle('hidden'); };
         window.openImageModal = (src) => { document.getElementById('modal-image-src').src = src; window.toggleModal('imageModal'); };
@@ -729,6 +746,8 @@
                 renderBestReviews();
             } catch (error) {
                 console.error("Auth Error:", error);
+                // Auth 실패해도 화면은 그림
+                renderBestReviews();
             }
         };
         initAuth();
