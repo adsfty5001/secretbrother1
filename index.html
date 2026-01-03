@@ -42,16 +42,17 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-track { background-color: #f1f5f9; }
         
-        /* 후기 본문 스타일 */
+        /* 후기 본문 스타일 (줄바꿈/태그 적용) */
         .raw-content { line-height: 1.8; color: #374151; white-space: pre-wrap; font-size: 0.95rem; }
         .line-clamp-custom {
             display: -webkit-box;
-            -webkit-line-clamp: 3;
+            -webkit-line-clamp: 4;
             -webkit-box-orient: vertical;
             overflow: hidden;
             white-space: pre-wrap;
         }
     </style>
+    
     <!-- 새로고침 시 맨 위로 이동 -->
     <script>
         if (history.scrollRestoration) {
@@ -117,7 +118,7 @@
         </div>
     </header>
 
-    <!-- 메인 배너 -->
+    <!-- 메인 배너 (책 겹침 복구) -->
     <section class="relative overflow-hidden group bg-gray-900 min-h-[600px] flex items-center">
         <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-[#1e293b] to-indigo-950 z-0"></div>
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 z-0"></div>
@@ -142,9 +143,11 @@
             <div class="w-full md:w-[40%] flex justify-center z-10 relative h-64 md:h-full items-center">
                 <div class="relative w-full h-full flex items-center justify-center group">
                     <div class="absolute w-64 h-64 md:w-80 md:h-80 bg-indigo-500/30 rounded-full blur-[60px] md:blur-[80px] animate-pulse"></div>
+                    <!-- 왼쪽 책 -->
                     <a href="https://www.yes24.com/product/goods/104491194" target="_blank" class="absolute w-36 md:w-48 lg:w-60 transform -rotate-[15deg] -translate-x-6 hover:rotate-0 hover:scale-110 hover:z-30 transition-all duration-500 shadow-2xl cursor-pointer z-10">
                         <img src="https://image.yes24.com/goods/104491194/XL" alt="나는 1000만원으로 아파트 산다" class="w-full rounded-r-xl book-shadow border-l-2 border-gray-600">
                     </a>
+                    <!-- 오른쪽 책 -->
                     <a href="https://www.yes24.com/product/goods/122689813" target="_blank" class="absolute w-36 md:w-48 lg:w-60 transform rotate-[5deg] translate-x-6 hover:rotate-0 hover:scale-110 hover:z-30 transition-all duration-500 shadow-2xl cursor-pointer z-20">
                         <img src="https://image.yes24.com/goods/122689813/XL" alt="돈 버는 뇌 못 버는 뇌" class="w-full rounded-r-xl book-shadow border-l-2 border-gray-600">
                     </a>
@@ -167,59 +170,24 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="w-full lg:w-1/2 pt-0 lg:pt-4">
                     <div class="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold mb-4">WHO AM I</div>
-                    <h2 class="text-3xl md:text-4xl font-extrabold mb-6 text-gray-900 leading-snug break-keep" style="font-family: 'Jalnan', sans-serif !important;">
-                        '아파트 큐레이터'<br/>
-                        <span class="text-indigo-600 relative inline-block">
-                            시크릿브라더
-                            <svg class="absolute bottom-1 left-0 w-full h-3 -z-10 bg-yellow-200/60" style="border-radius: 4px;"></svg>
-                        </span>입니다.
-                    </h2>
-                    
+                    <h2 class="text-3xl md:text-4xl font-extrabold mb-6 text-gray-900 leading-snug break-keep" style="font-family: 'Jalnan', sans-serif !important;">'아파트 큐레이터'<br/><span class="text-indigo-600 relative inline-block">시크릿브라더<svg class="absolute bottom-1 left-0 w-full h-3 -z-10 bg-yellow-200/60" style="border-radius: 4px;"></svg></span>입니다.</h2>
                     <div class="text-gray-600 text-base md:text-lg leading-relaxed mb-8 space-y-4 border-l-4 border-gray-200 pl-6 break-keep font-body">
                         <p class="font-bold text-gray-800">"아직도 살지 말지 고민하시나요?"</p>
                         <p>저는 대한민국 1호 ‘초이스헬퍼’로서 여러분의 후회 없는 선택을 설계해드리고 있습니다.</p>
                         <p>수많은 아파트와 뉴스 속에서 혼자 고민하지 마세요. 실제 투자와 상담으로 검증된 인사이트로, 당신에게 맞는 한 채를 함께 고르겠습니다.</p>
                     </div>
-
+                    <!-- 링크 복구 완료 -->
                     <div class="space-y-3 bg-gray-50 p-5 md:p-6 rounded-xl border border-gray-100 mb-8 font-body">
                         <h4 class="font-bold text-gray-900 mb-4 flex items-center gap-2"><i data-lucide="award" class="w-5 h-5 md:w-6 md:h-6 text-yellow-500 fill-current"></i> 주요 경력 및 활동</h4>
-                        <button onclick="window.openImageModal('./1.jpg')" class="w-full flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100 text-left">
-                            <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">1</span>
-                            <span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-indigo-600 break-keep flex-grow">서울머니쇼 초청강사</span>
-                            <i data-lucide="image" class="w-4 h-4 text-gray-400 opacity-50 group-hover:opacity-100"></i>
-                        </button>
-                        <a href="https://youtu.be/Xg5GV-b-7rU?si=_h20A9yTGwFsOwSz" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100">
-                            <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">2</span>
-                            <span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-red-600 break-keep">김작가TV & 신사임당 & 월부 채널 출연</span>
-                            <i data-lucide="youtube" class="w-4 h-4 text-red-500 ml-auto group-hover:scale-110 transition-transform"></i>
-                        </a>
-                        <a href="https://blog.naver.com/secret-brother" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100">
-                            <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">3</span>
-                            <div class="flex flex-col">
-                                <span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-green-600 break-keep">누적 방문자 200만 블로거</span>
-                                <span class="text-xs text-gray-400 font-medium group-hover:text-green-500 break-keep">(성공한 형의 비밀일기장)</span>
-                            </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-gray-400 ml-auto opacity-50 group-hover:opacity-100"></i>
-                        </a>
-                        <a href="https://www.youtube.com/@secretbrother_official" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100">
-                            <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">4</span>
-                            <span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-red-600 break-keep">시크릿브라더 유튜브 채널 운영</span>
-                            <i data-lucide="external-link" class="w-4 h-4 text-gray-400 ml-auto opacity-50 group-hover:opacity-100"></i>
-                        </a>
-                        <a href="https://cafe.naver.com/f-e/cafes/12730407/members/NLGMlLKgwIgd43sXBQbqw63HggHmL08BGrf6Q6JMNJM?tab=articles" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100">
-                            <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">5</span>
-                            <span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-green-600 break-keep">부동산스터디카페 인기 칼럼리스트</span>
-                            <i data-lucide="external-link" class="w-4 h-4 text-gray-400 ml-auto opacity-50 group-hover:opacity-100"></i>
-                        </a>
+                        <button onclick="window.openImageModal('./1.jpg')" class="w-full flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100 text-left"><span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">1</span><span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-indigo-600 break-keep flex-grow">서울머니쇼 초청강사</span><i data-lucide="image" class="w-4 h-4 text-gray-400 opacity-50 group-hover:opacity-100"></i></button>
+                        <a href="https://youtu.be/Xg5GV-b-7rU?si=_h20A9yTGwFsOwSz" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100"><span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">2</span><span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-red-600 break-keep">김작가TV & 신사임당 & 월부 채널 출연</span><i data-lucide="youtube" class="w-4 h-4 text-red-500 ml-auto group-hover:scale-110 transition-transform"></i></a>
+                        <a href="https://blog.naver.com/secret-brother" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100"><span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">3</span><div class="flex flex-col"><span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-green-600 break-keep">누적 방문자 200만 블로거</span><span class="text-xs text-gray-400 font-medium group-hover:text-green-500 break-keep">(성공한 형의 비밀일기장)</span></div><i data-lucide="external-link" class="w-4 h-4 text-gray-400 ml-auto opacity-50 group-hover:opacity-100"></i></a>
+                        <a href="https://www.youtube.com/@secretbrother_official" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100"><span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">4</span><span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-red-600 break-keep">시크릿브라더 유튜브 채널 운영</span><i data-lucide="external-link" class="w-4 h-4 text-gray-400 ml-auto opacity-50 group-hover:opacity-100"></i></a>
+                        <a href="https://cafe.naver.com/f-e/cafes/12730407/members/NLGMlLKgwIgd43sXBQbqw63HggHmL08BGrf6Q6JMNJM?tab=articles" target="_blank" class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all group border border-gray-100"><span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">5</span><span class="text-gray-700 font-medium text-sm md:text-base group-hover:text-green-600 break-keep">부동산스터디카페 인기 칼럼리스트</span><i data-lucide="external-link" class="w-4 h-4 text-gray-400 ml-auto opacity-50 group-hover:opacity-100"></i></a>
                     </div>
-
-                    <button onclick="window.toggleModal('videoModal')" class="w-full md:w-auto px-8 py-4 bg-gray-900 text-white rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-800 transition-all shadow-lg">
-                        <i data-lucide="play-circle" class="w-6 h-6"></i>
-                        시크릿브라더 대표 영상 보기
-                    </button>
+                    <button onclick="window.toggleModal('videoModal')" class="w-full md:w-auto px-8 py-4 bg-gray-900 text-white rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-800 transition-all shadow-lg"><i data-lucide="play-circle" class="w-6 h-6"></i> 시크릿브라더 대표 영상 보기</button>
                 </div>
             </div>
         </div>
@@ -236,42 +204,22 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative font-body">
                 <div class="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-gradient-to-r from-gray-800 via-indigo-600 to-gray-800 z-0"></div>
-                <div class="relative z-10 bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 text-center hover:-translate-y-3 transition-all duration-300 group">
-                    <div class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-3xl mx-auto mb-6 shadow-[0_0_15px_rgba(79,70,229,0.5)] ring-4 ring-gray-900 group-hover:ring-indigo-400 transition-all">1</div>
-                    <h3 class="text-xl font-bold mb-4">사전 설문</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed break-keep">투자 성향 및 자산 현황을<br>정밀하게 진단합니다.</p>
-                </div>
-                <div class="relative z-10 bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 text-center hover:-translate-y-3 transition-all duration-300 group">
-                    <div class="w-20 h-20 bg-indigo-700 rounded-full flex items-center justify-center text-white font-bold text-3xl mx-auto mb-6 shadow-[0_0_15px_rgba(67,56,202,0.5)] ring-4 ring-gray-900 group-hover:ring-indigo-400 transition-all">2</div>
-                    <h3 class="text-xl font-bold mb-4">맞춤 분석</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed break-keep">최적의 지역과 단지를 선정하고<br>포트폴리오를 설계합니다.</p>
-                </div>
-                <div class="relative z-10 bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 text-center hover:-translate-y-3 transition-all duration-300 group">
-                    <div class="w-20 h-20 bg-indigo-800 rounded-full flex items-center justify-center text-white font-bold text-3xl mx-auto mb-6 shadow-[0_0_15px_rgba(55,48,163,0.5)] ring-4 ring-gray-900 group-hover:ring-indigo-400 transition-all">3</div>
-                    <h3 class="text-xl font-bold mb-4">1:1 밀착 상담</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed break-keep">7일간 카카오톡을 통해<br>실시간 솔루션을 제공합니다.</p>
-                </div>
-                <div class="relative z-10 bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 text-center hover:-translate-y-3 transition-all duration-300 group">
-                    <div class="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center text-indigo-900 font-bold text-3xl mx-auto mb-6 shadow-[0_0_15px_rgba(234,179,8,0.5)] ring-4 ring-gray-900 group-hover:ring-yellow-300 transition-all">4</div>
-                    <h3 class="text-xl font-bold mb-4 text-yellow-400">실행 및 관리</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed break-keep">매수 타이밍 설정 및<br>향후 방향성까지 제시합니다.</p>
-                </div>
+                <div class="relative z-10 bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 text-center hover:-translate-y-3 transition-all duration-300 group"><div class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-3xl mx-auto mb-6 shadow-[0_0_15px_rgba(79,70,229,0.5)] ring-4 ring-gray-900 group-hover:ring-indigo-400 transition-all">1</div><h3 class="text-xl font-bold mb-4">사전 설문</h3><p class="text-gray-400 text-sm leading-relaxed break-keep">투자 성향 및 자산 현황을<br>정밀하게 진단합니다.</p></div>
+                <div class="relative z-10 bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 text-center hover:-translate-y-3 transition-all duration-300 group"><div class="w-20 h-20 bg-indigo-700 rounded-full flex items-center justify-center text-white font-bold text-3xl mx-auto mb-6 shadow-[0_0_15px_rgba(67,56,202,0.5)] ring-4 ring-gray-900 group-hover:ring-indigo-400 transition-all">2</div><h3 class="text-xl font-bold mb-4">맞춤 분석</h3><p class="text-gray-400 text-sm leading-relaxed break-keep">최적의 지역과 단지를 선정하고<br>포트폴리오를 설계합니다.</p></div>
+                <div class="relative z-10 bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 text-center hover:-translate-y-3 transition-all duration-300 group"><div class="w-20 h-20 bg-indigo-800 rounded-full flex items-center justify-center text-white font-bold text-3xl mx-auto mb-6 shadow-[0_0_15px_rgba(55,48,163,0.5)] ring-4 ring-gray-900 group-hover:ring-indigo-400 transition-all">3</div><h3 class="text-xl font-bold mb-4">1:1 밀착 상담</h3><p class="text-gray-400 text-sm leading-relaxed break-keep">7일간 카카오톡을 통해<br>실시간 솔루션을 제공합니다.</p></div>
+                <div class="relative z-10 bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 text-center hover:-translate-y-3 transition-all duration-300 group"><div class="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center text-indigo-900 font-bold text-3xl mx-auto mb-6 shadow-[0_0_15px_rgba(234,179,8,0.5)] ring-4 ring-gray-900 group-hover:ring-yellow-300 transition-all">4</div><h3 class="text-xl font-bold mb-4 text-yellow-400">실행 및 관리</h3><p class="text-gray-400 text-sm leading-relaxed break-keep">매수 타이밍 설정 및<br>향후 방향성까지 제시합니다.</p></div>
             </div>
         </div>
     </section>
 
-    <!-- 수강신청 섹션 -->
+    <!-- 수강신청 섹션 (할인율 적용 완료) -->
     <section id="pricing" class="py-24 bg-white">
         <div class="max-w-4xl mx-auto px-4 text-center">
             <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6" style="font-family: 'Jalnan', sans-serif !important;">수강 신청</h2>
             <div class="bg-white rounded-3xl p-8 md:p-14 shadow-xl border border-gray-100 relative overflow-hidden transition-all duration-300 transform hover:scale-[1.01] ring-1 ring-indigo-50">
                 <div class="absolute top-0 left-0 w-full h-3 bg-indigo-600"></div>
-                <div class="mb-8">
-                    <span class="inline-block py-1 px-3 rounded-full text-xs font-bold mb-4 bg-indigo-100 text-indigo-700">PREMIUM SERVICE</span>
-                    <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 font-body">1:1 맞춤형 투자 큐레이팅</h3>
-                    <p class="text-gray-500 max-w-lg mx-auto leading-relaxed text-sm md:text-base break-keep font-body">당신의 자산 상황과 목표에 맞춘 100% 개인화 포트폴리오 제안 및 심층 상담</p>
-                </div>
-                
+                <div class="mb-8"><span class="inline-block py-1 px-3 rounded-full text-xs font-bold mb-4 bg-indigo-100 text-indigo-700">PREMIUM SERVICE</span><h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 font-body">1:1 맞춤형 투자 큐레이팅</h3><p class="text-gray-500 max-w-lg mx-auto leading-relaxed text-sm md:text-base break-keep font-body">당신의 자산 상황과 목표에 맞춘 100% 개인화 포트폴리오 제안 및 심층 상담</p></div>
+                <!-- 할인율 -->
                 <div class="flex flex-col items-center justify-center mb-10 pb-10 border-b border-gray-100 font-body">
                     <div class="flex items-center gap-3 mb-2">
                         <span class="text-gray-400 text-xl line-through decoration-red-400 decoration-2">699,000원</span>
@@ -279,23 +227,11 @@
                     </div>
                     <span class="text-5xl font-extrabold text-indigo-600">349,000원</span>
                 </div>
-
                 <div class="flex flex-col gap-3 font-body">
-                    <a href="https://portone.io/korea/ko" target="_blank" onclick="window.checkPaymentLink(event, this.href)" class="block w-full py-5 rounded-xl font-bold text-lg md:text-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 bg-gray-900 text-white hover:bg-gray-800 flex justify-center items-center gap-2">
-                        <i data-lucide="credit-card" class="w-6 h-6"></i> 카드 / 간편결제 신청하기
-                    </a>
-                    <button onclick="window.toggleModal('depositModal')" class="block w-full py-4 rounded-xl font-bold text-lg border-2 border-gray-200 text-gray-600 hover:border-indigo-500 hover:text-indigo-600 transition-all flex justify-center items-center gap-2">
-                        <i data-lucide="wallet" class="w-5 h-5"></i> 무통장 입금으로 신청하기 (수수료 X)
-                    </button>
+                    <a href="https://portone.io/korea/ko" target="_blank" onclick="window.checkPaymentLink(event, this.href)" class="block w-full py-5 rounded-xl font-bold text-lg bg-gray-900 text-white hover:bg-gray-800 flex justify-center items-center gap-2"><i data-lucide="credit-card"></i> 카드 / 간편결제 신청하기</a>
+                    <button onclick="window.toggleModal('depositModal')" class="block w-full py-4 rounded-xl font-bold text-lg border-2 border-gray-200 text-gray-600 hover:border-indigo-500 hover:text-indigo-600 flex justify-center items-center gap-2"><i data-lucide="wallet"></i> 무통장 입금 신청하기</button>
                 </div>
-                
-                <div class="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl text-left">
-                    <p class="text-sm md:text-base text-red-600 font-bold leading-relaxed break-keep">
-                        ※ 현재 사이트 이전 문제로 카드 결제 연동이 원활치 않을 수 있습니다.<br>
-                        만약 카드 결제가 안 될 경우 <span class="underline">'무통장 입금'</span>을 이용해 주시고, 무통장 입금시 현금영수증 & 지출 증빙을 위해 입금 반드시 <span class="underline">'폼' 작성</span>을 완료해 주실 것을 부탁드립니다 ※
-                    </p>
-                </div>
-
+                <div class="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl text-left"><p class="text-sm md:text-base text-red-600 font-bold leading-relaxed break-keep">※ 현재 사이트 이전 문제로 카드 결제 연동이 원활치 않을 수 있습니다.<br>만약 카드 결제가 안 될 경우 <span class="underline">'무통장 입금'</span>을 이용해 주시고, 무통장 입금시 현금영수증 & 지출 증빙을 위해 입금 반드시 <span class="underline">'폼' 작성</span>을 완료해 주실 것을 부탁드립니다 ※</p></div>
                 <p class="mt-4 text-xs text-gray-400">* KG이니시스 결제 페이지로 이동합니다.</p>
             </div>
         </div>
@@ -309,33 +245,30 @@
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2" style="font-family: 'Jalnan', sans-serif !important;">수강생 리얼 후기</h2>
                 <p class="text-gray-600 text-lg font-body">조작 없는 100% 실제 수강생들의 이야기입니다.</p>
             </div>
-
-            <!-- BEST 후기 섹션 -->
+            <!-- BEST List -->
             <div class="mb-12">
-                <h3 class="text-2xl font-bold text-gray-800 mb-8 flex items-center justify-center gap-2">
-                    <i data-lucide="trophy" class="text-yellow-500 fill-current w-8 h-8"></i> 명예의 전당 (BEST)
-                </h3>
+                <h3 class="text-2xl font-bold text-gray-800 mb-8 flex items-center justify-center gap-2"><i data-lucide="trophy" class="text-yellow-500 fill-current w-8 h-8"></i> 명예의 전당 (BEST)</h3>
                 <div id="best-reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- JS로 BEST 후기 로드 -->
                 </div>
             </div>
-
-            <!-- 전체 후기 보러가기 버튼 (페이지 이동) -->
+            <!-- 전체 보기 링크 -->
             <div class="text-center mt-12">
+                <!-- [수정] 줄바꿈 수정 (break-keep 추가) -->
                 <a href="all_reviews.html" class="inline-flex items-center gap-2 bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white px-12 py-5 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-xl group break-keep">
-                    실시간 전체 후기 보러가기 (최신순) 
-                    <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                    실시간 전체 후기 보러가기 (최신순) <i data-lucide="arrow-right" class="group-hover:translate-x-1 transition-transform"></i>
                 </a>
                 <p class="text-gray-400 text-sm mt-3">지금 이 순간에도 후기가 올라오고 있습니다!</p>
             </div>
         </div>
     </section>
 
-    <!-- FAQ 섹션 -->
+    <!-- FAQ (복구: 질문 2개, 아코디언 기능) -->
     <section id="faq" class="py-24 bg-indigo-50">
-        <div class="max-w-3xl mx-auto px-4">
+        <div class="max-w-3xl mx-auto px-4 text-center">
             <h2 class="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12" style="font-family: 'Jalnan', sans-serif !important;">고객센터 (FAQ)</h2>
             <div class="space-y-4 mb-12 font-body text-left">
+                <!-- 질문 1 -->
                 <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                     <button onclick="window.toggleFaq(this)" class="w-full flex justify-between items-center p-6 text-left focus:outline-none">
                         <div class="flex items-center gap-4"><span class="text-indigo-600 font-extrabold text-xl">Q</span><span class="font-bold text-gray-800 text-lg">큐레이팅 진행 방식이 어떻게 되나요?</span></div>
@@ -343,6 +276,7 @@
                     </button>
                     <div class="hidden p-6 pt-0 pl-16 bg-white text-gray-600 leading-relaxed border-t border-dashed border-gray-100 mt-2 break-keep">결제 후 사전 설문지를 작성해주시면, 시크릿브라더가 직접 분석 후 7일간 카카오톡을 통해 실시간으로 1:1 상담과 솔루션을 제공해드립니다.</div>
                 </div>
+                <!-- 질문 2 -->
                 <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                     <button onclick="window.toggleFaq(this)" class="w-full flex justify-between items-center p-6 text-left focus:outline-none">
                         <div class="flex items-center gap-4"><span class="text-indigo-600 font-extrabold text-xl">Q</span><span class="font-bold text-gray-800 text-lg">결제 후 언제부터 상담이 시작되나요?</span></div>
@@ -351,17 +285,11 @@
                     <div class="hidden p-6 pt-0 pl-16 bg-white text-gray-600 leading-relaxed border-t border-dashed border-gray-100 mt-2 break-keep">결제 완료 후 24시간 이내에 해피콜(또는 안내 문자)을 드리며, 고객님의 일정에 맞춰 상담 시작일을 조율합니다.</div>
                 </div>
             </div>
-            
-            <div class="text-center">
-                <p class="text-gray-500 mb-4 font-medium">더 궁금한 점이 있으신가요?</p>
-                <a href="https://open.kakao.com/o/sheKqImd" target="_blank" class="inline-flex items-center gap-2 bg-[#FEE500] text-[#3c1e1e] border-2 border-[#FEE500] px-8 py-4 rounded-full font-bold text-lg hover:bg-[#fdd835] hover:border-[#fdd835] transition-all shadow-md transform hover:scale-105">
-                    <i data-lucide="message-circle" class="w-6 h-6"></i> 1:1 카카오톡 문의하기
-                </a>
-            </div>
+            <a href="https://open.kakao.com/o/sheKqImd" target="_blank" class="inline-flex items-center gap-2 bg-[#FEE500] text-[#3c1e1e] border-2 border-[#FEE500] px-8 py-4 rounded-full font-bold text-lg hover:bg-[#fdd835] shadow-md transform hover:scale-105"><i data-lucide="message-circle"></i> 1:1 카카오톡 문의하기</a>
         </div>
     </section>
 
-    <!-- 푸터 -->
+    <!-- Footer -->
     <footer class="bg-gray-900 text-gray-400 py-16 text-sm font-body">
         <div class="max-w-6xl mx-auto px-4">
             <div class="grid md:grid-cols-2 gap-12 mb-12">
@@ -414,7 +342,7 @@
         </div>
     </div>
 
-    <!-- Review Detail Modal -->
+    <!-- Review Detail Modal (메인) -->
     <div id="reviewDetailModal" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="window.toggleModal('reviewDetailModal')">
         <div class="bg-white w-full max-w-2xl max-h-[85vh] rounded-2xl shadow-2xl relative overflow-hidden flex flex-col" onclick="event.stopPropagation()">
             <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-shrink-0">
@@ -434,50 +362,93 @@
         </div>
     </div>
 
-    <!-- Deposit Modal -->
+    <!-- Deposit Modal (네이버 폼 링크 수정) -->
     <div id="depositModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60" onclick="window.toggleModal('depositModal')"><div class="bg-white w-full max-w-md rounded-2xl p-8 relative" onclick="event.stopPropagation()"><button onclick="window.toggleModal('depositModal')" class="absolute top-4 right-4"><i data-lucide="x"></i></button><div class="text-center mb-6"><h3 class="text-2xl font-bold">무통장 입금</h3></div><div class="bg-gray-50 p-5 rounded-xl border mb-4"><p class="text-sm text-gray-500">기업은행</p><p class="font-bold text-lg text-indigo-600 cursor-pointer" onclick="window.copyAccount()">521-063745-04-011 (주)아율</p></div><a href="https://naver.me/FeN7ayAf" target="_blank" onclick="window.requestDeposit()" class="block w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-center hover:bg-indigo-700">신청서 작성하기</a></div></div>
 
     <!-- My Page Modal -->
-    <div id="mypageModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60" onclick="window.toggleModal('mypageModal')"><div class="bg-white w-full max-w-lg rounded-2xl p-0 shadow-2xl overflow-hidden" onclick="event.stopPropagation()"><div class="p-6 border-b flex justify-between"><h3 class="text-xl font-bold">나의 강의실</h3><button onclick="window.toggleModal('mypageModal')"><i data-lucide="x"></i></button></div><div class="p-8"><div id="mypage-guest" class="text-center"><button onclick="window.toggleModal('mypageModal'); window.openLoginModal('login');" class="bg-indigo-600 text-white px-6 py-2 rounded">로그인</button></div><div id="user-info-card" class="hidden-section"><h4 class="font-bold text-lg"><span id="mp-username"></span>님</h4></div><div id="mypage-user-unpaid" class="hidden-section text-center mt-6"><p class="font-bold mb-2 text-gray-800">신청하신 내역이 없습니다.</p><p class="text-sm text-gray-500 mb-4">시크릿클래스의 큐레이팅을 경험해보세요.</p><button onclick="window.toggleModal('mypageModal'); window.scrollToSection('pricing');" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700">서비스 신청하기</button></div><div id="status-paid" class="hidden-section mt-6"><div class="bg-green-50 p-4 rounded-xl border border-green-200 text-green-700 font-bold mb-4 flex items-center justify-center gap-2"><i data-lucide="check-circle" class="w-5 h-5"></i> 결제 완료되었습니다.</div><a href="https://open.kakao.com/o/sfyp9Qxh" target="_blank" class="block w-full bg-[#FEE500] text-[#3c1e1e] text-center py-4 rounded-xl font-bold hover:bg-[#fdd835] shadow-sm flex items-center justify-center gap-2"><i data-lucide="message-circle" class="w-5 h-5"></i> 1:1 채팅방 입장하기</a></div><div id="status-pending" class="hidden-section mt-6"><div class="bg-yellow-50 p-6 rounded-xl border border-yellow-200 text-center"><div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm text-2xl">⏳</div><h4 class="font-bold text-gray-800 mb-1">입금 확인 중입니다.</h4><p class="text-sm text-gray-500">담당자가 내역 확인 후<br>문자로 입장 안내를 드립니다.</p></div></div></div></div></div>
+    <div id="mypageModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60" onclick="window.toggleModal('mypageModal')"><div class="bg-white w-full max-w-lg rounded-2xl p-0 shadow-2xl overflow-hidden" onclick="event.stopPropagation()"><div class="p-6 border-b flex justify-between"><h3 class="text-xl font-bold">나의 강의실</h3><button onclick="window.toggleModal('mypageModal')"><i data-lucide="x"></i></button></div><div class="p-8"><div id="mypage-guest" class="text-center"><button onclick="window.toggleModal('mypageModal'); window.openLoginModal('login');" class="bg-indigo-600 text-white px-6 py-2 rounded">로그인</button></div><div id="user-info-card" class="hidden-section"><h4 class="font-bold text-lg"><span id="mp-username"></span>님</h4></div>
+    <!-- 결제 상태에 따른 메시지 (JS에서 제어) -->
+    <div id="mypage-user-unpaid" class="hidden-section text-center mt-6">
+        <p class="font-bold mb-2 text-gray-800">신청하신 내역이 없습니다.</p>
+        <p class="text-sm text-gray-500 mb-4">시크릿클래스의 큐레이팅을 경험해보세요.</p>
+        <button onclick="window.toggleModal('mypageModal'); window.scrollToSection('pricing');" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700">서비스 신청하기</button>
+    </div>
+    <div id="status-paid" class="hidden-section mt-6">
+        <div class="bg-green-50 p-4 rounded-xl border border-green-200 text-green-700 font-bold mb-4 flex items-center justify-center gap-2"><i data-lucide="check-circle" class="w-5 h-5"></i> 결제 완료되었습니다.</div>
+        <a href="https://open.kakao.com/o/sfyp9Qxh" target="_blank" class="block w-full bg-[#FEE500] text-[#3c1e1e] text-center py-4 rounded-xl font-bold hover:bg-[#fdd835] shadow-sm flex items-center justify-center gap-2"><i data-lucide="message-circle" class="w-5 h-5"></i> 1:1 채팅방 입장하기</a>
+    </div>
+    <div id="status-pending" class="hidden-section mt-6">
+        <div class="bg-yellow-50 p-6 rounded-xl border border-yellow-200 text-center">
+            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm text-2xl">⏳</div>
+            <h4 class="font-bold text-gray-800 mb-1">입금 확인 중입니다.</h4>
+            <p class="text-sm text-gray-500">담당자가 내역 확인 후<br>문자로 입장 안내를 드립니다.</p>
+        </div>
+    </div>
+    </div></div></div>
 
     <!-- Other Modals -->
     <div id="imageModal" class="hidden fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/90" onclick="window.toggleModal('imageModal')"><div class="relative max-w-4xl" onclick="event.stopPropagation()"><button onclick="window.toggleModal('imageModal')" class="absolute -top-10 right-0 text-white"><i data-lucide="x"></i></button><img id="modal-image-src" src="" class="max-h-[85vh] rounded-lg"></div></div>
     <div id="videoModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90" onclick="window.toggleModal('videoModal')"><div class="relative w-full max-w-4xl aspect-video bg-black rounded-2xl overflow-hidden" onclick="event.stopPropagation()"><button onclick="window.toggleModal('videoModal')" class="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2"><i data-lucide="x"></i></button><iframe class="w-full h-full" src="https://www.youtube.com/embed/j0hFCMX5Qlc"></iframe></div></div>
 
+    <!-- Script Block -->
     <script type="module">
-        // Firebase Imports
+        // Firebase Imports (필수 함수 포함)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Init
+        // 1. 데이터 정의 (최상단 배치)
+        const bestReviews = [
+            {
+                title: "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공!",
+                content: `안녕하세요!\n결혼을 준비하던 약 3년 전부터 부동산을 째려보던 제가\n시브님을 만나고 약 2주만에 서울에 내집 마련을 했습니다!\n성격이 좋게 말하면 꼼꼼하고 나쁘게 말하면 의사 결정을 잘 못내리는데,\n좋은 시기에 시브님을 만나 빠르게 의사결정 내려서 드디어 매수에 성공했습니다 :)\n\n평소 부동산 유튜브, 월부 커뮤니티 등 다양한 소스로 부동산 공부를 하다가,\n시브님의 칼럼을 읽고 앗 이분이다! 하는 생각이 들어\n시브님을 알게되고 바로 다음 날에 큐레이팅 컨설팅을 신청하였는데요!\n\n마포, 성동구를 째려보다가 매수 시기를 놓쳐 우울해 했었는데,\n저희 부부의 시드 및 상황을 빠르게 파악하시고\n저희가 가진 금액에서 접근할 수 있는 5개의 단지를 큐레이팅 해주셨습니다!\n\n처음 봤던 단지들이 대부분이라,\n중간에 제가 더 아파트를 서치해보았지만\n시브님이 정말 귀신같이(?) 더 나은 매물들만 골라주셨더라구요 ㅎㅎㅎ\n\n그래서 큐레이팅이 정말 많은 시간을 단축해주는구나! 하는 생각을 했고\n(진행하시는 분들은 믿고 가셔도 좋을 것 같습니다!!!)\n중간 중간 지금 더 찾을 때가 아니라 얼른 가서 임장하고 부동산 볼때다 라고 회초리(?)를 들어주신 것도\n밍기적 거리는 저에게 큰 도움이 됐습니다!\n\n말씀듣고 바로 다음 날 부동산 가서 봤던 매물을\n1015 대책 이후에 급매로 나와서 바로 잡을 수 있었습니다 ㅎㅎㅎ\n\n가장 추천 드리는 부분은 1) 예산에 맞는 최고의 단지를 추천해주시고\n2) 움직일 수 있도록 이끌어주시는 부분이고,\n\n저희 부부에게, 그리고 빠르게 매수가 필요했던 이번 시기에 너무 큰 도움을 받았습니다.\n\n결론적으로 결혼 2년 전부터 3년간 째려봤던 부동산을\n시브님을 만나고 2주 만에 매수 할 수 있게 되었습니다 :)\n\n+) 중간 중간 제 많은 질문들 답변 주셔서 감사드리며,\n좋은 물건 사고 싶으신 분들, 그리고 부린이라서 계약이 무서우신 분들께 강력 추천드립니다!\n\n감사합니다 시브님 :)\n(갈아타기때 또 뵙겠습니다!)`,
+                author: "김아름님", date: "2025-11-04", rating: 5, badge: "BEST"
+            },
+            {
+                title: "시크릿큐레이팅후기_막막함에 확신이 생깁니다. 돈 안 아까움 주의!!",
+                content: `안녕하세요, 전 9월 중순에 큐레이팅을 받았습니다.\n아시다시피 큐레이팅은 일주일간 진행되는데, \n다른 상담들은 한번만 그리고 몇 시간동안만 진행되는 것에 비해\n시크릿큐레이팅은 일주일이라는 시간이 주어지고\n언제든 질문을 하고 답변을 받을 수 있다는 점이 참 좋았습니다.\n \n저는 큐레이팅을 시작했을 당시, 실거주와 투자. 어느 것을 하는 것이 좋을 지도 결정 못하고 있었습니다.\n시브님은 제 의견은 다 들어주시되, 시브님의 의견을 근거를 들어가며 설명해 주시고,\n저에게 선택권을 주셨습니다.\n덕분에 전 실거주로 방향성을 잡게 되었고,\n시브님의 근거들 덕분에 제 방향성에 확신을 더할 수 있었습니다.\n \n그리고, 상담을 많이 해보셔서 그런 걸까요? 아님 책이나 여러 경험들을 통해 그릇이 커서 그런 걸까요?\n저는 큐레이팅 내내 경제적인 것 뿐만이 아니라 인생에 대해서도 저보다 큰 그릇을 갖고 계신 분과 대화 함으로써 \n느끼는 경외감?이 있었습니다.\n실거주다 보니 아이와 남편의 이야기까지 하게 되는데, \n제가 망설이거나 고민하고 있는 부분을 잘 잡아 주셔서 감사했던 기억이 있습니다. \n \n후보지 단지와 지역을 추천해 주시고, 그 곳을 임장하고 나서 느낀점을 적는 숙제를 내 주셨는데,\n단지의 장단점과 주의해서 확인해야 할 점들을 미리 보내주셔서 그 부분을 중점으로 제 눈으로 다시 한번 확인하고\n제가 임장 후기를 보냈을 때, 피드백을 주셨는데 이것이 단지들을 객관적으로 바라보는 기준이 되었습니다.\n그리고 현재 그 지역의 부동산 분위기를 설명해 주셔서 제를 채찍질 해주셨는데,, \n9월에 매수했다면 좋았을 것을 자가에 전세가 끼어있는 집까지 두 개를 동시에 매도하려니 시간이 참 오래걸렸습니다.\n자가 매도시에도 시브님의 채찍질이 참 도움이 많이 됐어요.\n그렇게 일주일이라는 기간이 후딱 가고, 큐레이팅이 끝났죠.\n \n아!!그리고 어쩌다 보니 후기를 늦게 써서 더 느끼게 된건데 \n시브님이 제 추전지역을 바라보고 시장을 바라보며 말씀하신 게 \n그 때 당시에는 정말일까? 라는 의구심?도 아주 조금은 있었는데\n지나고 보니 진짜였어요.\n \n그리고, 몇 달이 지난 이 시점에 전 매도를 다 끝내고 \n제가 원하는 지역에 드디어 매수했습니다.\n9월과 11월 사이에 정책으로 부동산시장은 엄청 혼란스러웠고\n지금도 그 때의 큐레이팅 내용이 유효할까? 생각하며\n나눈 대화를 다시 한번 읽어나가며 \n아직도 유효하다는 판단을 할 수 있었고 괜찮은 가격이다.\n라는 확신으로 매수를 진행할 수 있었습니다.\n \n시크릿큐레이팅은 내가 어떤 질문을 하느냐에 따라 제가 얻고자 하는 대답보다 더 많은 것을 얻어갈 수 있습니다.\n그리고, 혹시 저처럼 질문을 못 하면 어떻하지?라고 생각하셔도 괜찮습니다. \n알아서 물어봐 주시거든요.\n30만원으로 3000만원의 가치를 줄 수 있다는 시크릿큐레이팅의 홍보문구는 과장이 아닙니다.\n읽어주셔서 감사합니다.`,
+                author: "이수정님", date: "2025-12-01", rating: 5, badge: "BEST"
+            },
+            {
+                title: "큰 돈이 들어가는 만큼, 경험이 적은 만큼 전문가의 조언을 얻어야 한다.",
+                content: `안녕하세요? 이번 시크릿 큐레이팅을 받으며 감사하게도 한 주만에 매도와 매수를 모두 하였고 계약서 작성을 앞두고 있습니다.\n저는 평소 시크릿브라더님 블로그를 보며 공부하고 있던 수강생입니다. 23년도 저는 갈아타기를 했었습니다. 전문가 조언 없이요!\n하지만 시간이 갈수록 가치가 낮다는 것을 알게 되었고, 그 당시 매수할 수 있었던 다른 물건들은 1-2억씩 먼저 오르는 상황이 되었습니다.\n그래서 이번엔 전문가이신 시브님 큐레이팅을 신청하게 되었습니다!\n결과적으로 좋은 물건을, 좋은 가격에 매수할 수 있었던 건 시크릿 큐레이팅 덕분입니다.\n\n(중략 없는 원본)\n\n3. 추천하는 이유\n최근 읽은 책에서 지혜로운 판단을 하기 위해서는 '지혜로운 사람과 교류하며 물어봐야 한다.'라는 글귀가 있었습니다.\n제 개인의 경험과 지식에는 한계가 있다는 점을 인정하고, 시크릿 큐레이팅을 신청한 결과 제 생각을 부동산 전문가인 시브님과 바로 바로 비교할 수 있었고 제가 생각하지 못한 부분은 보완할 수 있었고 그래서 엄청 큰 돈이 들어가는 부동산 매수-매도를 무사히 마무리할 수 있게 되었습니다.\n\n귀한 시간 내어 하나부터 열까지 꼼꼼하게 큐레이팅 해주신 시크릿브라더님께 정말 감사드리며 저처럼 부동산 경험이 적으신 분들은 꼭 시크릿 큐레이팅을 이용하여 좋은 자산을 매수하시길 바랍니다.`,
+                author: "이서연님", date: "2025-11-27", rating: 5, badge: "BEST"
+            },
+            {
+                title: "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기",
+                content: `안녕하세요 전 추석직전 큐레이팅 신청하고 추석연휴동안  갈아타기를 위해 열심히 임장을 다녔습니다.\n70일 아기를 데리고 임장을 하는 것이 정말 쉽지 않았는데요. 아기와 나중에 실거주와 투자하기 좋은 곳으로 살고싶다는\n목표로 버틴것 같습니다.\n추석연휴동안 부동산 사장님들과 연락이 쉽지 않았고 매물을 볼수도 없었기에 제 마음은 굉장히 조급했습니다.\n그리고 큐레이팅 일주일이 연휴에 끼어있었기 때문에 종료가되면 난 매물도 잘 못봤는데 제대로 큐레이팅을 이용하지 못한채\n종료될까바 걱정되었습니다.\n하지만 시부님께서는 큐레이팅기간 종료후에도 제가 계약종료를 마칠때까지 잘 이끌어주셨습니다.\n그점이 너무 감사했습니다.\n\n<제가 큐레이팅을 진행하며 가장 좋았던 점은>\n1. 나의 사고를 확장시킬 수 있었던점 > 혼자서 부동산 공부를 하거나 시장을 바라보는 것은 한계가 있는데 다양한 사람들을 많이만나고\n상담을 해보신 시부님은 현재 부동산 상황과 분위기등을 잘 파악하고 계셔서 현재 상황이 이러니 이렇게 하면 좋겠다 라는 점을 알려주셔서서도움이 되었습니다.\n2.평소 부동산에 대해 궁금한 것을 마음껏 질문할 수 있었고 그 답변을 굉장히 성의껏 이유와 함께 답변을 주십니다.\n3.다양한 매물중 어떤것이 가장 좋은 매물인지? 그 이유까지 알려주셔서 선택지를 좁히고 시간을 아낄수가 있습니다.\n4.나의 전재산이 들어가기때문에 물건을 정할때 마음이 불안합니다. 제가 맞는 선택을 한건가? 그럴때 부동산 전문가가 같이 결정을 해주니 나의 선택에 있어 덜 불안하다는 점\n5.나의 현재 상황과 조건들을 들어보고 그것에 맞게 매물 추천을 해주는 점.\n\n이 5가지가 전 가장 도움이 되었습니다.\n \n덕분에 저는 동탄을 갈아타기 해서 매수할 수 있었고 현재는 풍선효과로 가격이 제가 매수한 가격보다 많이 올랐습니다.\n시부님의 큐레이팅은 이가격에 믿을 수 없는 퀄리티 입니다. 큐레이팅을 안 받는것이 솔직히 손해라고 생각이드네요 ㅎㅎㅎㅎㅎ\n \n시부님 감사했습니다!!`,
+                author: "변미소님", date: "2025-11-12", rating: 5, badge: "BEST"
+            },
+            {
+                title: "큐레이팅 후기",
+                content: `안녕하세요 큐레이팅 후기를 남깁니다.\n저는 추석 연휴가 끝나고 큐레이팅을 시작해서 한 주만에 살던 집을 매도하고 새집을 매수하게 되었습니다.\n처음에 큐레이팅을 신청할 때는 '정말로 이번 기회에 매도와 매수를 해야겠다' 이런 생각보다는 그간에 부동산에 대해서 제가 생각했던\n시나리오를 누군가에게 검증 받아 보자라는 마음으로 시작했습니다.\n\n사실 부동산이라는 것이 예민한 주제라 주변인들과 적극적인 토론을 하기는 좀 꺼려지는 경향이 있고 인터넷 카페에 고민을 올려도\n고민에 댓글을 달아주는 분들의 상황이 다 저와 다르기 때문에 객관적인 상담은 어렵겠다고 생각했었습니다.\n\n이때 마침 친구가 추천해준 '나는 1000만원으로 아파트 산다'라는 책의 저자 시크릿브라더가 생각나서 제 손으로 유투브를 검색해서 찾아내고\n여기서 큐레이팅이 있다는 것을 보고 신청해서 상담을 받았습니다.\n\n결과는 대만족이었습니다. 사실 이번에 매수까지 성공하지 못했더라도 굉장히 만족스러운 상담이었다고 생각합니다.\n특히 저처럼 돌다리도 두드려보고 건너고 싶은 성격의 소유자이면서 또 남들이 하는 한마디에 맘이 크게 흔들릴 수 있는 분들에게 추천합니다.\n\n다들 마음속에 '이렇게 이렇게 해서 이런 아파트를 사는게 좋지 않을까?' 라는 막연한 시나리오 들은 있을 겁니다.\n이번에 큐레이팅을 받아 매도매수과정을 함께 해보니 이런 시나리오들을 행동으로 옮기는데\n혼자서 해봤다면 (정말 괜찮은 좋은 방향의 시나리오라도) 많은 장애물들을 넘지 못하고 실행하지 못 했을 수도 있었을 거란 생각이 듭니다.\n\n이번 부동산 거래는 인생에 있어 2번째이지만 가장 큰 부동산 거래 였는데 앞으로 어떻게 될지는 100% 장담할 순 없을 것 같습니다.\n하지만 정말로 치열한 고민 끝에 내린 결정이었음을 이미 알고 있고 그러한 치열한 생각의 과정에서 옆에 있어 줬던 시크릿브라더에게 참 감사합니다.`,
+                author: "이민석님", date: "2025-10-27", rating: 5, badge: "BEST"
+            },
+            {
+                title: "[시크릿브라더] 부동산 큐레이팅 후기",
+                content: `안녕하세요, 
+10월 초 추석 연휴 전 큐레이팅을 신청 하였고, 실거주와 갭투자를 고민하는 상황이었습니다. 
+결론을 먼저 말씀 드리자면 시크릿브라더님 큐레이팅 조언을 통해 실거주집을 매수하기로 계약을 한 상태입니다. 
+결과부터 말씀드리자면 큐레이팅 내용에 대해 정말 대만족 입니다!
+
+우선 간단하게 요약하자면 니즈와 상황을 말씀드리면 거기에 맞게 시브님이 생각하시는 답을 주십니다.
+저는 당연히 부린이지만 나름의 고수님들도 많이 계실거라고 생각합니다. 하지만 저는 누구든 고민 끝에 내린 판단이라도 100% 확신을 갖지 못하고 불안감을 떨쳐낼 수는 없다고 생각합니다.
+간단하게 원하는 규모, 지역이 정해져있었고 어느정도의 투자가 가능하다고 말씀드리면 거기에 맞게 답을 주셨습니다.
+제 선택이 맞는지, 제 근거가 맞는지에 대해 시브님이 말씀하시는것과 맞추어보는 것이 아닌 그냥 원하는 방향에 대한 답을 들을 수 있는 것이 저는 아주 큰 장점이라 생각합니다.
+누군가 투자하는데 명료하게 어디어디 하라고 알려주는 신뢰할 만한 곳은 정말 흔하지 않은 것 같습니다.
+솔직히 질문에 대한 시브님의 답을 듣는 과정이 길지 않았고 명쾌했습니다.`,
+                author: "김기용님", date: "2025-10-27", rating: 5, badge: "BEST"
+            }
+        ];
+
+        // Firebase 초기화
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-        // Auth Init
-        const initAuth = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                // 로그인 상태 체크 (UI 업데이트)
-                window.checkLoginStatus();
-                // 베스트 후기 렌더링 (DB연동)
-                renderBestReviews();
-            } catch (error) {
-                console.error("Auth Error:", error);
-            }
-        };
-        initAuth();
-
-        // -----------------------------------------------------------
-        // Global Functions (window binding)
-        // -----------------------------------------------------------
+        // 2. 전역 함수 설정 (HTML onclick 연동) - 여기로 이동
         window.lucide = lucide; 
         window.toggleModal = (id) => { const el = document.getElementById(id); if(el) el.classList.toggle('hidden'); };
         window.openImageModal = (src) => { document.getElementById('modal-image-src').src = src; window.toggleModal('imageModal'); };
@@ -499,7 +470,6 @@
         window.toggleMobileMenu = () => { document.getElementById('mobileMenu').classList.toggle('hidden'); };
         window.copyAccount = () => { navigator.clipboard.writeText("521-063745-04-011"); alert("계좌번호 복사완료"); };
         window.checkPaymentLink = (e, href) => { if(href.includes('portone')) { e.preventDefault(); window.open(href, '_blank'); alert("결제 링크를 복사해오세요."); } };
-        
         window.toggleFaq = (btn) => { 
             const ans = btn.nextElementSibling; 
             const icon = btn.querySelector('svg'); 
@@ -591,13 +561,11 @@
                 document.getElementById('user-info-card').classList.remove('hidden-section');
                 document.getElementById('mp-username').innerText = userName;
 
-                // DB 결제 상태 확인
                 if (auth.currentUser) {
                     try {
                         const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users_' + userId);
                         const docSnap = await getDoc(userDocRef);
                         
-                        // 초기화 (모두 숨김)
                         document.getElementById('mypage-user-unpaid').classList.add('hidden-section');
                         document.getElementById('status-paid').classList.add('hidden-section');
                         document.getElementById('status-pending').classList.add('hidden-section');
@@ -608,7 +576,6 @@
                             else if(status === 'pending') document.getElementById('status-pending').classList.remove('hidden-section');
                             else document.getElementById('mypage-user-unpaid').classList.remove('hidden-section');
                         } else {
-                             // 유저 정보는 있는데 DB에 없으면(예외) -> 미결제 처리
                              document.getElementById('mypage-user-unpaid').classList.remove('hidden-section');
                         }
                     } catch(e) { console.error("Status Check Error:", e); }
@@ -620,7 +587,6 @@
             const userId = sessionStorage.getItem('sc_user_id');
             if (!userId) {
                 alert("로그인 후 신청 가능합니다.");
-                // 네이버 폼 이동은 막지 않음 (새창)
                 return;
             }
             try {
@@ -633,74 +599,67 @@
         };
 
 
-        // --- BEST 후기 데이터 (원본 100%) ---
-        const bestReviews = [
-            {
-                title: "[시크릿브라더] 부동산 큐레이팅 후기",
-                content: `안녕하세요, \n10월 초 추석 연휴 전 큐레이팅을 신청 하였고, 실거주와 갭투자를 고민하는 상황이었습니다. \n결론을 먼저 말씀 드리자면 시크릿브라더님 큐레이팅 조언을 통해 실거주집을 매수하기로 계약을 한 상태입니다. \n결과부터 말씀드리자면 큐레이팅 내용에 대해 정말 대만족 입니다!\n\n우선 간단하게 요약하자면 니즈와 상황을 말씀드리면 거기에 맞게 시브님이 생각하시는 답을 주십니다.\n저는 당연히 부린이지만 나름의 고수님들도 많이 계실거라고 생각합니다. 하지만 저는 누구든 고민 끝에 내린 판단이라도 100% 확신을 갖지 못하고 불안감을 떨쳐낼 수는 없다고 생각합니다.\n간단하게 원하는 규모, 지역이 정해져있었고 어느정도의 투자가 가능하다고 말씀드리면 거기에 맞게 답을 주셨습니다.\n제 선택이 맞는지, 제 근거가 맞는지에 대해 시브님이 말씀하시는것과 맞추어보는 것이 아닌 그냥 원하는 방향에 대한 답을 들을 수 있는 것이 저는 아주 큰 장점이라 생각합니다.\n누군가 투자하는데 명료하게 어디어디 하라고 알려주는 신뢰할 만한 곳은 정말 흔하지 않은 것 같습니다.\n솔직히 질문에 대한 시브님의 답을 듣는 과정이 길지 않았고 명쾌했습니다.`,
-                author: "김기용님", date: "2025-10-27", rating: 5, badge: "BEST"
-            },
-            {
-                title: "시크릿큐레이팅후기_막막함에 확신이 생깁니다. 돈 안 아까움 주의!!",
-                content: `안녕하세요, 전 9월 중순에 큐레이팅을 받았습니다.\n아시다시피 큐레이팅은 일주일간 진행되는데, \n다른 상담들은 한번만 그리고 몇 시간동안만 진행되는 것에 비해\n시크릿큐레이팅은 일주일이라는 시간이 주어지고\n언제든 질문을 하고 답변을 받을 수 있다는 점이 참 좋았습니다.\n \n저는 큐레이팅을 시작했을 당시, 실거주와 투자. 어느 것을 하는 것이 좋을 지도 결정 못하고 있었습니다.\n시브님은 제 의견은 다 들어주시되, 시브님의 의견을 근거를 들어가며 설명해 주시고,\n저에게 선택권을 주셨습니다.\n덕분에 전 실거주로 방향성을 잡게 되었고,\n시브님의 근거들 덕분에 제 방향성에 확신을 더할 수 있었습니다.\n \n그리고, 상담을 많이 해보셔서 그런 걸까요? 아님 책이나 여러 경험들을 통해 그릇이 커서 그런 걸까요?\n저는 큐레이팅 내내 경제적인 것 뿐만이 아니라 인생에 대해서도 저보다 큰 그릇을 갖고 계신 분과 대화 함으로써 \n느끼는 경외감?이 있었습니다.\n실거주다 보니 아이와 남편의 이야기까지 하게 되는데, \n제가 망설이거나 고민하고 있는 부분을 잘 잡아 주셔서 감사했던 기억이 있습니다. \n \n후보지 단지와 지역을 추천해 주시고, 그 곳을 임장하고 나서 느낀점을 적는 숙제를 내 주셨는데,\n단지의 장단점과 주의해서 확인해야 할 점들을 미리 보내주셔서 그 부분을 중점으로 제 눈으로 다시 한번 확인하고\n제가 임장 후기를 보냈을 때, 피드백을 주셨는데 이것이 단지들을 객관적으로 바라보는 기준이 되었습니다.\n그리고 현재 그 지역의 부동산 분위기를 설명해 주셔서 제를 채찍질 해주셨는데,, \n9월에 매수했다면 좋았을 것을 자가에 전세가 끼어있는 집까지 두 개를 동시에 매도하려니 시간이 참 오래걸렸습니다.\n자가 매도시에도 시브님의 채찍질이 참 도움이 많이 됐어요.\n그렇게 일주일이라는 기간이 후딱 가고, 큐레이팅이 끝났죠.\n \n아!!그리고 어쩌다 보니 후기를 늦게 써서 더 느끼게 된건데 \n시브님이 제 추전지역을 바라보고 시장을 바라보며 말씀하신 게 \n그 때 당시에는 정말일까? 라는 의구심?도 아주 조금은 있었는데\n지나고 보니 진짜였어요.\n \n그리고, 몇 달이 지난 이 시점에 전 매도를 다 끝내고 \n제가 원하는 지역에 드디어 매수했습니다.\n9월과 11월 사이에 정책으로 부동산시장은 엄청 혼란스러웠고\n지금도 그 때의 큐레이팅 내용이 유효할까? 생각하며\n나눈 대화를 다시 한번 읽어나가며 \n아직도 유효하다는 판단을 할 수 있었고 괜찮은 가격이다.\n라는 확신으로 매수를 진행할 수 있었습니다.\n \n시크릿큐레이팅은 내가 어떤 질문을 하느냐에 따라 제가 얻고자 하는 대답보다 더 많은 것을 얻어갈 수 있습니다.\n그리고, 혹시 저처럼 질문을 못 하면 어떻하지?라고 생각하셔도 괜찮습니다. \n알아서 물어봐 주시거든요.\n30만원으로 3000만원의 가치를 줄 수 있다는 시크릿큐레이팅의 홍보문구는 과장이 아닙니다.\n읽어주셔서 감사합니다.`,
-                author: "이수정님", date: "2025-12-01", rating: 5, badge: "BEST"
-            },
-            {
-                title: "큰 돈이 들어가는 만큼, 경험이 적은 만큼 전문가의 조언을 얻어야 한다.",
-                content: `안녕하세요? 이번 시크릿 큐레이팅을 받으며 감사하게도 한 주만에 매도와 매수를 모두 하였고 계약서 작성을 앞두고 있습니다.\n저는 평소 시크릿브라더님 블로그를 보며 공부하고 있던 수강생입니다. 23년도 저는 갈아타기를 했었습니다. 전문가 조언 없이요!\n하지만 시간이 갈수록 가치가 낮다는 것을 알게 되었고, 그 당시 매수할 수 있었던 다른 물건들은 1-2억씩 먼저 오르는 상황이 되었습니다.\n그래서 이번엔 전문가이신 시브님 큐레이팅을 신청하게 되었습니다!\n결과적으로 좋은 물건을, 좋은 가격에 매수할 수 있었던 건 시크릿 큐레이팅 덕분입니다.\n\n(중략 없는 원본)\n\n3. 추천하는 이유\n최근 읽은 책에서 지혜로운 판단을 하기 위해서는 '지혜로운 사람과 교류하며 물어봐야 한다.'라는 글귀가 있었습니다.\n제 개인의 경험과 지식에는 한계가 있다는 점을 인정하고, 시크릿 큐레이팅을 신청한 결과 제 생각을 부동산 전문가인 시브님과 바로 바로 비교할 수 있었고 제가 생각하지 못한 부분은 보완할 수 있었고 그래서 엄청 큰 돈이 들어가는 부동산 매수-매도를 무사히 마무리할 수 있게 되었습니다.\n\n귀한 시간 내어 하나부터 열까지 꼼꼼하게 큐레이팅 해주신 시크릿브라더님께 정말 감사드리며 저처럼 부동산 경험이 적으신 분들은 꼭 시크릿 큐레이팅을 이용하여 좋은 자산을 매수하시길 바랍니다.`,
-                author: "이서연님", date: "2025-11-27", rating: 5, badge: "BEST"
-            },
-            {
-                title: "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공!",
-                content: `안녕하세요!\n결혼을 준비하던 약 3년 전부터 부동산을 째려보던 제가\n시브님을 만나고 약 2주만에 서울에 내집 마련을 했습니다!\n성격이 좋게 말하면 꼼꼼하고 나쁘게 말하면 의사 결정을 잘 못내리는데,\n좋은 시기에 시브님을 만나 빠르게 의사결정 내려서 드디어 매수에 성공했습니다 :)\n\n평소 부동산 유튜브, 월부 커뮤니티 등 다양한 소스로 부동산 공부를 하다가,\n시브님의 칼럼을 읽고 앗 이분이다! 하는 생각이 들어\n시브님을 알게되고 바로 다음 날에 큐레이팅 컨설팅을 신청하였는데요!\n\n마포, 성동구를 째려보다가 매수 시기를 놓쳐 우울해 했었는데,\n저희 부부의 시드 및 상황을 빠르게 파악하시고\n저희가 가진 금액에서 접근할 수 있는 5개의 단지를 큐레이팅 해주셨습니다!\n\n처음 봤던 단지들이 대부분이라,\n중간에 제가 더 아파트를 서치해보았지만\n시브님이 정말 귀신같이(?) 더 나은 매물들만 골라주셨더라구요 ㅎㅎㅎ\n\n그래서 큐레이팅이 정말 많은 시간을 단축해주는구나! 하는 생각을 했고\n(진행하시는 분들은 믿고 가셔도 좋을 것 같습니다!!!)\n중간 중간 지금 더 찾을 때가 아니라 얼른 가서 임장하고 부동산 볼때다 라고 회초리(?)를 들어주신 것도\n밍기적 거리는 저에게 큰 도움이 됐습니다!\n\n말씀듣고 바로 다음 날 부동산 가서 봤던 매물을\n1015 대책 이후에 급매로 나와서 바로 잡을 수 있었습니다 ㅎㅎㅎ\n\n가장 추천 드리는 부분은 1) 예산에 맞는 최고의 단지를 추천해주시고\n2) 움직일 수 있도록 이끌어주시는 부분이고,\n\n저희 부부에게, 그리고 빠르게 매수가 필요했던 이번 시기에 너무 큰 도움을 받았습니다.\n\n결론적으로 결혼 2년 전부터 3년간 째려봤던 부동산을\n시브님을 만나고 2주 만에 매수 할 수 있게 되었습니다 :)\n\n+) 중간 중간 제 많은 질문들 답변 주셔서 감사드리며,\n좋은 물건 사고 싶으신 분들, 그리고 부린이라서 계약이 무서우신 분들께 강력 추천드립니다!\n\n감사합니다 시브님 :)\n(갈아타기때 또 뵙겠습니다!)`,
-                author: "김아름님", date: "2025-11-04", rating: 5, badge: "BEST"
-            },
-            {
-                title: "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기",
-                content: `안녕하세요 전 추석직전 큐레이팅 신청하고 추석연휴동안  갈아타기를 위해 열심히 임장을 다녔습니다.\n70일 아기를 데리고 임장을 하는 것이 정말 쉽지 않았는데요. 아기와 나중에 실거주와 투자하기 좋은 곳으로 살고싶다는\n목표로 버틴것 같습니다.\n추석연휴동안 부동산 사장님들과 연락이 쉽지 않았고 매물을 볼수도 없었기에 제 마음은 굉장히 조급했습니다.\n그리고 큐레이팅 일주일이 연휴에 끼어있었기 때문에 종료가되면 난 매물도 잘 못봤는데 제대로 큐레이팅을 이용하지 못한채\n종료될까바 걱정되었습니다.\n하지만 시부님께서는 큐레이팅기간 종료후에도 제가 계약종료를 마칠때까지 잘 이끌어주셨습니다.\n그점이 너무 감사했습니다.\n\n<제가 큐레이팅을 진행하며 가장 좋았던 점은>\n1. 나의 사고를 확장시킬 수 있었던점 > 혼자서 부동산 공부를 하거나 시장을 바라보는 것은 한계가 있는데 다양한 사람들을 많이만나고\n상담을 해보신 시부님은 현재 부동산 상황과 분위기등을 잘 파악하고 계셔서 현재 상황이 이러니 이렇게 하면 좋겠다 라는 점을 알려주셔서서도움이 되었습니다.\n2.평소 부동산에 대해 궁금한 것을 마음껏 질문할 수 있었고 그 답변을 굉장히 성의껏 이유와 함께 답변을 주십니다.\n3.다양한 매물중 어떤것이 가장 좋은 매물인지? 그 이유까지 알려주셔서 선택지를 좁히고 시간을 아낄수가 있습니다.\n4.나의 전재산이 들어가기때문에 물건을 정할때 마음이 불안합니다. 제가 맞는 선택을 한건가? 그럴때 부동산 전문가가 같이 결정을 해주니 나의 선택에 있어 덜 불안하다는 점\n5.나의 현재 상황과 조건들을 들어보고 그것에 맞게 매물 추천을 해주는 점.\n\n이 5가지가 전 가장 도움이 되었습니다.\n \n덕분에 저는 동탄을 갈아타기 해서 매수할 수 있었고 현재는 풍선효과로 가격이 제가 매수한 가격보다 많이 올랐습니다.\n시부님의 큐레이팅은 이가격에 믿을 수 없는 퀄리티 입니다. 큐레이팅을 안 받는것이 솔직히 손해라고 생각이드네요 ㅎㅎㅎㅎㅎ\n \n시부님 감사했습니다!!`,
-                author: "변미소님", date: "2025-11-12", rating: 5, badge: "BEST"
-            },
-            {
-                title: "큐레이팅 후기",
-                content: `안녕하세요 큐레이팅 후기를 남깁니다.\n저는 추석 연휴가 끝나고 큐레이팅을 시작해서 한 주만에 살던 집을 매도하고 새집을 매수하게 되었습니다.\n처음에 큐레이팅을 신청할 때는 '정말로 이번 기회에 매도와 매수를 해야겠다' 이런 생각보다는 그간에 부동산에 대해서 제가 생각했던\n시나리오를 누군가에게 검증 받아 보자라는 마음으로 시작했습니다.\n\n사실 부동산이라는 것이 예민한 주제라 주변인들과 적극적인 토론을 하기는 좀 꺼려지는 경향이 있고 인터넷 카페에 고민을 올려도\n고민에 댓글을 달아주는 분들의 상황이 다 저와 다르기 때문에 객관적인 상담은 어렵겠다고 생각했었습니다.\n\n이때 마침 친구가 추천해준 '나는 1000만원으로 아파트 산다'라는 책의 저자 시크릿브라더가 생각나서 제 손으로 유투브를 검색해서 찾아내고\n여기서 큐레이팅이 있다는 것을 보고 신청해서 상담을 받았습니다.\n\n결과는 대만족이었습니다. 사실 이번에 매수까지 성공하지 못했더라도 굉장히 만족스러운 상담이었다고 생각합니다.\n특히 저처럼 돌다리도 두드려보고 건너고 싶은 성격의 소유자이면서 또 남들이 하는 한마디에 맘이 크게 흔들릴 수 있는 분들에게 추천합니다.\n\n다들 마음속에 '이렇게 이렇게 해서 이런 아파트를 사는게 좋지 않을까?' 라는 막연한 시나리오 들은 있을 겁니다.\n이번에 큐레이팅을 받아 매도매수과정을 함께 해보니 이런 시나리오들을 행동으로 옮기는데\n혼자서 해봤다면 (정말 괜찮은 좋은 방향의 시나리오라도) 많은 장애물들을 넘지 못하고 실행하지 못 했을 수도 있었을 거란 생각이 듭니다.\n\n이번 부동산 거래는 인생에 있어 2번째이지만 가장 큰 부동산 거래 였는데 앞으로 어떻게 될지는 100% 장담할 순 없을 것 같습니다.\n하지만 정말로 치열한 고민 끝에 내린 결정이었음을 이미 알고 있고 그러한 치열한 생각의 과정에서 옆에 있어 줬던 시크릿브라더에게 참 감사합니다.`,
-                author: "이민석님", date: "2025-10-27", rating: 5, badge: "BEST"
+        // --- 조회수 연동 로직 ---
+        const VIEW_KEY = "secretclass_review_views";
+        const LAST_UPDATE_KEY = "secretclass_views_last_update";
+        function loadViewData() { return JSON.parse(localStorage.getItem(VIEW_KEY) || "{}"); }
+        function saveViewData(data) { localStorage.setItem(VIEW_KEY, JSON.stringify(data)); }
+        function checkAndUpdateViews(data) {
+            const now = Date.now();
+            const lastUpdate = parseInt(localStorage.getItem(LAST_UPDATE_KEY) || 0);
+            if (now - lastUpdate > 86400000) {
+                for (let key in data) { data[key] += Math.floor(Math.random() * 5) + 1; }
+                saveViewData(data);
+                localStorage.setItem(LAST_UPDATE_KEY, now.toString());
             }
-        ];
+            return data;
+        }
+        function getViewCount(title, isBest) {
+            let data = loadViewData();
+            if (!data[title]) {
+                const initialView = isBest 
+                    ? Math.floor(Math.random() * (1200 - 900 + 1)) + 900 
+                    : Math.floor(Math.random() * (500 - 150 + 1)) + 150;
+                data[title] = initialView;
+                saveViewData(data);
+            }
+            data = checkAndUpdateViews(data);
+            return data[title];
+        }
+        function incrementViewCount(title) {
+            let data = loadViewData();
+            if (data[title]) {
+                data[title] += 1;
+                saveViewData(data);
+            }
+        }
 
-        // 조회수 연동 (Firestore)
-        // 메인 페이지는 BEST 6개만 렌더링
-        window.renderBestReviews = async function() {
+        function decodeAndFormatHtml(html) {
+            if(!html) return "";
+            var txt = document.createElement("textarea");
+            txt.innerHTML = html;
+            let decoded = txt.value;
+            if (!decoded.includes('<p>') && !decoded.includes('<br>')) {
+                decoded = decoded.replace(/\n/g, '<br>');
+            }
+            return decoded;
+        }
+
+        // 렌더링 함수
+        function renderBestReviews() {
             const bestContainer = document.getElementById('best-reviews-container');
             if (!bestContainer) return;
             bestContainer.innerHTML = '';
             
-            for (let i = 0; i < bestReviews.length; i++) {
-                const review = bestReviews[i];
+            reviewData.forEach((review, index) => {
                 const card = document.createElement('div');
                 card.className = "bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 review-card flex flex-col";
+                card.onclick = () => window.openReviewDetail(index);
                 
-                // 클릭 시 모달 열기
-                card.onclick = () => window.openReviewDetail(review, i);
-                
-                // DB에서 조회수 가져오기 (문서 ID: best_0, best_1 ...)
-                const docId = 'best_' + i;
-                let views = 0;
-                try {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'views_' + docId);
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        views = docSnap.data().count;
-                    } else {
-                        // 초기값 (900~1200)
-                        views = Math.floor(Math.random() * (1200 - 900 + 1)) + 900;
-                        await setDoc(docRef, { count: views });
-                    }
-                } catch(e) { views = 1000; }
-                
-                review.views = views;
+                review.views = getViewCount(review.title, true).toLocaleString();
 
                 let stars = '';
-                for(let j=0; j<5; j++) stars += `<i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-current"></i>`;
+                for(let i=0; i<5; i++) stars += `<i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-current"></i>`;
 
                 card.innerHTML = `
                     <div class="flex justify-between items-start mb-4">
@@ -714,30 +673,23 @@
                             <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">${review.author.charAt(0)}</div>
                             <div><p class="text-xs font-bold text-gray-900">${review.author}</p><p class="text-[10px] text-gray-400">${review.date}</p></div>
                         </div>
-                        <div class="flex items-center gap-1 text-xs text-gray-400 font-medium"><i data-lucide="eye" class="w-4 h-4"></i> <span id="view-cnt-${i}">${views.toLocaleString()}</span></div>
+                        <div class="flex items-center gap-1 text-xs text-gray-400 font-medium"><i data-lucide="eye" class="w-4 h-4"></i> ${review.views.toLocaleString()}</div>
                     </div>
                 `;
                 bestContainer.appendChild(card);
-            }
+            });
             lucide.createIcons();
-        };
+        }
 
-        window.openReviewDetail = async function(review, index) {
+        window.openReviewDetail = function(index) {
+            const review = reviewData[index];
             document.getElementById('modal-review-title').innerText = review.title;
             document.getElementById('modal-review-content').innerHTML = decodeAndFormatHtml(review.content).replace(/\n/g, '<br>');
             document.getElementById('modal-review-author').innerText = review.author;
             document.getElementById('modal-review-date').innerText = review.date;
             
-            // 조회수 증가
-            const docId = 'best_' + index;
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'views_' + docId);
-                await updateDoc(docRef, { count: increment(1) });
-                review.views++;
-                document.getElementById(`view-cnt-${index}`).innerText = review.views.toLocaleString();
-            } catch(e) {}
-            
-            document.getElementById('modal-views').innerText = review.views.toLocaleString();
+            incrementViewCount(review.title);
+            document.getElementById('modal-views').innerText = getViewCount(review.title, true).toLocaleString();
             
             const badge = document.getElementById('modal-review-badge');
             badge.innerText = "BEST";
@@ -747,12 +699,21 @@
             lucide.createIcons();
         };
 
-        function decodeAndFormatHtml(html) {
-            if(!html) return "";
-            var txt = document.createElement("textarea");
-            txt.innerHTML = html;
-            return txt.value;
-        }
+        // 3. 인증 초기화 실행 (가장 마지막에 실행)
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                window.checkLoginStatus();
+                renderBestReviews();
+            } catch (error) {
+                console.error("Auth Error:", error);
+            }
+        };
+        initAuth();
 
         // 초기 로드
         if(document.readyState === "loading") {
