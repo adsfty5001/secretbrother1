@@ -402,7 +402,7 @@
                         <h1 class="text-3xl font-jalnan text-gray-900 mb-2">실시간 수강 후기</h1>
                         <p class="text-gray-600">지금 이 순간에도 새로운 후기가 올라오고 있습니다. (총 <span id="total-review-count" class="font-bold text-indigo-600">0</span>개)</p>
                     </div>
-                    <button onclick="app.openModal('writeReviewModal')" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md flex items-center gap-2">
+                    <button onclick="app.checkWritePermission()" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md flex items-center gap-2">
                         <i data-lucide="pen-tool" class="w-4 h-4"></i> 나도 후기 쓰기
                     </button>
                 </div>
@@ -912,24 +912,24 @@
                 this.openModal('reviewDetailModal');
             },
 
-            submitReview() {
-                // 1. 비로그인 체크
+            checkWritePermission() {
                 if(!this.data.isLoggedIn) {
                     alert("로그인을 하세요");
+                    this.openModal('loginModal', 'login');
                     return;
                 }
-                
-                // 2. 수강생(결제완료) 체크
-                // 데모 환경에서는 'pending' 상태도 수강생으로 인정하거나, 엄격하게 'complete'만 인정할 수 있음
-                // 요청사항: "큐레이팅을 결제한 사람만"
                 const payStatus = localStorage.getItem('sc_pay_status');
-                
-                // 주의: confirmDeposit()은 'pending'으로 설정함. 
-                // 관리자 승인이 없으므로 여기서는 'pending' 이상이면 작성 가능하게 하거나, 
-                // 엄격하게 하려면 'complete'여야 함.
-                // 사용자 요청대로 "결제를 안했다면" 메시지를 띄우려면 status가 없거나 none일때.
                 if(!payStatus || payStatus === 'none') {
                     alert("수강생만 작성 가능합니다");
+                    return;
+                }
+                this.openModal('writeReviewModal');
+            },
+
+            submitReview() {
+                // 1. 비로그인 체크 (이중 체크)
+                if(!this.data.isLoggedIn) {
+                    alert("로그인을 하세요");
                     return;
                 }
                 
