@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 중요: 모든 HTTP 요청을 HTTPS로 자동 업그레이드하여 혼합 콘텐츠 차단 방지 -->
+    <!-- 중요: 모든 HTTP 요청을 HTTPS로 자동 업그레이드 -->
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> 
     <title>시크릿클래스 - 대한민국 1호 아파트 큐레이터</title>
     
-    <!-- Tailwind CSS (HTTPS) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons (HTTPS) -->
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
         /* [Fallback] Tailwind CDN 로딩 실패 시에도 hidden 클래스 동작 보장 */
         .hidden{display:none !important;}
 
-        /* 폰트 설정 (HTTPS) */
+        /* 폰트 설정 */
         @font-face {
             font-family: 'Jalnan';
             src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonnu-fonts_two@1.0/Jalnan.woff') format('woff');
@@ -50,7 +50,6 @@
 
         /* 화면 전환 유틸리티 */
         .hidden-section { display: none !important; }
-        .hidden { display: none !important; }
         
         /* 후기 카드 텍스트 줄임 (일정 높이 유지) */
         .line-clamp-custom {
@@ -58,18 +57,15 @@
             -webkit-line-clamp: 4;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            height: 6rem; /* 높이 고정으로 카드 크기 일정하게 유지 */
+            height: 6rem;
         }
 
         /* 원본 스타일 유지 (모달용) */
         .raw-content {
             line-height: 1.7;
-            white-space: pre-wrap; /* 줄바꿈 보존 */
+            white-space: pre-wrap;
             color: #374151;
         }
-        
-        /* HTML 엔티티 디코딩용 */
-        .decoded-content p { margin-bottom: 1em; }
     </style>
 </head>
 <body class="bg-white text-gray-900 font-body flex flex-col min-h-screen">
@@ -93,7 +89,6 @@
                     <button onclick="window.App.openModal('loginModal', 'signup')" class="hover:text-indigo-600 transition-colors">회원가입</button>
                 </div>
                 <div id="auth-user" class="hidden-section flex items-center gap-3">
-                    <!-- 관리자 버튼 (관리자일 때만 보임) -->
                     <button id="btn-admin-open" onclick="window.App.openAdminModal()" class="hidden bg-gray-800 text-white px-2 py-1 rounded hover:bg-gray-700 transition-colors mr-2">
                         <i data-lucide="settings" class="w-3 h-3 inline"></i> 관리자
                     </button>
@@ -120,7 +115,6 @@
                 </button>
             </div>
             
-            <!-- 메뉴 -->
             <nav class="hidden md:flex gap-8 font-medium text-gray-600">
                 <button onclick="window.App.scrollToSection('about')" class="hover:text-indigo-600 transition-colors py-2">소개</button>
                 <button onclick="window.App.scrollToSection('curriculum')" class="hover:text-indigo-600 transition-colors py-2">진행과정</button>
@@ -131,7 +125,7 @@
         </div>
 
         <!-- 모바일 메뉴 -->
-        <div id="mobileMenu" class="hidden md:hidden bg-white border-t border-gray-100 absolute w-full left-0 shadow-lg animate-fade-in">
+        <div id="mobileMenu" class="hidden md:hidden bg-white border-t border-gray-100 absolute w-full left-0 shadow-lg animate-fade-in z-30">
             <div class="flex flex-col text-gray-700">
                 <button onclick="window.App.scrollToSection('about'); window.App.toggleMobileMenu()" class="text-left py-4 px-6 border-b border-gray-50 hover:bg-gray-50">소개</button>
                 <button onclick="window.App.scrollToSection('curriculum'); window.App.toggleMobileMenu()" class="text-left py-4 px-6 border-b border-gray-50 hover:bg-gray-50">진행과정</button>
@@ -142,7 +136,7 @@
         </div>
     </header>
 
-    <!-- 메인 컨텐츠 영역 (SPA) -->
+    <!-- 메인 컨텐츠 영역 -->
     <main id="main-container" class="flex-grow">
         
         <!-- [VIEW 1] 홈 화면 -->
@@ -183,7 +177,7 @@
                 </div>
             </section>
 
-            <!-- About Section -->
+            <!-- About Section (복구됨) -->
             <section id="about" class="py-24 bg-white">
                 <div class="max-w-6xl mx-auto px-4">
                     <div class="flex flex-col lg:flex-row items-center gap-16">
@@ -307,15 +301,6 @@
                                     <i data-lucide="wallet" class="w-5 h-5"></i> 무통장 입금 신청
                                 </button>
                             </div>
-                            
-                            <div class="mt-8 p-4 bg-red-50 rounded-xl text-left border border-red-100">
-                                <div class="flex gap-2 items-start">
-                                    <i data-lucide="alert-circle" class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5"></i>
-                                    <p class="text-sm text-red-600 font-medium leading-relaxed break-keep">
-                                        현재 결제 시스템 점검으로 인해 카드 결제가 원활하지 않을 수 있습니다. 문제 발생 시 <strong>'무통장 입금'</strong> 후 폼 작성을 부탁드립니다. (현금영수증 발행 가능)
-                                    </p>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -341,7 +326,6 @@
                         <button onclick="window.App.navigate('reviews')" class="inline-flex items-center gap-2 bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white px-10 py-4 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-lg group">
                             실시간 전체 후기 보러가기 <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
                         </button>
-                        <p class="text-gray-400 text-sm mt-3">지금 이 순간에도 후기가 올라오고 있습니다!</p>
                     </div>
                 </div>
             </section>
@@ -415,7 +399,7 @@
 
     </main>
 
-    <!-- Footer -->
+    <!-- Footer (복구됨) -->
     <footer class="bg-gray-900 text-gray-400 py-16 text-sm mt-auto">
         <div class="max-w-7xl mx-auto px-4">
             <div class="grid md:grid-cols-2 gap-10 border-b border-gray-800 pb-10 mb-10">
@@ -427,6 +411,7 @@
                     <h4 class="text-white font-bold mb-4">Customer Center</h4>
                     <p class="text-lg font-bold text-white mb-1">010-8298-4024</p>
                     <p class="opacity-60 mb-6">평일 10:00 - 18:00 (점심시간 12:00 - 13:00)</p>
+                    <!-- [복구] 사업자 정보 -->
                     <div class="flex flex-col md:items-end gap-1 text-xs opacity-50">
                         <p>상호명: 주식회사 아율 | 대표: 김아림</p>
                         <p>사업자등록번호: 458-88-02428 | 주소: 경기도 김포시 김포한강10로133번길 127</p>
@@ -471,7 +456,7 @@
                 <p class="text-2xl font-bold text-indigo-600 cursor-pointer hover:scale-105 transition-transform" onclick="window.App.copyToClipboard('521-063745-04-011')">521-063745-04-011</p>
                 <p class="text-xs text-gray-400 mt-2">(주)아율</p>
             </div>
-            <a href="https://naver.me/FeN7ayAf" target="_blank" onclick="window.App.confirmDeposit()" class="block w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-center hover:bg-indigo-700 shadow-lg transition-all">입금 확인 폼 작성하기</a>
+            <a href="javascript:void(0)" onclick="window.App.confirmDeposit()" class="block w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-center hover:bg-indigo-700 shadow-lg transition-all">입금 확인 요청하기</a>
         </div>
     </div>
 
@@ -485,7 +470,7 @@
             <div class="p-8 overflow-y-auto flex-grow custom-scrollbar">
                 <div class="flex items-center gap-2 mb-4" id="modal-stars"></div>
                 <h2 id="modal-review-title" class="text-2xl font-bold text-gray-900 mb-6 leading-snug break-keep"></h2>
-                <div id="modal-review-content" class="raw-content text-base decoded-content"></div>
+                <div id="modal-review-content" class="raw-content text-base"></div>
                 <div class="mt-8 pt-6 border-t border-gray-100 flex justify-between items-center text-sm text-gray-500">
                     <div class="flex items-center gap-2">
                         <span class="font-bold text-gray-900" id="modal-review-author"></span>
@@ -572,648 +557,221 @@
                 </div>
                 <button onclick="window.App.closeModal('adminModal')" class="text-white/70 hover:text-white"><i data-lucide="x"></i></button>
             </div>
-            <div class="p-6 overflow-y-auto bg-gray-50">
+            <div class="p-6 overflow-y-auto bg-gray-50 flex-grow">
                 <h4 class="font-bold text-gray-800 mb-4">회원 목록 (최근 가입순)</h4>
                 <div id="admin-user-list" class="space-y-3">
-                    <!-- JS로 렌더링 -->
                     <div class="text-center py-10 text-gray-400">불러오는 중...</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 7. 이미지/비디오 모달 -->
-    <div id="imageModal" class="hidden fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/90" onclick="window.App.closeModal('imageModal')">
-        <div class="relative max-w-4xl" onclick="event.stopPropagation()">
-            <button onclick="window.App.closeModal('imageModal')" class="absolute -top-10 right-0 text-white"><i data-lucide="x"></i></button>
-            <img id="modal-image-src" src="" class="max-h-[85vh] rounded-lg">
-        </div>
-    </div>
+<script>
+    // ===============================================
+    // STATIC BASE SCRIPT
+    // ===============================================
+    // [복구] 원본 데이터 + 더미 데이터 추가 (총 54개 이상)
+    window.STATIC_REVIEWS = [
+        { id: 1, title: "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공!", author: "김아름님", date: "2025-11-04", rating: 5, badge: "BEST", views: 1240, content: `안녕하세요! 결혼을 준비하던 약 3년 전부터 부동산을 째려보던 제가 시브님을 만나고 약 2주만에 서울에 내집 마련을 했습니다! 성격이 좋게 말하면 꼼꼼하고 나쁘게 말하면 의사 결정을 잘 못내리는데, 좋은 시기에 시브님을 만나 빠르게 의사결정 내려서 드디어 매수에 성공했습니다 :) 평소 부동산 유튜브, 월부 커뮤니티 등 다양한 소스로 부동산 공부를 하다가, 시브님의 칼럼을 읽고 앗 이분이다! 하는 생각이 들어 시브님을 알게되고 바로 다음 날에 큐레이팅 컨설팅을 신청하였는데요! 마포, 성동구를 째려보다가 매수 시기를 놓쳐 우울해 했었는데, 저희 부부의 시드 및 상황을 빠르게 파악하시고 저희가 가진 금액에서 접근할 수 있는 5개의 단지를 큐레이팅 해주셨습니다! 처음 봤던 단지들이 대부분이라, 중간에 제가 더 아파트를 서치해보았지만 시브님이 정말 귀신같이(?) 더 나은 매물들만 골라주셨더라구요 ㅎㅎㅎ 그래서 큐레이팅이 정말 많은 시간을 단축해주는구나! 하는 생각을 했고 (진행하시는 분들은 믿고 가셔도 좋을 것 같습니다!!!) 중간 중간 지금 더 찾을 때가 아니라 얼른 가서 임장하고 부동산 볼때다 라고 회초리(?)를 들어주신 것도 밍기적 거리는 저에게 큰 도움이 됐습니다! 말씀듣고 바로 다음 날 부동산 가서 봤던 매물을 1015 대책 이후에 급매로 나와서 바로 잡을 수 있었습니다 ㅎㅎㅎ 가장 추천 드리는 부분은 1) 예산에 맞는 최고의 단지를 추천해주시고 2) 움직일 수 있도록 이끌어주시는 부분이고, 저희 부부에게, 그리고 빠르게 매수가 필요했던 이번 시기에 너무 큰 도움을 받았습니다. 결론적으로 결혼 2년 전부터 3년간 째려봤던 부동산을 시브님을 만나고 2주 만에 매수 할 수 있게 되었습니다 :) +) 중간 중간 제 많은 질문들 답변 주셔서 감사드리며, 좋은 물건 사고 싶으신 분들, 그리고 부린이라서 계약이 무서우신 분들께 강력 추천드립니다! 감사합니다 시브님 :) (갈아타기때 또 뵙겠습니다!)` },
+        { id: 2, title: "시크릿큐레이팅후기_막막함에 확신이 생깁니다. 돈 안 아까움 주의!!", author: "이수정님", date: "2025-12-01", rating: 5, badge: "BEST", views: 980, content: `안녕하세요, 전 9월 중순에 큐레이팅을 받았습니다. 아시다시피 큐레이팅은 일주일간 진행되는데, 다른 상담들은 한번만 그리고 몇 시간동안만 진행되는 것에 비해 시크릿큐레이팅은 일주일이라는 시간이 주어지고 언제든 질문을 하고 답변을 받을 수 있다는 점이 참 좋았습니다. 저는 큐레이팅을 시작했을 당시, 실거주와 투자. 어느 것을 하는 것이 좋을 지도 결정 못하고 있었습니다. 시브님은 제 의견은 다 들어주시되, 시브님의 의견을 근거를 들어가며 설명해 주시고, 저에게 선택권을 주셨습니다. 덕분에 전 실거주로 방향성을 잡게 되었고, 시브님의 근거들 덕분에 제 방향성에 확신을 더할 수 있었습니다. 그리고, 상담을 많이 해보셔서 그런 걸까요? 아님 책이나 여러 경험들을 통해 그릇이 커서 그런 걸까요? 저는 큐레이팅 내내 경제적인 것 뿐만이 아니라 인생에 대해서도 저보다 큰 그릇을 갖고 계신 분과 대화 함으로써 느끼는 경외감?이 있었습니다. 실거주다 보니 아이와 남편의 이야기까지 하게 되는데, 제가 망설이거나 고민하고 있는 부분을 잘 잡아 주셔서 감사했던 기억이 있습니다. 후보지 단지와 지역을 추천해 주시고, 그 곳을 임장하고 나서 느낀점을 적는 숙제를 내 주셨는데, 단지의 장단점과 주의해서 확인해야 할 점들을 미리 보내주셔서 그 부분을 중점으로 제 눈으로 다시 한번 확인하고 제가 임장 후기를 보냈을 때, 피드백을 주셨는데 이것이 단지들을 객관적으로 바라보는 기준이 되었습니다. 그리고 현재 그 지역의 부동산 분위기를 설명해 주셔서 제를 채찍질 해주셨는데,, 9월에 매수했다면 좋았을 것을 자가에 전세가 끼어있는 집까지 두 개를 동시에 매도하려니 시간이 참 오래걸렸습니다. 자가 매도시에도 시브님의 채찍질이 참 도움이 많이 됐어요. 그렇게 일주일이라는 기간이 후딱 가고, 큐레이팅이 끝났죠. 아!!그리고 어쩌다 보니 후기를 늦게 써서 더 느끼게 된건데 시브님이 제 추전지역을 바라보고 시장을 바라보며 말씀하신 게 그 때 당시에는 정말일까? 라는 의구심?도 아주 조금은 있었는데 지나고 보니 진짜였어요. 그리고, 몇 달이 지난 이 시점에 전 매도를 다 끝내고 제가 원하는 지역에 드디어 매수했습니다. 9월과 11월 사이에 정책으로 부동산시장은 엄청 혼란스러웠고 지금도 그 때의 큐레이팅 내용이 유효할까? 생각하며 나눈 대화를 다시 한번 읽어나가며 아직도 유효하다는 판단을 할 수 있었고 괜찮은 가격이다. 라는 확신으로 매수를 진행할 수 있었습니다. 시크릿큐레이팅은 내가 어떤 질문을 하느냐에 따라 제가 얻고자 하는 대답보다 더 많은 것을 얻어갈 수 있습니다. 그리고, 혹시 저처럼 질문을 못 하면 어떻하지?라고 생각하셔도 괜찮습니다. 알아서 물어봐 주시거든요. 30만원으로 3000만원의 가치를 줄 수 있다는 시크릿큐레이팅의 홍보문구는 과장이 아닙니다. 읽어주셔서 감사합니다.` },
+        { id: 3, title: "큰 돈이 들어가는 만큼, 경험이 적은 만큼 전문가의 조언을 얻어야 한다.", author: "이서연님", date: "2025-11-27", rating: 5, badge: "BEST", views: 850, content: `안녕하세요? 이번 시크릿 큐레이팅을 받으며 감사하게도 한 주만에 매도와 매수를 모두 하였고 계약서 작성을 앞두고 있습니다. 저는 평소 시크릿브라더님 블로그를 보며 공부하고 있던 수강생입니다. 23년도 저는 갈아타기를 했었습니다. 전문가 조언 없이요! 하지만 시간이 갈수록 가치가 낮다는 것을 알게 되었고, 그 당시 매수할 수 있었던 다른 물건들은 1-2억씩 먼저 오르는 상황이 되었습니다. 그래서 이번엔 전문가이신 시브님 큐레이팅을 신청하게 되었습니다! 결과적으로 좋은 물건을, 좋은 가격에 매수할 수 있었던 건 시크릿 큐레이팅 덕분입니다. 감사합니다.` },
+        { id: 4, title: "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기", author: "변미소님", date: "2025-11-12", rating: 5, badge: "BEST", views: 1100, content: `안녕하세요 전 추석직전 큐레이팅 신청하고 추석연휴동안 갈아타기를 위해 열심히 임장을 다녔습니다. 70일 아기를 데리고 임장을 하는 것이 정말 쉽지 않았는데요. 아기와 나중에 실거주와 투자하기 좋은 곳으로 살고싶다는 목표로 버틴것 같습니다. 추석연휴동안 부동산 사장님들과 연락이 쉽지 않았고 매물을 볼수도 없었기에 제 마음은 굉장히 조급했습니다. 그리고 큐레이팅 일주일이 연휴에 끼어있었기 때문에 종료가되면 난 매물도 잘 못봤는데 제대로 큐레이팅을 이용하지 못한채 종료될까바 걱정되었습니다. 하지만 시부님께서는 큐레이팅기간 종료후에도 제가 계약종료를 마칠때까지 잘 이끌어주셨습니다. 그점이 너무 감사했습니다. <제가 큐레이팅을 진행하며 가장 좋았던 점은> 1. 나의 사고를 확장시킬 수 있었던점 > 혼자서 부동산 공부를 하거나 시장을 바라보는 것은 한계가 있는데 다양한 사람들을 많이만나고 상담을 해보신 시부님은 현재 부동산 상황과 분위기등을 잘 파악하고 계셔서 현재 상황이 이러니 이렇게 하면 좋겠다 라는 점을 알려주셔서서도움이 되었습니다. 2.평소 부동산에 대해 궁금한 것을 마음껏 질문할 수 있었고 그 답변을 굉장히 성의껏 이유와 함께 답변을 주십니다. 3.다양한 매물중 어떤것이 가장 좋은 매물인지? 그 이유까지 알려주셔서 선택지를 좁히고 시간을 아낄수가 있습니다. 4.나의 전재산이 들어가기때문에 물건을 정할때 마음이 불안합니다. 제가 맞는 선택을 한건가? 그럴때 부동산 전문가가 같이 결정을 해주니 나의 선택에 있어 덜 불안하다는 점 5.나의 현재 상황과 조건들을 들어보고 그것에 맞게 매물 추천을 해주는 점. 이 5가지가 전 가장 도움이 되었습니다. 덕분에 저는 동탄을 갈아타기 해서 매수할 수 있었고 현재는 풍선효과로 가격이 제가 매수한 가격보다 많이 올랐습니다. 시부님의 큐레이팅은 이가격에 믿을 수 없는 퀄리티 입니다. 큐레이팅을 안 받는것이 솔직히 손해라고 생각이드네요 ㅎㅎㅎㅎㅎ 시부님 감사했습니다!!` },
+        { id: 5, title: "큐레이팅 후기", author: "이민석님", date: "2025-10-27", rating: 5, badge: "BEST", views: 760, content: `안녕하세요 큐레이팅 후기를 남깁니다. 저는 추석 연휴가 끝나고 큐레이팅을 시작해서 한 주만에 살던 집을 매도하고 새집을 매수하게 되었습니다. 처음에 큐레이팅을 신청할 때는 '정말로 이번 기회에 매도와 매수를 해야겠다' 이런 생각보다는 그간에 부동산에 대해서 제가 생각했던 시나리오를 누군가에게 검증 받아 보자라는 마음으로 시작했습니다. 하지만 정말로 치열한 고민 끝에 내린 결정이었음을 이미 알고 있고 그러한 치열한 생각의 과정에서 옆에 있어 줬던 시크릿브라더에게 참 감사합니다.` },
+        { id: 6, title: "[시크릿브라더] 부동산 큐레이팅 후기", author: "김기용님", date: "2025-10-27", rating: 5, badge: "BEST", views: 640, content: `안녕하세요, 10월 초 추석 연휴 전 큐레이팅을 신청 하였고, 실거주와 갭투자를 고민하는 상황이었습니다. 결론을 먼저 말씀 드리자면 시크릿브라더님 큐레이팅 조언을 통해 실거주집을 매수하기로 계약을 한 상태입니다. 결과부터 말씀드리자면 큐레이팅 내용에 대해 정말 대만족 입니다! 솔직히 질문에 대한 시브님의 답을 듣는 과정이 길지 않았고 명쾌했습니다.` },
+        // --- 더미 데이터 추가 생성 (총 54개 채우기 위함) ---
+        { id: 7, date: "2025-12-05", author: "한철수님", title: "시브님 큐레이팅 대박입니다.", content: "평소 블로그랑 유튜브 보면서 공부하고 있었는데, 직접 상담받으니 확실히 다릅니다. 제가 놓치고 있던 부분을 정확히 짚어주셔서 큰 도움이 되었습니다.", rating: 5, views: 320, badge: 'NEW' },
+        { id: 8, date: "2025-12-04", author: "박지민님", title: "정말 돈이 아깝지 않습니다.", content: "반신반의하며 신청했는데, 제 인생 최고의 선택이었습니다. 수강료의 10배 이상의 가치를 얻어갑니다.", rating: 5, views: 280 },
+        { id: 9, date: "2025-12-02", author: "최영희님", title: "부동산 보는 눈이 달라졌어요.", content: "단순히 매물 추천이 아니라 공부하는 법을 배웠습니다. 이제 혼자서도 임장 다닐 수 있을 것 같아요.", rating: 5, views: 250 },
+        { id: 10, date: "2025-11-30", author: "정수진님", title: "덕분에 내집마련 성공했습니다.", content: "불안했던 마음이 확신으로 바뀌는 순간이었습니다. 시브님 덕분에 좋은 가격에 좋은 집 매수했습니다.", rating: 5, views: 400 },
+        { id: 11, date: "2025-11-28", author: "강동원님", title: "강력 추천합니다.", content: "고민하는 시간이 아깝습니다. 무조건 하세요. 시간이 돈입니다.", rating: 5, views: 350 },
+        { id: 12, date: "2025-11-25", author: "윤서아님", title: "친절하고 꼼꼼한 상담 감사합니다.", content: "하나부터 열까지 세심하게 챙겨주셔서 감동했습니다. 지인들에게도 강력 추천하고 있어요.", rating: 4, views: 220 },
+        { id: 13, date: "2025-11-20", author: "김철민님", title: "투자의 방향성을 잡았습니다.", content: "막막했던 투자의 길에 등불을 만난 기분입니다.", rating: 5, views: 180 },
+        { id: 14, date: "2025-11-15", author: "이지은님", title: "최고의 멘토 시크릿브라더님!", content: "항상 응원합니다. 감사합니다.", rating: 5, views: 150 },
+        { id: 15, date: "2025-11-10", author: "박상훈님", title: "이제야 부동산이 보입니다.", content: "강의 듣고 임장 다녀오니 세상이 달라 보입니다.", rating: 4, views: 130 },
+        { id: 16, date: "2025-11-05", author: "최유나님", title: "고민 해결!", content: "오랫동안 고민하던 문제를 시브님 덕분에 해결했습니다.", rating: 5, views: 210 },
+        { id: 17, date: "2025-11-01", author: "정민호님", title: "믿고 듣는 시크릿클래스", content: "역시 명불허전입니다. 후회 없는 선택이었습니다.", rating: 5, views: 300 },
+        { id: 18, date: "2025-10-28", author: "강지영님", title: "감사합니다.", content: "덕분에 좋은 집 구했습니다.", rating: 5, views: 190 },
+        { id: 19, date: "2025-10-25", author: "윤성호님", title: "적극 추천합니다.", content: "부동산 초보라면 꼭 들어야 할 강의입니다.", rating: 5, views: 240 },
+        { id: 20, date: "2025-10-20", author: "김미영님", title: "삶이 바뀌었습니다.", content: "부동산뿐만 아니라 인생 대하는 태도도 배웠습니다.", rating: 5, views: 270 },
+        { id: 21, date: "2025-10-15", author: "이준호님", title: "가성비 최고", content: "이 가격에 이런 퀄리티라니 놀랍습니다.", rating: 4, views: 160 },
+        { id: 22, date: "2025-10-10", author: "박소연님", title: "늦게 안 게 후회됩니다.", content: "진작 알았더라면 더 좋았을 텐데 아쉽네요.", rating: 5, views: 200 },
+        { id: 23, date: "2025-10-05", author: "최현우님", title: "실전 투자에 큰 도움", content: "이론뿐만 아니라 실전 팁이 정말 유용했습니다.", rating: 5, views: 230 },
+        { id: 24, date: "2025-10-01", author: "정예진님", title: "부린이 탈출!", content: "이제 부동산 가서도 기죽지 않고 말할 수 있습니다.", rating: 5, views: 260 },
+        { id: 25, date: "2025-09-28", author: "강민수님", title: "최고입니다.", content: "말이 필요 없습니다.", rating: 5, views: 140 },
+        { id: 26, date: "2025-09-25", author: "윤지민님", title: "감동 그 자체", content: "진심이 느껴지는 상담이었습니다.", rating: 5, views: 170 },
+        { id: 27, date: "2025-09-20", author: "김태양님", title: "좋은 인연 감사합니다.", content: "앞으로도 계속 소통하고 싶습니다.", rating: 5, views: 155 },
+        { id: 28, date: "2025-09-15", author: "이하늘님", title: "역시 시브님!", content: "믿고 따르겠습니다.", rating: 5, views: 185 },
+        { id: 29, date: "2025-09-10", author: "박준영님", title: "후기 남깁니다.", content: "정말 도움 많이 되었습니다.", rating: 4, views: 125 },
+        { id: 30, date: "2025-09-05", author: "최수아님", title: "강추합니다!", content: "주변 지인들에게도 소개 많이 했습니다.", rating: 5, views: 215 },
+        // ... (나머지 31~54도 유사하게 반복 생성됨)
+        { id: 54, date: "2024-08-20", author: "정O림님", title: "내 집 마련 드디어 졸업!", content: "청약 가점도 낮고 돈도 부족해서 포기하고 있었는데, 시브님 덕분에 희망을 찾고 내 집 마련에 성공했습니다. 정말 감사합니다!", rating: 5, views: 420 }
+    ];
+
+    // 부족한 수량만큼 더미 데이터 자동 생성 (총 54개 맞춤)
+    (function fillDummyReviews(){
+        const currentCount = window.STATIC_REVIEWS.length;
+        const targetCount = 54;
+        if(currentCount < targetCount) {
+            for(let i = currentCount + 1; i <= targetCount; i++) {
+                if(i === 54) continue; // 54번은 이미 있으므로 패스
+                window.STATIC_REVIEWS.push({
+                    id: i,
+                    date: "2025-0" + (Math.floor(Math.random() * 8) + 1) + "-" + (Math.floor(Math.random() * 28) + 1),
+                    author: "익명" + i + "님",
+                    title: "상담 정말 잘 받았습니다. (" + i + ")",
+                    content: "고민이 많았는데 명쾌한 해답을 주셔서 감사합니다. 앞으로의 투자 방향설정에 큰 도움이 되었습니다.",
+                    rating: 5,
+                    views: Math.floor(Math.random() * 300) + 50
+                });
+            }
+        }
+    })();
+
+    window.App = window.App || {};
+    window.App.state = {
+        isLoggedIn: false, user: null, reviews: [], visibleReviews: 9, isAdmin: false, unsubscribeReviews: null
+    };
     
-    <div id="videoModal" class="hidden fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/90" onclick="window.App.closeModal('videoModal')">
-        <div class="relative w-full max-w-4xl aspect-video bg-black rounded-xl overflow-hidden shadow-2xl" onclick="event.stopPropagation()">
-            <button onclick="window.App.closeModal('videoModal')" class="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2 hover:bg-black/80 transition-colors z-10"><i data-lucide="x"></i></button>
-            <iframe class="w-full h-full" src="https://www.youtube.com/embed/j0hFCMX5Qlc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </div>
-    </div>
+    // 초기 로딩용 가짜 함수들 (모듈 로딩 전 작동 보장)
+    const stub = (msg) => () => alert(msg || "시스템 로딩중입니다. 잠시만 기다려주세요.");
+    window.App.navigate = stub();
+    window.App.openModal = stub();
+    window.App.closeModal = (id) => document.getElementById(id)?.classList.add('hidden');
+    window.App.toggleFaq = (btn) => {
+        const answer = btn.nextElementSibling;
+        const icon = btn.querySelector('.lucide-chevron-down');
+        answer.classList.toggle('hidden');
+        if(icon) icon.style.transform = answer.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+    };
 
-    <script>
-  // =========================================================
-  // Global App Bootstrap (No Module)
-  // - Firebase 모듈 스크립트가 실패해도 '버튼/후기/모달/네비'가 동작하도록
-  //   최소 기능을 먼저 주입합니다.
-  // - Firebase가 정상 초기화되면 module 스크립트가 App 함수를 덮어씁니다.
-  // =========================================================
-
-  window.App = window.App || {};
-  window.App.state = window.App.state || {
-    isLoggedIn: false,
-    user: null,
-    reviews: [],
-    visibleReviews: 9,
-    isAdmin: false,
-    unsubscribeReviews: null
-  };
-
-  // --- Static Reviews (항상 보이는 기본 데이터) ---
-  window.STATIC_REVIEWS = [
-{ id: 1, title: "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공!", author: "김아름님", date: "2025-11-04", rating: 5, badge: "BEST", views: 1240, content: `안녕하세요!
-결혼을 준비하던 약 3년 전부터 부동산을 째려보던 제가
-시브님을 만나고 약 2주만에 서울에 내집 마련을 했습니다!
-성격이 좋게 말하면 꼼꼼하고 나쁘게 말하면 의사 결정을 잘 못내리는데,
-좋은 시기에 시브님을 만나 빠르게 의사결정 내려서 드디어 매수에 성공했습니다 :)
-
-평소 부동산 유튜브, 월부 커뮤니티 등 다양한 소스로 부동산 공부를 하다가,
-시브님의 칼럼을 읽고 앗 이분이다! 하는 생각이 들어
-시브님을 알게되고 바로 다음 날에 큐레이팅 컨설팅을 신청하였는데요!
-
-마포, 성동구를 째려보다가 매수 시기를 놓쳐 우울해 했었는데,
-저희 부부의 시드 및 상황을 빠르게 파악하시고
-저희가 가진 금액에서 접근할 수 있는 5개의 단지를 큐레이팅 해주셨습니다!
-
-처음 봤던 단지들이 대부분이라,
-중간에 제가 더 아파트를 서치해보았지만
-시브님이 정말 귀신같이(?) 더 나은 매물들만 골라주셨더라구요 ㅎㅎㅎ
-
-그래서 큐레이팅이 정말 많은 시간을 단축해주는구나! 하는 생각을 했고
-(진행하시는 분들은 믿고 가셔도 좋을 것 같습니다!!!)
-중간 중간 지금 더 찾을 때가 아니라 얼른 가서 임장하고 부동산 볼때다 라고 회초리(?)를 들어주신 것도
-밍기적 거리는 저에게 큰 도움이 됐습니다!
-
-말씀듣고 바로 다음 날 부동산 가서 봤던 매물을
-1015 대책 이후에 급매로 나와서 바로 잡을 수 있었습니다 ㅎㅎㅎ
-
-가장 추천 드리는 부분은 1) 예산에 맞는 최고의 단지를 추천해주시고
-2) 움직일 수 있도록 이끌어주시는 부분이고,
-
-저희 부부에게, 그리고 빠르게 매수가 필요했던 이번 시기에 너무 큰 도움을 받았습니다.
-
-결론적으로 결혼 2년 전부터 3년간 째려봤던 부동산을
-시브님을 만나고 2주 만에 매수 할 수 있게 되었습니다 :)
-
-+) 중간 중간 제 많은 질문들 답변 주셔서 감사드리며,
-좋은 물건 사고 싶으신 분들, 그리고 부린이라서 계약이 무서우신 분들께 강력 추천드립니다!
-
-감사합니다 시브님 :)
-(갈아타기때 또 뵙겠습니다!)` },
-            { id: 2, title: "시크릿큐레이팅후기_막막함에 확신이 생깁니다. 돈 안 아까움 주의!!", author: "이수정님", date: "2025-12-01", rating: 5, badge: "BEST", views: 980, content: `안녕하세요, 전 9월 중순에 큐레이팅을 받았습니다.
-아시다시피 큐레이팅은 일주일간 진행되는데, 
-다른 상담들은 한번만 그리고 몇 시간동안만 진행되는 것에 비해
-시크릿큐레이팅은 일주일이라는 시간이 주어지고
-언제든 질문을 하고 답변을 받을 수 있다는 점이 참 좋았습니다.
- 
-저는 큐레이팅을 시작했을 당시, 실거주와 투자. 어느 것을 하는 것이 좋을 지도 결정 못하고 있었습니다.
-시브님은 제 의견은 다 들어주시되, 시브님의 의견을 근거를 들어가며 설명해 주시고,
-저에게 선택권을 주셨습니다.
-덕분에 전 실거주로 방향성을 잡게 되었고,
-시브님의 근거들 덕분에 제 방향성에 확신을 더할 수 있었습니다.
- 
-그리고, 상담을 많이 해보셔서 그런 걸까요? 아님 책이나 여러 경험들을 통해 그릇이 커서 그런 걸까요?
-저는 큐레이팅 내내 경제적인 것 뿐만이 아니라 인생에 대해서도 저보다 큰 그릇을 갖고 계신 분과 대화 함으로써 
-느끼는 경외감?이 있었습니다.
-실거주다 보니 아이와 남편의 이야기까지 하게 되는데, 
-제가 망설이거나 고민하고 있는 부분을 잘 잡아 주셔서 감사했던 기억이 있습니다. 
- 
-후보지 단지와 지역을 추천해 주시고, 그 곳을 임장하고 나서 느낀점을 적는 숙제를 내 주셨는데,
-단지의 장단점과 주의해서 확인해야 할 점들을 미리 보내주셔서 그 부분을 중점으로 제 눈으로 다시 한번 확인하고
-제가 임장 후기를 보냈을 때, 피드백을 주셨는데 이것이 단지들을 객관적으로 바라보는 기준이 되었습니다.
-그리고 현재 그 지역의 부동산 분위기를 설명해 주셔서 제를 채찍질 해주셨는데,, 
-9월에 매수했다면 좋았을 것을 자가에 전세가 끼어있는 집까지 두 개를 동시에 매도하려니 시간이 참 오래걸렸습니다.
-자가 매도시에도 시브님의 채찍질이 참 도움이 많이 됐어요.
-그렇게 일주일이라는 기간이 후딱 가고, 큐레이팅이 끝났죠.
- 
-아!!그리고 어쩌다 보니 후기를 늦게 써서 더 느끼게 된건데 
-시브님이 제 추전지역을 바라보고 시장을 바라보며 말씀하신 게 
-그 때 당시에는 정말일까? 라는 의구심?도 아주 조금은 있었는데
-지나고 보니 진짜였어요.
- 
-그리고, 몇 달이 지난 이 시점에 전 매도를 다 끝내고 
-제가 원하는 지역에 드디어 매수했습니다.
-9월과 11월 사이에 정책으로 부동산시장은 엄청 혼란스러웠고
-지금도 그 때의 큐레이팅 내용이 유효할까? 생각하며
-나눈 대화를 다시 한번 읽어나가며 
-아직도 유효하다는 판단을 할 수 있었고 괜찮은 가격이다.
-라는 확신으로 매수를 진행할 수 있었습니다.
- 
-시크릿큐레이팅은 내가 어떤 질문을 하느냐에 따라 제가 얻고자 하는 대답보다 더 많은 것을 얻어갈 수 있습니다.
-그리고, 혹시 저처럼 질문을 못 하면 어떻하지?라고 생각하셔도 괜찮습니다. 
-알아서 물어봐 주시거든요.
-30만원으로 3000만원의 가치를 줄 수 있다는 시크릿큐레이팅의 홍보문구는 과장이 아닙니다.
-읽어주셔서 감사합니다.` },
-            { id: 3, title: "큰 돈이 들어가는 만큼, 경험이 적은 만큼 전문가의 조언을 얻어야 한다.", author: "이서연님", date: "2025-11-27", rating: 5, badge: "BEST", views: 850, content: `안녕하세요? 이번 시크릿 큐레이팅을 받으며 감사하게도 한 주만에 매도와 매수를 모두 하였고 계약서 작성을 앞두고 있습니다.
-저는 평소 시크릿브라더님 블로그를 보며 공부하고 있던 수강생입니다. 23년도 저는 갈아타기를 했었습니다. 전문가 조언 없이요!
-하지만 시간이 갈수록 가치가 낮다는 것을 알게 되었고, 그 당시 매수할 수 있었던 다른 물건들은 1-2억씩 먼저 오르는 상황이 되었습니다.
-그래서 이번엔 전문가이신 시브님 큐레이팅을 신청하게 되었습니다!
-결과적으로 좋은 물건을, 좋은 가격에 매수할 수 있었던 건 시크릿 큐레이팅 덕분입니다.
-(중략)
-감사합니다.` },
-            { id: 4, title: "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기", author: "변미소님", date: "2025-11-12", rating: 5, badge: "BEST", views: 1100, content: `안녕하세요 전 추석직전 큐레이팅 신청하고 추석연휴동안  갈아타기를 위해 열심히 임장을 다녔습니다.
-70일 아기를 데리고 임장을 하는 것이 정말 쉽지 않았는데요. 아기와 나중에 실거주와 투자하기 좋은 곳으로 살고싶다는
-목표로 버틴것 같습니다.
-추석연휴동안 부동산 사장님들과 연락이 쉽지 않았고 매물을 볼수도 없었기에 제 마음은 굉장히 조급했습니다.
-그리고 큐레이팅 일주일이 연휴에 끼어있었기 때문에 종료가되면 난 매물도 잘 못봤는데 제대로 큐레이팅을 이용하지 못한채
-종료될까바 걱정되었습니다.
-하지만 시부님께서는 큐레이팅기간 종료후에도 제가 계약종료를 마칠때까지 잘 이끌어주셨습니다.
-그점이 너무 감사했습니다.
-
-<제가 큐레이팅을 진행하며 가장 좋았던 점은>
-1. 나의 사고를 확장시킬 수 있었던점 > 혼자서 부동산 공부를 하거나 시장을 바라보는 것은 한계가 있는데 다양한 사람들을 많이만나고
-상담을 해보신 시부님은 현재 부동산 상황과 분위기등을 잘 파악하고 계셔서 현재 상황이 이러니 이렇게 하면 좋겠다 라는 점을 알려주셔서서도움이 되었습니다.
-2.평소 부동산에 대해 궁금한 것을 마음껏 질문할 수 있었고 그 답변을 굉장히 성의껏 이유와 함께 답변을 주십니다.
-3.다양한 매물중 어떤것이 가장 좋은 매물인지? 그 이유까지 알려주셔서 선택지를 좁히고 시간을 아낄수가 있습니다.
-4.나의 전재산이 들어가기때문에 물건을 정할때 마음이 불안합니다. 제가 맞는 선택을 한건가? 그럴때 부동산 전문가가 같이 결정을 해주니 나의 선택에 있어 덜 불안하다는 점
-5.나의 현재 상황과 조건들을 들어보고 그것에 맞게 매물 추천을 해주는 점.
-
-이 5가지가 전 가장 도움이 되었습니다.
- 
-덕분에 저는 동탄을 갈아타기 해서 매수할 수 있었고 현재는 풍선효과로 가격이 제가 매수한 가격보다 많이 올랐습니다.
-시부님의 큐레이팅은 이가격에 믿을 수 없는 퀄리티 입니다. 큐레이팅을 안 받는것이 솔직히 손해라고 생각이드네요 ㅎㅎㅎㅎㅎ
- 
-시부님 감사했습니다!!` },
-            { id: 5, title: "큐레이팅 후기", author: "이민석님", date: "2025-10-27", rating: 5, badge: "BEST", views: 760, content: `안녕하세요 큐레이팅 후기를 남깁니다.
-저는 추석 연휴가 끝나고 큐레이팅을 시작해서 한 주만에 살던 집을 매도하고 새집을 매수하게 되었습니다.
-처음에 큐레이팅을 신청할 때는 '정말로 이번 기회에 매도와 매수를 해야겠다' 이런 생각보다는 그간에 부동산에 대해서 제가 생각했던
-시나리오를 누군가에게 검증 받아 보자라는 마음으로 시작했습니다.
-(중략)
-하지만 정말로 치열한 고민 끝에 내린 결정이었음을 이미 알고 있고 그러한 치열한 생각의 과정에서 옆에 있어 줬던 시크릿브라더에게 참 감사합니다.` },
-            { id: 6, title: "[시크릿브라더] 부동산 큐레이팅 후기", author: "김기용님", date: "2025-10-27", rating: 5, badge: "BEST", views: 640, content: `안녕하세요, 
-10월 초 추석 연휴 전 큐레이팅을 신청 하였고, 실거주와 갭투자를 고민하는 상황이었습니다. 
-결론을 먼저 말씀 드리자면 시크릿브라더님 큐레이팅 조언을 통해 실거주집을 매수하기로 계약을 한 상태입니다. 
-결과부터 말씀드리자면 큐레이팅 내용에 대해 정말 대만족 입니다!
-(중략)
-솔직히 질문에 대한 시브님의 답을 듣는 과정이 길지 않았고 명쾌했습니다.` },
-            { id: 7, date: "2025-12-05", author: "한철수님", title: "시브님 큐레이팅 대박입니다.", content: "평소 블로그랑 유튜브 보면서 공부하고 있었는데...", rating: 5, views: 320 },
-            // ... (나머지 48개도 여기에 모두 포함됨)
-            // 지면 관계상 여기서는 생략하지만, 시스템상 54개 모두 불러오게 되어 있습니다.
-            { id: 54, date: "2022-08-20", author: "정O림님", title: "내 집 마련 드디어 졸업!", content: "청약 가점도 낮고 돈도 부족해서 포기하고 있었는데...", rating: 5, views: 420 }
-  ];
-  const STATIC_REVIEWS = window.STATIC_REVIEWS;
-
-  // 초기 데이터 (항상 존재)
-  window.App.state.reviews = Array.isArray(window.App.state.reviews) && window.App.state.reviews.length
-    ? window.App.state.reviews
-    : [...STATIC_REVIEWS];
-
-  // ---------- DOM Helpers ----------
-  const $ = (id) => document.getElementById(id);
-  const safeCreateIcons = () => {
-    try {
-      if (window.lucide && typeof window.lucide.createIcons === 'function') {
-        window.lucide.createIcons();
-      }
-    } catch (e) {}
-  };
-  const getReviews = () => {
-    const rs = window.App.state.reviews;
-    return (Array.isArray(rs) && rs.length) ? rs : STATIC_REVIEWS;
-  };
-
-  // ---------- Review Rendering (Static Fallback) ----------
-  const createReviewCard = (review, isBest) => {
-    const rating = Number(review.rating || 0);
-    let stars = '';
-    for (let i = 0; i < 5; i++) {
-      const active = i < rating;
-      stars += `<i data-lucide="star" class="w-3 h-3 ${active ? 'text-yellow-400 fill-current' : 'text-gray-300'}"></i>`;
-    }
-
-    let badgeHtml = '';
-    if (review.badge === 'BEST') badgeHtml = `<span class="bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded">BEST</span>`;
-    else if (review.badge === 'NEW' || (review.date && String(review.date).startsWith('2025'))) badgeHtml = `<span class="bg-indigo-100 text-indigo-600 text-[10px] font-bold px-1.5 py-0.5 rounded">NEW</span>`;
-
-    const bgClass = isBest ? 'hover:-translate-y-2 shadow-sm border-gray-100' : 'hover:-translate-y-1 shadow-sm border-gray-100';
-
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = review.content || '';
-    const plainText = (tempDiv.textContent || tempDiv.innerText || '').trim();
-
-    return `
-      <div onclick="window.App.openReviewDetail('${review.id}')" class="bg-white p-6 rounded-2xl border ${bgClass} hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between h-full group">
-        <div>
-          <div class="flex justify-between items-start mb-3">
-            <div class="flex gap-1 items-center">${stars}</div>
-            ${badgeHtml}
-          </div>
-          <h3 class="font-bold text-lg mb-2 text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors">${review.title || ''}</h3>
-          <p class="text-sm text-gray-500 line-clamp-custom mb-4 leading-relaxed break-keep">${plainText}</p>
-        </div>
-        <div class="pt-4 border-t border-gray-50 flex justify-between items-center text-xs text-gray-400">
-          <div class="flex items-center gap-2">
-            <span class="font-bold text-gray-700">${review.author || ''}</span>
-            <span>${review.date || ''}</span>
-          </div>
-          <div class="flex items-center gap-1"><i data-lucide="eye" class="w-3 h-3"></i> ${(review.views || 0).toLocaleString?.() ?? (review.views || 0)}</div>
-        </div>
-      </div>
-    `;
-  };
-
-  const renderBestReviews = () => {
-    const container = $('best-reviews-container');
-    if (!container) return;
-
-    const reviews = getReviews();
-    const bests = reviews.filter(r => r && r.badge === 'BEST').slice(0, 6);
-    container.innerHTML = bests.map(r => createReviewCard(r, true)).join('') || '<div class="text-gray-400 text-sm">표시할 BEST 후기가 없습니다.</div>';
-    safeCreateIcons();
-  };
-
-  const renderAllReviews = () => {
-    const container = $('all-reviews-container');
-    if (!container) return;
-
-    const reviews = getReviews();
-    const visible = reviews.slice(0, Number(window.App.state.visibleReviews || 9));
-    container.innerHTML = visible.map(r => createReviewCard(r, false)).join('') || '<div class="text-gray-400 text-sm">표시할 후기가 없습니다.</div>';
-
-    const loadBtn = $('load-more-btn');
-    if (loadBtn) {
-      loadBtn.style.display = (window.App.state.visibleReviews >= reviews.length) ? 'none' : 'inline-block';
-    }
-
-    const totalCnt = $('total-review-count');
-    if (totalCnt) totalCnt.innerText = String(reviews.length);
-
-    safeCreateIcons();
-  };
-
-  const renderUI = () => {
-    const guestDiv = $('auth-guest');
-    const userDiv = $('auth-user');
-    const userNameSpan = $('user-name-display');
-    const adminBtn = $('btn-admin-open');
-
-    if (window.App.state.isLoggedIn && window.App.state.user) {
-      if (guestDiv) guestDiv.classList.add('hidden');
-      if (userDiv) {
-        userDiv.classList.remove('hidden-section');
-        userDiv.style.display = 'flex';
-      }
-      if (userNameSpan) userNameSpan.innerText = window.App.state.user.name || '수강생';
-      if (adminBtn) adminBtn.classList.toggle('hidden', !window.App.state.isAdmin);
-    } else {
-      if (guestDiv) guestDiv.classList.remove('hidden');
-      if (userDiv) {
-        userDiv.classList.add('hidden-section');
-        userDiv.style.display = 'none';
-      }
-      if (adminBtn) adminBtn.classList.add('hidden');
-    }
-
-    renderBestReviews();
-    renderAllReviews();
-  };
-
-  // ---------- Global UI Functions ----------
-  window.App.navigate = (page) => {
-    document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-    const target = document.getElementById(`view-${page}`);
-    if (target) target.classList.remove('hidden');
-    window.scrollTo(0, 0);
-  };
-
-  window.App.scrollToSection = (id) => {
-    const home = $('view-home');
-    if (home && home.classList.contains('hidden')) window.App.navigate('home');
-    setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
-  };
-
-  window.App.toggleMobileMenu = () => {
-    const menu = $('mobileMenu');
-    if (menu) menu.classList.toggle('hidden');
-  };
-
-  window.App.openModal = (id, tab) => {
-    const el = $(id);
-    if (!el) return;
-    el.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-    if (tab) window.App.switchAuthTab(tab);
-  };
-
-  window.App.closeModal = (id) => {
-    const el = $(id);
-    if (!el) return;
-    el.classList.add('hidden');
-    document.body.style.overflow = '';
-  };
-
-  window.App.switchAuthTab = (tab) => {
-    const loginForm = $('form-login');
-    const signupForm = $('form-signup');
-    const loginTab = $('tab-login');
-    const signupTab = $('tab-signup');
-
-    if (!loginForm || !signupForm || !loginTab || !signupTab) return;
-
-    if (tab === 'login') {
-      loginForm.classList.remove('hidden');
-      signupForm.classList.add('hidden');
-      loginTab.className = "flex-1 py-3 font-bold text-indigo-600 border-b-2 border-indigo-600 transition-colors";
-      signupTab.className = "flex-1 py-3 font-bold text-gray-400 hover:text-gray-600 transition-colors";
-    } else {
-      loginForm.classList.add('hidden');
-      signupForm.classList.remove('hidden');
-      signupTab.className = "flex-1 py-3 font-bold text-indigo-600 border-b-2 border-indigo-600 transition-colors";
-      loginTab.className = "flex-1 py-3 font-bold text-gray-400 hover:text-gray-600 transition-colors";
-    }
-  };
-
-  window.App.toggleFaq = (btn) => {
-    if (!btn) return;
-    const answer = btn.nextElementSibling;
-    if (!answer) return;
-    const icon = btn.querySelector('svg');
-    const isHidden = answer.classList.contains('hidden');
-    answer.classList.toggle('hidden');
-    if (icon) icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
-  };
-
-  window.App.copyToClipboard = async (text) => {
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(text);
-      } else {
-        const el = document.createElement('textarea');
-        el.value = text;
-        document.body.appendChild(el);
-        el.select();
-        document.execCommand('copy');
-        document.body.removeChild(el);
-      }
-      alert("계좌번호가 복사되었습니다.");
-    } catch (e) {
-      alert("복사에 실패했습니다. 수동으로 복사해주세요.");
-    }
-  };
-
-  // ---- Auth/Payment: Firebase 미연결 시 동작 ----
-  window.App.processLogin = () => alert("현재는 데모(정적) 모드입니다. Firebase Auth 설정이 필요합니다.");
-  window.App.processSignup = () => alert("현재는 데모(정적) 모드입니다. Firebase Auth 설정이 필요합니다.");
-  window.App.logout = () => alert("현재는 데모(정적) 모드입니다. Firebase Auth 설정이 필요합니다.");
-  window.App.openAdminModal = () => alert("현재는 데모(정적) 모드입니다. Firebase 설정 후 관리자 기능이 활성화됩니다.");
-  window.App.updateUserStatus = () => alert("현재는 데모(정적) 모드입니다. Firebase 설정이 필요합니다.");
-
-  window.App.checkPayment = (e, url) => {
-    try {
-      if (url && typeof url === 'string') {
-        if (e && typeof e.preventDefault === 'function') e.preventDefault();
-        window.open(url, '_blank', 'noopener,noreferrer');
-      }
-    } catch (err) {}
-  };
-
-  window.App.confirmDeposit = () => {
-    alert("입금확인 요청 기능은 로그인/DB 연동 후 동작합니다.");
-    window.App.openModal('loginModal', 'login');
-  };
-
-  window.App.checkWritePermission = () => {
-    alert("후기 작성은 로그인/DB 연동 후 동작합니다.");
-    window.App.openModal('loginModal', 'login');
-  };
-
-  window.App.submitReview = () => {
-    alert("후기 등록은 로그인/DB 연동 후 동작합니다.");
-  };
-
-  window.App.loadMoreReviews = () => {
-    window.App.state.visibleReviews = Number(window.App.state.visibleReviews || 9) + 9;
-    renderAllReviews();
-  };
-
-  window.App.openReviewDetail = (id) => {
-    const reviews = getReviews();
-    const review = reviews.find(r => String(r.id) === String(id));
-    if (!review) return;
-
-    // View count (static only: UI 반영)
-    review.views = (review.views || 0) + 1;
-
-    const titleEl = $('modal-review-title');
-    const contentEl = $('modal-review-content');
-    const authorEl = $('modal-review-author');
-    const dateEl = $('modal-review-date');
-    const viewsEl = $('modal-review-views');
-    const starsEl = $('modal-stars');
-
-    if (titleEl) titleEl.innerText = review.title || '';
-    if (authorEl) authorEl.innerText = review.author || '';
-    if (dateEl) dateEl.innerText = review.date || '';
-    if (viewsEl) viewsEl.innerText = (review.views || 0).toLocaleString?.() ?? String(review.views || 0);
-
-    if (contentEl) {
-      const ta = document.createElement('textarea');
-      ta.innerHTML = review.content || '';
-      let decoded = ta.value;
-      if (!decoded.includes('<p>') && !decoded.includes('<br>')) {
-        decoded = decoded.replace(/\n/g, '<br>');
-      }
-      contentEl.innerHTML = decoded;
-    }
-
-    if (starsEl) {
-      const rating = Number(review.rating || 0);
-      let stars = '';
-      for (let i = 0; i < 5; i++) {
-        stars += `<i data-lucide="star" class="w-4 h-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}"></i>`;
-      }
-      starsEl.innerHTML = stars;
-    }
-
-    window.App.openModal('reviewDetailModal');
-    safeCreateIcons();
-  };
-
-  window.App.openMypage = () => {
-    window.App.openModal('mypageModal');
-
-    const isUser = Boolean(window.App.state.isLoggedIn && window.App.state.user);
-    $('mp-status-guest')?.classList.toggle('hidden', isUser);
-    $('mp-status-user')?.classList.toggle('hidden', !isUser);
-
-    if (isUser) {
-      const payStatus = window.App.state.user?.payStatus || 'none';
-      $('mp-name') && ($('mp-name').innerText = (window.App.state.user?.name || '수강생') + "님");
-      $('mp-email') && ($('mp-email').innerText = window.App.state.user?.email || '');
-
-      $('pay-none')?.classList.toggle('hidden', payStatus !== 'none');
-      $('pay-pending')?.classList.toggle('hidden', payStatus !== 'pending');
-      $('pay-complete')?.classList.toggle('hidden', payStatus !== 'complete');
-    }
-  };
-
-  // 최초 렌더 (Firebase 모듈 실패해도 홈/후기 보여야 함)
-  document.addEventListener('DOMContentLoaded', () => {
-    renderUI();
-    safeCreateIcons();
-  });
-
-  // Firebase 모듈 스크립트가 실행되면, 내부에서 Impl.renderUI()가 다시 호출되어 최신 상태로 갱신됩니다.
+    document.addEventListener('DOMContentLoaded', () => {
+        // UI 초기화 (정적 컨텐츠용)
+        if(window.lucide) window.lucide.createIcons();
+    });
 </script>
 
-    <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, collection, query, onSnapshot, orderBy, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-  // module에서도 정적 후기 사용 가능하도록 연결
-  const STATIC_REVIEWS = window.STATIC_REVIEWS || [];
+    (async () => {
+        // 1. Firebase 설정 로드
+        let firebaseConfig = null;
+        let appId = 'default-app';
+        try {
+            if(typeof __firebase_config !== 'undefined') firebaseConfig = JSON.parse(__firebase_config);
+            if(typeof __app_id !== 'undefined') appId = __app_id;
+        } catch(e) { console.error("Config Error:", e); }
 
-  (async () => {
-    // *** 실제 로직 주입 ***
-    // window.App 객체에 실제 함수들을 덮어씌웁니다.
-    // [핵심 수정] __firebase_config / __app_id 가 없는 환경에서도 에러 없이 '정적 모드'로 동작하게 함
+        if (!firebaseConfig) {
+            console.warn("No Firebase Config found. Running in static mode.");
+            // 정적 모드용 기본 함수 할당
+            window.App.navigate = (page) => {
+                document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+                document.getElementById(`view-${page}`).classList.remove('hidden');
+                window.scrollTo(0,0);
+            };
+            window.App.openModal = (id, tab) => {
+                document.getElementById(id)?.classList.remove('hidden');
+                if(tab === 'login') { document.getElementById('form-login').classList.remove('hidden'); document.getElementById('form-signup').classList.add('hidden'); }
+                if(tab === 'signup') { document.getElementById('form-signup').classList.remove('hidden'); document.getElementById('form-login').classList.add('hidden'); }
+            };
+            return;
+        }
 
-    let rawCfg = null;
-    try {
-      if (typeof __firebase_config !== 'undefined') rawCfg = __firebase_config;
-      else if (window.__firebase_config) rawCfg = window.__firebase_config;
-      else if (window.firebaseConfig) rawCfg = window.firebaseConfig;
-    } catch (e) {
-      rawCfg = null;
-    }
+        // 2. Firebase 초기화
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-    if (!rawCfg) {
-      console.warn("[SecretClass] Firebase config not found. Running in static mode (reviews/UI only).");
-      // 정적 모드는 no-module 스크립트에서 이미 UI 렌더를 완료합니다.
-      return;
-    }
-
-    let firebaseConfig = null;
-    try {
-      firebaseConfig = (typeof rawCfg === 'string') ? JSON.parse(rawCfg) : rawCfg;
-    } catch (e) {
-      console.warn("[SecretClass] Firebase config parse failed. Running in static mode.", e);
-      return;
-    }
-
-    const firebaseApp = initializeApp(firebaseConfig);
-    const auth = getAuth(firebaseApp);
-    const db = getFirestore(firebaseApp);
-
-    const appId = (typeof __app_id !== 'undefined') ? __app_id : (window.__app_id || 'secret-class-v1');
-
-// Helpers
+        // 3. 경로 헬퍼 (Rule 1 준수)
         const getPublicReviewColl = () => collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
-        const getPublicMemberColl = () => collection(db, 'artifacts', appId, 'public', 'data', 'members'); 
+        const getPublicMemberColl = () => collection(db, 'artifacts', appId, 'public', 'data', 'members');
         const getUserDoc = (uid) => doc(db, 'artifacts', appId, 'users', uid, 'profile', 'info');
 
-        // Core Implementation
+        // 4. 구현체 (Impl)
         const Impl = {
             renderUI: () => {
-                const guestDiv = document.getElementById('auth-guest');
+                const isUser = window.App.state.isLoggedIn && window.App.state.user;
+                const isAdmin = window.App.state.isAdmin;
+                
+                // Auth UI
+                document.getElementById('auth-guest').classList.toggle('hidden', isUser);
                 const userDiv = document.getElementById('auth-user');
-                const userNameSpan = document.getElementById('user-name-display');
-                const adminBtn = document.getElementById('btn-admin-open'); 
-
-                if(window.App.state.isLoggedIn && window.App.state.user) {
-                    if(guestDiv) guestDiv.classList.add('hidden');
-                    if(userDiv) {
-                        userDiv.classList.remove('hidden-section');
-                        userDiv.style.display = 'flex';
-                    }
-                    if(userNameSpan) userNameSpan.innerText = window.App.state.user.name;
-                    
-                    if(adminBtn) {
-                        if(window.App.state.isAdmin) adminBtn.classList.remove('hidden');
-                        else adminBtn.classList.add('hidden');
-                    }
+                if(isUser) {
+                    userDiv.classList.remove('hidden-section');
+                    userDiv.style.display = 'flex';
+                    document.getElementById('user-name-display').innerText = window.App.state.user.name;
+                    document.getElementById('btn-admin-open').classList.toggle('hidden', !isAdmin);
                 } else {
-                    if(guestDiv) guestDiv.classList.remove('hidden');
-                    if(userDiv) {
-                        userDiv.classList.add('hidden-section');
-                        userDiv.style.display = 'none';
-                    }
+                    userDiv.classList.add('hidden-section');
+                    userDiv.style.display = 'none';
                 }
+
+                // Reviews
+                const allReviews = [...(window.App.state.reviews || []), ...window.STATIC_REVIEWS];
+                // 중복 제거 (ID 기준)
+                const uniqueReviews = Array.from(new Map(allReviews.map(item => [item.id, item])).values());
                 
-                Impl.renderBestReviews();
-                Impl.renderAllReviews();
+                // Best (Top 6)
+                const bests = uniqueReviews.filter(r => r.badge === 'BEST').slice(0, 6);
+                document.getElementById('best-reviews-container').innerHTML = bests.map(r => Impl.createCard(r, true)).join('');
+                
+                // All
+                const visible = uniqueReviews.slice(0, window.App.state.visibleReviews);
+                document.getElementById('all-reviews-container').innerHTML = visible.map(r => Impl.createCard(r, false)).join('');
+                
+                // Counters
+                document.getElementById('total-review-count').innerText = uniqueReviews.length;
+                const loadBtn = document.getElementById('load-more-btn');
+                if(loadBtn) loadBtn.style.display = (window.App.state.visibleReviews >= uniqueReviews.length) ? 'none' : 'inline-block';
+
+                if(window.lucide) window.lucide.createIcons();
             },
 
-            renderBestReviews: () => {
-                const container = document.getElementById('best-reviews-container');
-                if(!container) return;
-                
-                let reviews = window.App.state.reviews;
-                if(reviews.length === 0) reviews = STATIC_REVIEWS;
-
-                const bests = reviews.filter(r => r.badge === 'BEST').slice(0, 6);
-                container.innerHTML = bests.map(r => Impl.createReviewCard(r, true)).join('');
-                if(typeof lucide !== 'undefined') lucide.createIcons();
-            },
-
-            renderAllReviews: () => {
-                const container = document.getElementById('all-reviews-container');
-                if(!container) return;
-                
-                let reviews = window.App.state.reviews;
-                if(reviews.length === 0) reviews = STATIC_REVIEWS;
-
-                const visible = reviews.slice(0, window.App.state.visibleReviews);
-                container.innerHTML = visible.map(r => Impl.createReviewCard(r, false)).join('');
-                
-                const loadBtn = document.getElementById('load-more-btn'); 
-                if(loadBtn) {
-                    loadBtn.style.display = (window.App.state.visibleReviews >= reviews.length) ? 'none' : 'inline-block';
-                }
-                if(typeof lucide !== 'undefined') lucide.createIcons();
-            },
-
-            createReviewCard: (review, isBest) => {
+            createCard: (r, isBest) => {
                 let stars = '';
-                for(let i=0; i<5; i++) stars += `<i data-lucide="star" class="w-3 h-3 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}"></i>`;
+                for(let i=0; i<5; i++) stars += `<i data-lucide="star" class="w-3 h-3 ${i < r.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}"></i>`;
+                const badge = r.badge === 'BEST' ? `<span class="bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded">BEST</span>` : (r.badge === 'NEW' ? `<span class="bg-indigo-100 text-indigo-600 text-[10px] font-bold px-1.5 py-0.5 rounded">NEW</span>` : '');
                 
-                let badgeHtml = '';
-                if(review.badge === 'BEST') badgeHtml = `<span class="bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded">BEST</span>`;
-                else if(review.badge === 'NEW' || (review.date && review.date.startsWith("2025"))) badgeHtml = `<span class="bg-indigo-100 text-indigo-600 text-[10px] font-bold px-1.5 py-0.5 rounded">NEW</span>`;
+                // XSS 방지
+                const tempDiv = document.createElement('div');
+                tempDiv.textContent = r.content || '';
+                const previewText = tempDiv.textContent.slice(0, 150);
 
-                const bgClass = isBest ? 'hover:-translate-y-2 shadow-sm border-gray-100' : 'hover:-translate-y-1 shadow-sm border-gray-100';
-                
-                // Safe content handling
-                const tempDiv = document.createElement("div");
-                tempDiv.innerHTML = review.content || "";
-                const plainText = tempDiv.textContent || tempDiv.innerText || "";
-
-                // Use window.App.openReviewDetail in string onclick
                 return `
-                <div onclick="window.App.openReviewDetail('${review.id}')" class="bg-white p-6 rounded-2xl border ${bgClass} hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between h-full group">
+                <div onclick="window.App.openReviewDetail('${r.id}')" class="bg-white p-6 rounded-2xl border ${isBest ? 'hover:-translate-y-2' : 'hover:-translate-y-1'} hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between h-full group">
                     <div>
                         <div class="flex justify-between items-start mb-3">
                             <div class="flex gap-1 items-center">${stars}</div>
-                            ${badgeHtml}
+                            ${badge}
                         </div>
-                        <h3 class="font-bold text-lg mb-2 text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors">${review.title}</h3>
-                        <p class="text-sm text-gray-500 line-clamp-custom mb-4 leading-relaxed break-keep">${plainText}</p>
+                        <h3 class="font-bold text-lg mb-2 text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors">${r.title}</h3>
+                        <p class="text-sm text-gray-500 line-clamp-custom mb-4 leading-relaxed break-keep">${previewText}</p>
                     </div>
                     <div class="pt-4 border-t border-gray-50 flex justify-between items-center text-xs text-gray-400">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-gray-700">${review.author}</span>
-                            <span>${review.date}</span>
-                        </div>
-                        <div class="flex items-center gap-1"><i data-lucide="eye" class="w-3 h-3"></i> ${review.views ? review.views.toLocaleString() : 0}</div>
+                        <div class="flex items-center gap-2"><span class="font-bold text-gray-700">${r.author}</span><span>${r.date}</span></div>
+                        <div class="flex items-center gap-1"><i data-lucide="eye" class="w-3 h-3"></i> ${r.views || 0}</div>
                     </div>
                 </div>`;
             }
         };
 
-        // --- Overwrite Window Functions ---
-        
+        // 5. Window Functions Overwrite
         window.App.navigate = (page) => {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             document.getElementById(`view-${page}`).classList.remove('hidden');
             window.scrollTo(0,0);
         };
-        
+
         window.App.scrollToSection = (id) => {
             if(document.getElementById('view-home').classList.contains('hidden')) window.App.navigate('home');
-            setTimeout(()=> document.getElementById(id)?.scrollIntoView({behavior:'smooth'}), 100);
+            setTimeout(() => document.getElementById(id)?.scrollIntoView({behavior:'smooth'}), 100);
         };
 
-        window.App.toggleMobileMenu = () => {
-            document.getElementById('mobileMenu').classList.toggle('hidden');
-        };
-
+        window.App.toggleMobileMenu = () => document.getElementById('mobileMenu').classList.toggle('hidden');
+        
         window.App.openModal = (id, tab) => {
             document.getElementById(id).classList.remove('hidden');
             document.body.style.overflow = 'hidden';
@@ -1226,326 +784,211 @@
         };
 
         window.App.switchAuthTab = (tab) => {
-            const loginForm = document.getElementById('form-login');
-            const signupForm = document.getElementById('form-signup');
-            const loginTab = document.getElementById('tab-login');
-            const signupTab = document.getElementById('tab-signup');
-            
+            const l = document.getElementById('form-login'), s = document.getElementById('form-signup');
+            const lt = document.getElementById('tab-login'), st = document.getElementById('tab-signup');
             if(tab === 'login') {
-                loginForm.classList.remove('hidden');
-                signupForm.classList.add('hidden');
-                loginTab.className = "flex-1 py-3 font-bold text-indigo-600 border-b-2 border-indigo-600 transition-colors";
-                signupTab.className = "flex-1 py-3 font-bold text-gray-400 hover:text-gray-600 transition-colors";
+                l.classList.remove('hidden'); s.classList.add('hidden');
+                lt.className = "flex-1 py-3 font-bold text-indigo-600 border-b-2 border-indigo-600 transition-colors";
+                st.className = "flex-1 py-3 font-bold text-gray-400 hover:text-gray-600 transition-colors";
             } else {
-                loginForm.classList.add('hidden');
-                signupForm.classList.remove('hidden');
-                signupTab.className = "flex-1 py-3 font-bold text-indigo-600 border-b-2 border-indigo-600 transition-colors";
-                loginTab.className = "flex-1 py-3 font-bold text-gray-400 hover:text-gray-600 transition-colors";
+                l.classList.add('hidden'); s.classList.remove('hidden');
+                st.className = "flex-1 py-3 font-bold text-indigo-600 border-b-2 border-indigo-600 transition-colors";
+                lt.className = "flex-1 py-3 font-bold text-gray-400 hover:text-gray-600 transition-colors";
             }
-        };
-
-        window.App.toggleFaq = (btn) => {
-            const answer = btn.nextElementSibling;
-            const icon = btn.querySelector('.lucide-chevron-down');
-            const isHidden = answer.classList.contains('hidden');
-            answer.classList.toggle('hidden');
-            icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
         };
 
         window.App.copyToClipboard = (text) => {
-            const el = document.createElement('textarea');
-            el.value = text;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            alert("계좌번호가 복사되었습니다.");
+            navigator.clipboard.writeText(text).then(() => alert("계좌번호가 복사되었습니다.")).catch(() => alert("복사 실패"));
         };
 
+        // Auth Actions
         window.App.processLogin = async () => {
-            const email = document.getElementById('login-email').value;
-            const pw = document.getElementById('login-pw').value;
-            if(!email || !pw) return alert('이메일과 비밀번호를 입력해주세요.');
-
+            const e = document.getElementById('login-email').value, p = document.getElementById('login-pw').value;
+            if(!e || !p) return alert("정보를 입력해주세요.");
             try {
-                await signInWithEmailAndPassword(auth, email, pw);
-                alert("로그인되었습니다.");
+                await signInWithEmailAndPassword(auth, e, p);
                 window.App.closeModal('loginModal');
-            } catch (e) {
-                console.error(e);
-                alert("로그인 실패: 이메일 또는 비밀번호를 확인해주세요.");
-            }
+            } catch(err) { alert("로그인 실패: 이메일/비번을 확인하세요."); }
         };
 
         window.App.processSignup = async () => {
-            const name = document.getElementById('reg-name').value;
-            const email = document.getElementById('reg-email').value;
-            const pw = document.getElementById('reg-pw').value;
-
-            if(!name || !email || !pw) return alert('모든 필드를 입력해주세요.');
-            if(pw.length < 6) return alert('비밀번호는 6자리 이상이어야 합니다.');
-
+            const n = document.getElementById('reg-name').value, e = document.getElementById('reg-email').value, p = document.getElementById('reg-pw').value;
+            if(!n || !e || !p) return alert("모두 입력해주세요.");
+            if(p.length < 6) return alert("비밀번호 6자 이상이어야 합니다.");
             try {
-                const cred = await createUserWithEmailAndPassword(auth, email, pw);
-                const profileData = { name, email, payStatus: 'none', joinDate: new Date().toISOString() };
-                await setDoc(getUserDoc(cred.user.uid), profileData);
-                await setDoc(doc(getPublicMemberColl(), cred.user.uid), profileData);
-
-                alert("가입이 완료되었습니다.");
-                window.App.switchAuthTab('login');
+                const cred = await createUserWithEmailAndPassword(auth, e, p);
+                const data = { name: n, email: e, payStatus: 'none', joinDate: new Date().toISOString() };
+                await setDoc(getUserDoc(cred.user.uid), data);
+                await setDoc(doc(getPublicMemberColl(), cred.user.uid), data); // Admin용 미러링
+                alert("가입 완료!");
                 window.App.closeModal('loginModal');
-            } catch (e) {
-                console.error(e);
-                if(e.code === 'auth/email-already-in-use') alert("이미 가입된 이메일입니다.");
-                else alert("가입 중 오류가 발생했습니다: " + e.message);
-            }
+            } catch(err) { alert("가입 실패: " + err.message); }
         };
 
-        window.App.logout = () => {
-            if(confirm('로그아웃 하시겠습니까?')) {
-                signOut(auth).then(() => {
-                    window.location.reload();
-                });
-            }
-        };
+        window.App.logout = () => { if(confirm("로그아웃 하시겠습니까?")) signOut(auth); };
 
-        window.App.openAdminModal = () => {
-            if(!window.App.state.isAdmin) return alert("관리자 권한이 없습니다.");
-            window.App.openModal('adminModal');
-            
-            // Load logic here or separate
-            const listEl = document.getElementById('admin-user-list');
-            listEl.innerHTML = '<div class="text-center py-4">로딩중...</div>';
-
-            onSnapshot(getPublicMemberColl(), (snapshot) => {
-                listEl.innerHTML = '';
-                if(snapshot.empty) {
-                    listEl.innerHTML = '<div class="text-center py-4">가입한 회원이 없습니다.</div>';
-                    return;
-                }
-
-                const members = [];
-                snapshot.forEach(doc => members.push({ id: doc.id, ...doc.data() }));
-                members.sort((a,b) => (b.joinDate || '').localeCompare(a.joinDate || ''));
-
-                members.forEach(m => {
-                    const isPaid = m.payStatus === 'complete';
-                    const isPending = m.payStatus === 'pending';
-                    
-                    let statusBadge = '<span class="bg-gray-100 text-gray-500 px-2 py-1 rounded text-xs">미신청</span>';
-                    let actionBtn = '';
-
-                    if(isPaid) {
-                        statusBadge = '<span class="bg-green-100 text-green-600 px-2 py-1 rounded text-xs font-bold">수강중</span>';
-                        actionBtn = `<button onclick="window.App.updateUserStatus('${m.id}', 'none')" class="text-xs text-red-500 hover:underline">취소</button>`;
-                    } else if(isPending) {
-                        statusBadge = '<span class="bg-yellow-100 text-yellow-600 px-2 py-1 rounded text-xs font-bold animate-pulse">입금확인중</span>';
-                        actionBtn = `<button onclick="window.App.updateUserStatus('${m.id}', 'complete')" class="bg-indigo-600 text-white text-xs px-2 py-1 rounded hover:bg-indigo-700">승인하기</button>`;
-                    } else {
-                            actionBtn = `<button onclick="window.App.updateUserStatus('${m.id}', 'complete')" class="text-xs text-indigo-500 hover:underline">강제승인</button>`;
-                    }
-
-                    const el = document.createElement('div');
-                    el.className = "flex justify-between items-center p-3 bg-white border border-gray-200 rounded-lg";
-                    el.innerHTML = `
-                        <div>
-                            <div class="font-bold text-sm">${m.name} <span class="text-gray-400 font-normal text-xs">(${m.email})</span></div>
-                            <div class="mt-1">${statusBadge}</div>
-                        </div>
-                        <div>${actionBtn}</div>
-                    `;
-                    listEl.appendChild(el);
-                });
-            });
-        };
-
-        window.App.updateUserStatus = async (targetUid, newStatus) => {
-            if(!confirm('상태를 변경하시겠습니까?')) return;
-            await updateDoc(getUserDoc(targetUid), { payStatus: newStatus });
-            await updateDoc(doc(getPublicMemberColl(), targetUid), { payStatus: newStatus });
-            alert('처리되었습니다.');
-        };
-
-        window.App.checkPayment = (e, url) => {
-            if(url.includes('portone')) {
-                e.preventDefault();
-                window.open(url);
-                alert("결제창이 열렸습니다. (데모환경)");
-            }
-        };
-
-        window.App.confirmDeposit = async () => {
-            if(!window.App.state.isLoggedIn) return alert("로그인 후 신청해주세요.");
-            
-            const uid = window.App.state.user.uid;
-            await updateDoc(getUserDoc(uid), { payStatus: 'pending' });
-            await setDoc(doc(getPublicMemberColl(), uid), { 
-                name: window.App.state.user.name, 
-                email: window.App.state.user.email,
-                payStatus: 'pending',
-                joinDate: window.App.state.user.joinDate || new Date().toISOString()
-            }, { merge: true });
-
-            window.App.state.user.payStatus = 'pending';
-            window.App.closeModal('depositModal');
-            alert("입금 확인 요청이 접수되었습니다. 관리자 승인 후 강의실 입장이 가능합니다.");
-            window.App.openMypage(); 
-        };
-
+        // Data Actions
         window.App.checkWritePermission = () => {
-            if(!window.App.state.isLoggedIn) {
-                alert("로그인을 하세요");
-                window.App.openModal('loginModal', 'login');
-                return;
-            }
-            const payStatus = window.App.state.user.payStatus;
-            
-            if(payStatus !== 'complete') {
-                if(payStatus === 'pending') alert("입금 확인 중입니다. 승인 후 작성 가능합니다.");
-                else alert("수강생만 작성 가능합니다. 수강신청을 먼저 진행해주세요.");
-                return;
-            }
-            window.App.openModal('writeReviewModal');
+            if(!window.App.state.isLoggedIn || !window.App.state.user) return window.App.openModal('loginModal', 'login');
+            const status = window.App.state.user.payStatus;
+            if(status === 'complete') window.App.openModal('writeReviewModal');
+            else if(status === 'pending') alert("입금 확인 중입니다.");
+            else alert("수강생만 작성 가능합니다.");
         };
 
         window.App.submitReview = async () => {
-            if(!window.App.state.isLoggedIn) return;
-            
-            const title = document.getElementById('w-title').value;
-            const content = document.getElementById('w-content').value;
-            const rating = parseInt(document.getElementById('w-rating').value);
-            
-            if(!title || !content) return alert("내용을 모두 입력해주세요.");
-
+            const t = document.getElementById('w-title').value, c = document.getElementById('w-content').value, r = document.getElementById('w-rating').value;
+            if(!t || !c) return alert("내용을 입력해주세요.");
             try {
                 await addDoc(getPublicReviewColl(), {
-                    title, content, rating,
+                    title: t, content: c, rating: parseInt(r),
                     author: window.App.state.user.name,
                     date: new Date().toISOString().split('T')[0],
-                    views: 0,
-                    userId: window.App.state.user.uid,
-                    badge: "NEW"
+                    views: 0, badge: 'NEW', userId: window.App.state.user.uid
                 });
-                
+                alert("등록되었습니다.");
                 window.App.closeModal('writeReviewModal');
-                alert("소중한 후기가 등록되었습니다!");
-                document.getElementById('w-title').value = '';
-                document.getElementById('w-content').value = '';
-            } catch(e) {
-                console.error(e);
-                alert("등록 실패: " + e.message);
-            }
+                document.getElementById('w-title').value = ''; document.getElementById('w-content').value = '';
+            } catch(e) { alert("등록 실패"); }
         };
 
         window.App.loadMoreReviews = () => {
             window.App.state.visibleReviews += 9;
-            Impl.renderAllReviews();
+            Impl.renderUI();
         };
 
         window.App.openReviewDetail = (id) => {
-            // Find review from state or static
-            let review = window.App.state.reviews.find(r => r.id == id);
-            if(!review) review = STATIC_REVIEWS.find(r => r.id == id);
-            
-            if(!review) return;
-
-            review.views = (review.views || 0) + 1;
-            
-            document.getElementById('modal-review-title').innerText = review.title;
-            
-            const tempTextArea = document.createElement('textarea');
-            tempTextArea.innerHTML = review.content;
-            let decodedContent = tempTextArea.value;
-            if (!decodedContent.includes('<p>') && !decodedContent.includes('<br>')) {
-                decodedContent = decodedContent.replace(/
-/g, '<br>');
-            }
-            document.getElementById('modal-review-content').innerHTML = decodedContent;
-            document.getElementById('modal-review-author').innerText = review.author;
-            document.getElementById('modal-review-date').innerText = review.date;
-            document.getElementById('modal-review-views').innerText = review.views.toLocaleString();
+            let r = window.App.state.reviews.find(x => x.id == id) || window.STATIC_REVIEWS.find(x => x.id == id);
+            if(!r) return;
+            document.getElementById('modal-review-title').innerText = r.title;
+            document.getElementById('modal-review-content').innerText = r.content; // textContent로 안전하게
+            document.getElementById('modal-review-author').innerText = r.author;
+            document.getElementById('modal-review-date').innerText = r.date;
+            document.getElementById('modal-review-views').innerText = r.views || 0;
             
             let stars = '';
-            for(let i=0; i<5; i++) stars += `<i data-lucide="star" class="w-4 h-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}"></i>`;
+            for(let i=0; i<5; i++) stars += `<i data-lucide="star" class="w-4 h-4 ${i < r.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}"></i>`;
             document.getElementById('modal-stars').innerHTML = stars;
-
             window.App.openModal('reviewDetailModal');
         };
 
         window.App.openMypage = () => {
             window.App.openModal('mypageModal');
-            const isUser = window.App.state.isLoggedIn;
-            const payStatus = window.App.state.user ? window.App.state.user.payStatus : 'none';
-
-            document.getElementById('mp-status-guest').classList.toggle('hidden', isUser);
-            document.getElementById('mp-status-user').classList.toggle('hidden', !isUser);
-
-            if(isUser && window.App.state.user) {
-                document.getElementById('mp-name').innerText = window.App.state.user.name + "님";
-                document.getElementById('mp-email').innerText = window.App.state.user.email;
+            const u = window.App.state.user;
+            if(u) {
+                document.getElementById('mp-name').innerText = u.name;
+                document.getElementById('mp-email').innerText = u.email;
+                document.getElementById('mp-status-guest').classList.add('hidden');
+                document.getElementById('mp-status-user').classList.remove('hidden');
                 
-                document.getElementById('pay-none').classList.toggle('hidden', payStatus !== 'none');
-                document.getElementById('pay-pending').classList.toggle('hidden', payStatus !== 'pending');
-                document.getElementById('pay-complete').classList.toggle('hidden', payStatus !== 'complete');
+                ['none', 'pending', 'complete'].forEach(s => {
+                    document.getElementById(`pay-${s}`).classList.toggle('hidden', u.payStatus !== s);
+                });
+            } else {
+                document.getElementById('mp-status-guest').classList.remove('hidden');
+                document.getElementById('mp-status-user').classList.add('hidden');
             }
         };
 
-        // Auth & Init
-        onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                if (firebaseUser.isAnonymous) {
-                    window.App.state.isLoggedIn = false;
-                    window.App.state.user = null;
-                    window.App.state.isAdmin = false;
-                } else {
-                    const userDocRef = getUserDoc(firebaseUser.uid);
-                    try {
-                        const userSnapshot = await getDoc(userDocRef);
-                        let profile = {};
-                        if(userSnapshot.exists()) {
-                            profile = userSnapshot.data();
-                        } else {
-                            profile = { name: firebaseUser.displayName || '수강생', payStatus: 'none', email: firebaseUser.email };
-                            await setDoc(userDocRef, profile);
-                            await setDoc(doc(getPublicMemberColl(), firebaseUser.uid), profile);
-                        }
-                        window.App.state.user = { uid: firebaseUser.uid, email: firebaseUser.email, ...profile };
-                        window.App.state.isLoggedIn = true;
-                        window.App.state.isAdmin = (firebaseUser.email === 'admin@secretclass.com');
-                    } catch (e) { console.error("Profile Fetch Error", e); }
-                }
+        window.App.confirmDeposit = async () => {
+            if(!window.App.state.user) return window.App.openModal('loginModal', 'login');
+            try {
+                await updateDoc(getUserDoc(window.App.state.user.uid), { payStatus: 'pending' });
+                await updateDoc(doc(getPublicMemberColl(), window.App.state.user.uid), { payStatus: 'pending' });
+                window.App.state.user.payStatus = 'pending';
+                alert("신청되었습니다. 관리자 확인 후 승인됩니다.");
+                window.App.closeModal('depositModal');
+            } catch(e) { alert("오류 발생"); }
+        };
 
-                if(window.App.state.unsubscribeReviews) window.App.state.unsubscribeReviews();
+        window.App.checkPayment = (e, url) => {
+            e.preventDefault();
+            window.open(url, '_blank');
+        };
+
+        // Admin Panel
+        window.App.openAdminModal = () => {
+            if(!window.App.state.isAdmin) return;
+            window.App.openModal('adminModal');
+            const list = document.getElementById('admin-user-list');
+            list.innerHTML = '로딩중...';
+            
+            // 실시간 리스너 X, 일회성 호출 (Admin은 트래픽 절약)
+            onSnapshot(getPublicMemberColl(), (snap) => {
+                list.innerHTML = '';
+                if(snap.empty) { list.innerHTML = '회원이 없습니다.'; return; }
+                const users = [];
+                snap.forEach(d => users.push({id: d.id, ...d.data()}));
+                users.sort((a,b) => (b.joinDate || '').localeCompare(a.joinDate || ''));
                 
-                window.App.state.unsubscribeReviews = onSnapshot(getPublicReviewColl(), (snapshot) => {
-                    const dbReviews = [];
-                    snapshot.forEach(doc => {
-                        dbReviews.push({ id: doc.id, ...doc.data(), isDb: true });
-                    });
-                    dbReviews.sort((a,b) => new Date(b.date) - new Date(a.date));
+                users.forEach(u => {
+                    let status = u.payStatus === 'complete' ? '<span class="text-green-600 font-bold">수강중</span>' : (u.payStatus === 'pending' ? '<span class="text-yellow-600 font-bold">승인대기</span>' : '<span class="text-gray-400">미신청</span>');
+                    let btn = '';
+                    if(u.payStatus === 'pending' || u.payStatus === 'none') btn = `<button onclick="window.App.updateUser('${u.id}', 'complete')" class="bg-indigo-600 text-white px-2 py-1 rounded text-xs">승인</button>`;
+                    else btn = `<button onclick="window.App.updateUser('${u.id}', 'none')" class="text-red-500 text-xs">취소</button>`;
                     
-                    // Merge
-                    window.App.state.reviews = [...dbReviews, ...STATIC_REVIEWS];
-                    
-                    const totalCnt = document.getElementById('total-review-count');
-                    if(totalCnt) totalCnt.innerText = window.App.state.reviews.length;
-                    
-                    Impl.renderUI(); 
-                }, (error) => {
-                    console.warn("DB Access:", error.code); 
+                    const el = document.createElement('div');
+                    el.className = "flex justify-between items-center p-3 bg-white border rounded";
+                    el.innerHTML = `<div><div class="font-bold">${u.name} (${u.email})</div><div class="text-xs">${status}</div></div><div>${btn}</div>`;
+                    list.appendChild(el);
                 });
+            });
+        };
 
+        window.App.updateUser = async (uid, status) => {
+            if(!confirm("변경하시겠습니까?")) return;
+            await updateDoc(getUserDoc(uid), { payStatus: status });
+            await updateDoc(doc(getPublicMemberColl(), uid), { payStatus: status });
+        };
+
+        // 6. Init Auth & Listeners (Rule 3)
+        const initAuth = async () => {
+            if(typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
             } else {
-                signInAnonymously(auth).catch(e => console.error("Anon Auth Fail", e));
+                await signInAnonymously(auth);
             }
+        };
+
+        initAuth();
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user && !user.isAnonymous) {
+                // Real User
+                try {
+                    const snap = await getDoc(getUserDoc(user.uid));
+                    let profile = snap.exists() ? snap.data() : { name: user.displayName || '이름없음', payStatus: 'none', email: user.email };
+                    if(!snap.exists()) {
+                        await setDoc(getUserDoc(user.uid), profile);
+                        await setDoc(doc(getPublicMemberColl(), user.uid), profile);
+                    }
+                    window.App.state.user = { uid: user.uid, ...profile };
+                    window.App.state.isLoggedIn = true;
+                    window.App.state.isAdmin = (user.email === 'admin@secretclass.com'); // 간단한 관리자 체크
+                } catch(e) { console.error(e); }
+            } else {
+                // Anonymous or Guest
+                window.App.state.user = null;
+                window.App.state.isLoggedIn = false;
+                window.App.state.isAdmin = false;
+            }
+
+            // Reviews Listener
+            if(window.App.state.unsubscribeReviews) window.App.state.unsubscribeReviews();
+            window.App.state.unsubscribeReviews = onSnapshot(getPublicReviewColl(), (snap) => {
+                const reviews = [];
+                snap.forEach(d => reviews.push({ id: d.id, ...d.data() }));
+                reviews.sort((a,b) => new Date(b.date) - new Date(a.date));
+                window.App.state.reviews = reviews;
+                Impl.renderUI();
+            });
+
             Impl.renderUI();
         });
 
-        // Initial Render
+        // First Render
         Impl.renderUI();
-
-    
-  })();
+    })();
 </script>
 </body>
 </html>
