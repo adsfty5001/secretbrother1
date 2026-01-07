@@ -736,16 +736,11 @@
     import { getFirestore, doc, setDoc, getDoc, collection, query, onSnapshot, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // 1. Firebase 설정 (자동 주입)
-  const firebaseConfig = {
-  apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJ0Fcjn-w-tyY",
-  authDomain: "secretclass-5c9d8.firebaseapp.com",
-  projectId: "secretclass-5c9d8",
-  storageBucket: "secretclass-5c9d8.firebasestorage.app",
-  messagingSenderId: "316837263466",
-  appId: "1:316837263466:web:ae28f1110f3728ea8ab213",
-  measurementId: "G-8GPZWFNNC6"
-};
-
+    const firebaseConfig = JSON.parse(__firebase_config);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'secret-class-default';
 
     // 2. 관리자 이메일 설정
     const adminEmail = "admin@secretclass.com";
