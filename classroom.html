@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>나의 강의실 - 시크릿클래스</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <header class="bg-white border-b">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="./index.html" class="font-extrabold text-gray-900">시크릿클래스</a>
+      <button id="btn-logout" class="px-3 py-1.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 text-sm">로그아웃</button>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-6 space-y-6">
+    <div id="guard" class="p-5 rounded-2xl border bg-white">
+      <div class="font-bold text-gray-900">접속 확인 중…</div>
+      <div class="text-sm text-gray-500 mt-1">로그인/수강 상태를 확인하고 있습니다.</div>
+    </div>
+
+    <section id="room" class="hidden space-y-4">
+      <div class="bg-white border rounded-2xl p-5">
+        <div class="text-sm text-gray-500">회원</div>
+        <div id="me" class="text-lg font-extrabold mt-1">-</div>
+        <div id="status" class="text-sm text-gray-600 mt-1">-</div>
+      </div>
+
+      <div class="bg-white border rounded-2xl p-5">
+        <div class="font-bold text-gray-900 mb-2">강의 목록</div>
+        <div class="text-sm text-gray-500 mb-4">현재는 기본 틀만 구성되어 있습니다. (courses 컬렉션을 연결하면 자동 노출)</div>
+        <div id="courses" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+      </div>
+    </section>
+  </main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { getFirestore, doc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const FIREBASE_CONFIG = {
+  "apiKey": "AIzaSyCvFTB5GVkVZLLVily_hCoJ0Fcjn-w-tyY",
+  "authDomain": "secretclass-5c9d8.firebaseapp.com",
+  "projectId": "secretclass-5c9d8",
+  "storageBucket": "secretclass-5c9d8.firebasestorage.app",
+  "messagingSenderId": "316837263466",
+  "appId": "1:316837263466:web:ae28f1110f3728ea8ab213",
+  "measurementId": "G-8GPZWFNNC6"
+};
+const ADMIN_EMAILS = [
+  // 여기에 관리자 이메일을 넣어주세요 (Firebase Auth에 로그인되는 이메일)
+  "midnight5001@naver.com"
+];
+
+  const app = initializeApp(FIREBASE_CONFIG);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  document.getElementById("btn-logout").onclick = () => signOut(auth).then(()=>location.href="./index.html");
+
+  const guard = document.getElementById("guard");
+  const room = document.getElementById("room");
+  const coursesEl = document.getElementById("courses");
+
+  function courseCard(c) {
+    return `<div class="p-4 rounded-xl border bg-gray-50">
+      <div class="font-bold text-gray-900">${c.title||"강의 제목"}</div>
+      <div class="text-sm text-gray-500 mt-1">${c.desc||"설명"}</div>
+      <div class="text-xs text-gray-400 mt-3">상태: ${c.status||"준비중"}</div>
+    </div>`;
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if(!user) {
+      guard.innerHTML = `<div class="font-bold text-gray-900">로그인이 필요합니다.</div>
+        <div class="text-sm text-gray-500 mt-1">메인에서 로그인 후 다시 접속하세요.</div>`;
+      room.classList.add("hidden");
+      return;
+    }
+    const snap = await getDoc(doc(db,"users",user.uid));
+    const profile = snap.exists() ? snap.data() : {};
+    const payStatus = profile.payStatus || "none";
+
+    if(payStatus !== "complete") {
+      guard.innerHTML = `<div class="font-bold text-gray-900">아직 강의실 접근 권한이 없습니다.</div>
+        <div class="text-sm text-gray-500 mt-1">결제상태: <b>${payStatus}</b> (관리자 승인 후 이용 가능)</div>`;
+      room.classList.add("hidden");
+      return;
+    }
+
+    guard.classList.add("hidden");
+    room.classList.remove("hidden");
+    document.getElementById("me").innerText = `${profile.name||"회원"} (${profile.username||user.email||""})`;
+    document.getElementById("status").innerText = `결제상태: ${payStatus}`;
+
+    // courses 컬렉션이 있으면 자동 표시
+    onSnapshot(collection(db,"courses"), (snap2) => {
+      const arr = [];
+      snap2.forEach(d => arr.push({ id:d.id, ...d.data() }));
+      if(arr.length === 0) {
+        coursesEl.innerHTML = `<div class="text-sm text-gray-500">등록된 강의가 없습니다. (courses 컬렉션에 문서를 추가하세요)</div>`;
+      } else {
+        coursesEl.innerHTML = arr.map(courseCard).join("");
+      }
+    }, () => {
+      coursesEl.innerHTML = `<div class="text-sm text-gray-500">courses 읽기 권한이 없거나 컬렉션이 없습니다.</div>`;
+    });
+  });
+</script>
+</body>
+</html>
