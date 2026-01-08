@@ -1,18 +1,17 @@
 <!DOCTYPE html>
+
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 중요: 모든 HTTP 요청을 HTTPS로 자동 업그레이드하여 혼합 콘텐츠 차단 방지 -->
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> 
-    <title>시크릿클래스 - 대한민국 1호 아파트 큐레이터</title>
-    
-    <!-- Tailwind CSS (HTTPS) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons (HTTPS) -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<!-- 중요: 모든 HTTP 요청을 HTTPS로 자동 업그레이드하여 혼합 콘텐츠 차단 방지 -->
+<meta content="upgrade-insecure-requests" http-equiv="Content-Security-Policy"/>
+<title>시크릿클래스 - 대한민국 1호 아파트 큐레이터</title>
+<!-- Tailwind CSS (HTTPS) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Lucide Icons (HTTPS) -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
         /* 폰트 설정 (HTTPS) */
         @font-face {
             font-family: 'Jalnan';
@@ -70,531 +69,495 @@
     </style>
 </head>
 <body class="bg-white text-gray-900 font-body flex flex-col min-h-screen">
-
-    <!-- 1. 최상단 배너 -->
-    <div class="bg-red-600 text-white text-center py-3 text-sm md:text-base shadow-md z-50 relative break-keep px-4">
-        <div class="animate-pulse flex justify-center items-center gap-2">
-            <span class="font-bold bg-white text-red-600 px-2 py-0.5 rounded text-xs">마감임박</span>
-            <span>이번 달 큐레이팅 마감까지 <span id="countdown-number" class="text-yellow-300 font-extrabold text-lg">2</span>자리 남았습니다.</span>
-        </div>
-    </div>
-
-    <!-- 2. 헤더 -->
-    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
-        <!-- 로그인 상태 바 -->
-        <div class="bg-gray-50 border-b border-gray-100">
-            <div class="max-w-7xl mx-auto px-4 py-2 flex justify-end items-center gap-4 text-xs text-gray-500">
-                <div id="auth-guest" class="flex items-center gap-3">
-                    <button onclick="window.App.openModal('loginModal', 'login')" class="hover:text-indigo-600 transition-colors">로그인</button>
-                    <span class="w-px h-3 bg-gray-300"></span>
-                    <button onclick="window.App.openModal('loginModal', 'signup')" class="hover:text-indigo-600 transition-colors">회원가입</button>
-                </div>
-                <div id="auth-user" class="hidden-section flex items-center gap-3">
-                    <!-- 관리자 버튼 (관리자일 때만 보임) -->
-                    <button id="btn-admin-open" onclick="window.App.openAdminModal()" class="hidden bg-gray-800 text-white px-2 py-1 rounded hover:bg-gray-700 transition-colors mr-2">
-                        <i data-lucide="settings" class="w-3 h-3 inline"></i> 관리자
+<!-- 1. 최상단 배너 -->
+<div class="bg-red-600 text-white text-center py-3 text-sm md:text-base shadow-md z-50 relative break-keep px-4">
+<div class="animate-pulse flex justify-center items-center gap-2">
+<span class="font-bold bg-white text-red-600 px-2 py-0.5 rounded text-xs">마감임박</span>
+<span>이번 달 큐레이팅 마감까지 <span class="text-yellow-300 font-extrabold text-lg" id="countdown-number">2</span>자리 남았습니다.</span>
+</div>
+</div>
+<!-- 2. 헤더 -->
+<header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
+<!-- 로그인 상태 바 -->
+<div class="bg-gray-50 border-b border-gray-100">
+<div class="max-w-7xl mx-auto px-4 py-2 flex justify-end items-center gap-4 text-xs text-gray-500">
+<div class="flex items-center gap-3" id="auth-guest">
+<button class="hover:text-indigo-600 transition-colors" onclick="window.App.openModal('loginModal', 'login')">로그인</button>
+<span class="w-px h-3 bg-gray-300"></span>
+<button class="hover:text-indigo-600 transition-colors" onclick="window.App.openModal('loginModal', 'signup')">회원가입</button>
+</div>
+<div class="hidden-section flex items-center gap-3" id="auth-user">
+<!-- 관리자 버튼 (관리자일 때만 보임) -->
+<button class="hidden bg-gray-800 text-white px-2 py-1 rounded hover:bg-gray-700 transition-colors mr-2" id="btn-admin-open" onclick="window.App.openAdminModal()">
+<i class="w-3 h-3 inline" data-lucide="settings"></i> 관리자
                     </button>
-                    <span class="font-bold text-gray-700"><span id="user-name-display" class="text-indigo-600"></span>님</span>
-                    <span class="w-px h-3 bg-gray-300"></span>
-                    <button onclick="window.App.logout()" class="hover:text-red-500 transition-colors">로그아웃</button>
-                </div>
-                <span class="w-px h-3 bg-gray-300"></span>
-                <button onclick="window.App.openMypage()" class="font-bold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1">
-                    <i data-lucide="user" class="w-3 h-3"></i> 나의강의실
+<span class="font-bold text-gray-700"><span class="text-indigo-600" id="user-name-display"></span>님</span>
+<span class="w-px h-3 bg-gray-300"></span>
+<button class="hover:text-red-500 transition-colors" onclick="window.App.logout()">로그아웃</button>
+</div>
+<span class="w-px h-3 bg-gray-300"></span>
+<button class="font-bold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1" onclick="window.App.openMypage()">
+<i class="w-3 h-3" data-lucide="user"></i> 나의강의실
                 </button>
-            </div>
-        </div>
-
-        <!-- 네비게이션 -->
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex justify-between items-center w-full md:w-auto">
-                <a href="javascript:void(0)" onclick="window.App.navigate('home')" class="text-left group cursor-pointer">
-                    <div class="text-2xl font-jalnan font-bold text-indigo-900 tracking-tighter group-hover:text-indigo-700 transition-colors">시크릿클래스</div>
-                    <div class="text-[10px] text-indigo-400 tracking-[0.3em] font-light">SECRETCLASS</div>
-                </a>
-                <button class="md:hidden p-2" onclick="window.App.toggleMobileMenu()">
-                    <i data-lucide="menu" class="h-6 w-6 text-gray-800"></i>
-                </button>
-            </div>
-            
-            <!-- 메뉴 -->
-            <nav class="hidden md:flex gap-8 font-medium text-gray-600">
-                <button onclick="window.App.scrollToSection('about')" class="hover:text-indigo-600 transition-colors py-2">소개</button>
-                <button onclick="window.App.scrollToSection('curriculum')" class="hover:text-indigo-600 transition-colors py-2">진행과정</button>
-                <button onclick="window.App.scrollToSection('pricing')" class="hover:text-indigo-600 transition-colors py-2">수강신청</button>
-                <button onclick="window.App.scrollToSection('reviews')" class="hover:text-indigo-600 transition-colors py-2">강의후기</button>
-                <button onclick="window.App.scrollToSection('faq')" class="hover:text-indigo-600 transition-colors py-2">고객센터</button>
-            </nav>
-        </div>
-
-        <!-- 모바일 메뉴 -->
-        <div id="mobileMenu" class="hidden md:hidden bg-white border-t border-gray-100 absolute w-full left-0 shadow-lg animate-fade-in">
-            <div class="flex flex-col text-gray-700">
-                <button onclick="window.App.scrollToSection('about'); window.App.toggleMobileMenu()" class="text-left py-4 px-6 border-b border-gray-50 hover:bg-gray-50">소개</button>
-                <button onclick="window.App.scrollToSection('curriculum'); window.App.toggleMobileMenu()" class="text-left py-4 px-6 border-b border-gray-50 hover:bg-gray-50">진행과정</button>
-                <button onclick="window.App.scrollToSection('pricing'); window.App.toggleMobileMenu()" class="text-left py-4 px-6 border-b border-gray-50 hover:bg-gray-50">수강신청</button>
-                <button onclick="window.App.scrollToSection('reviews'); window.App.toggleMobileMenu()" class="text-left py-4 px-6 border-b border-gray-50 hover:bg-gray-50">강의후기</button>
-                <button onclick="window.App.scrollToSection('faq'); window.App.toggleMobileMenu()" class="text-left py-4 px-6 border-b border-gray-50 hover:bg-gray-50">고객센터</button>
-            </div>
-        </div>
-    </header>
-
-    <!-- 메인 컨텐츠 영역 (SPA) -->
-    <main id="main-container" class="flex-grow">
-        
-        <!-- [VIEW 1] 홈 화면 -->
-        <div id="view-home" class="view-section">
-            <!-- Hero -->
-            <section class="relative overflow-hidden bg-gray-900 min-h-[600px] flex items-center">
-                <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-[#1e293b] to-indigo-950 z-0"></div>
-                <div class="absolute inset-0 opacity-10" style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png');"></div>
-                
-                <div class="max-w-7xl mx-auto px-4 w-full flex flex-col md:flex-row items-center justify-between gap-10 relative z-10 py-16">
-                    <div class="text-center md:text-left text-white w-full md:w-[60%]">
-                        <div class="inline-block px-4 py-1.5 bg-indigo-500/20 backdrop-blur-md rounded-full text-sm font-bold border border-indigo-400/30 text-indigo-300 mb-6">
+</div>
+</div>
+<!-- 네비게이션 -->
+<div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="flex justify-between items-center w-full md:w-auto">
+<a class="text-left group cursor-pointer" href="javascript:void(0)" onclick="window.App.navigate('home')">
+<div class="text-2xl font-jalnan font-bold text-indigo-900 tracking-tighter group-hover:text-indigo-700 transition-colors">시크릿클래스</div>
+<div class="text-[10px] text-indigo-400 tracking-[0.3em] font-light">SECRETCLASS</div>
+</a>
+<button class="md:hidden p-2" onclick="window.App.toggleMobileMenu()">
+<i class="h-6 w-6 text-gray-800" data-lucide="menu"></i>
+</button>
+</div>
+<!-- 메뉴 -->
+<nav class="hidden md:flex gap-8 font-medium text-gray-600">
+<button class="hover:text-indigo-600 transition-colors py-2" onclick="window.App.scrollToSection('about')">소개</button>
+<button class="hover:text-indigo-600 transition-colors py-2" onclick="window.App.scrollToSection('curriculum')">진행과정</button>
+<button class="hover:text-indigo-600 transition-colors py-2" onclick="window.App.scrollToSection('pricing')">수강신청</button>
+<button class="hover:text-indigo-600 transition-colors py-2" onclick="window.App.scrollToSection('reviews')">강의후기</button>
+<button class="hover:text-indigo-600 transition-colors py-2" onclick="window.App.scrollToSection('faq')">고객센터</button>
+</nav>
+</div>
+<!-- 모바일 메뉴 -->
+<div class="hidden md:hidden bg-white border-t border-gray-100 absolute w-full left-0 shadow-lg animate-fade-in" id="mobileMenu">
+<div class="flex flex-col text-gray-700">
+<button class="text-left py-4 px-6 border-b border-gray-50 hover:bg-gray-50" onclick="window.App.scrollToSection('about'); window.App.toggleMobileMenu()">소개</button>
+<button class="text-left py-4 px-6 border-b border-gray-50 hover:bg-gray-50" onclick="window.App.scrollToSection('curriculum'); window.App.toggleMobileMenu()">진행과정</button>
+<button class="text-left py-4 px-6 border-b border-gray-50 hover:bg-gray-50" onclick="window.App.scrollToSection('pricing'); window.App.toggleMobileMenu()">수강신청</button>
+<button class="text-left py-4 px-6 border-b border-gray-50 hover:bg-gray-50" onclick="window.App.scrollToSection('reviews'); window.App.toggleMobileMenu()">강의후기</button>
+<button class="text-left py-4 px-6 border-b border-gray-50 hover:bg-gray-50" onclick="window.App.scrollToSection('faq'); window.App.toggleMobileMenu()">고객센터</button>
+</div>
+</div>
+</header>
+<!-- 메인 컨텐츠 영역 (SPA) -->
+<main class="flex-grow" id="main-container">
+<!-- [VIEW 1] 홈 화면 -->
+<div class="view-section" id="view-home">
+<!-- Hero -->
+<section class="relative overflow-hidden bg-gray-900 min-h-[600px] flex items-center">
+<div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-[#1e293b] to-indigo-950 z-0"></div>
+<div class="absolute inset-0 opacity-10" style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png');"></div>
+<div class="max-w-7xl mx-auto px-4 w-full flex flex-col md:flex-row items-center justify-between gap-10 relative z-10 py-16">
+<div class="text-center md:text-left text-white w-full md:w-[60%]">
+<div class="inline-block px-4 py-1.5 bg-indigo-500/20 backdrop-blur-md rounded-full text-sm font-bold border border-indigo-400/30 text-indigo-300 mb-6">
                             🏆 대한민국 1호 아파트 큐레이터
                         </div>
-                        <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-[4.5rem] font-jalnan leading-tight mb-6">
-                            부동산 유목민의<br>
-                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500">마지막 종착지!</span>
-                        </h1>
-                        <p class="text-gray-300 text-lg md:text-xl mb-10 font-light leading-relaxed">
-                            김작가TV, 신사임당, 월부 등 압도적 초청!<br>
-                            <strong class="text-white font-bold border-b-2 border-indigo-500">내 집 마련과 투자의 완결</strong>을 설계합니다.
+<h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-[4.5rem] font-jalnan leading-tight mb-6">
+                            부동산 유목민의<br/>
+<span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500">마지막 종착지!</span>
+</h1>
+<p class="text-gray-300 text-lg md:text-xl mb-10 font-light leading-relaxed">
+                            김작가TV, 신사임당, 월부 등 압도적 초청!<br/>
+<strong class="text-white font-bold border-b-2 border-indigo-500">내 집 마련과 투자의 완결</strong>을 설계합니다.
                         </p>
-                        <button onclick="window.App.scrollToSection('pricing')" class="px-8 py-4 rounded-full font-bold text-lg bg-indigo-600 text-white hover:bg-indigo-500 transition-all shadow-[0_0_30px_rgba(79,70,229,0.4)] flex items-center justify-center gap-2 mx-auto md:mx-0">
-                            지금 바로 시작하기 <i data-lucide="arrow-right" class="w-5 h-5"></i>
-                        </button>
-                    </div>
-                    
-                    <!-- 책 이미지 -->
-                    <div class="w-full md:w-[40%] relative h-[300px] md:h-[400px] flex items-center justify-center animate-float">
-                        <div class="absolute w-72 h-72 bg-indigo-600/30 rounded-full blur-[80px] animate-pulse"></div>
-                        <a href="https://www.yes24.com/product/goods/104491194" target="_blank" class="absolute transform -rotate-12 -translate-x-8 hover:z-20 hover:scale-110 hover:rotate-0 transition-all duration-500 cursor-pointer z-10">
-                            <img src="https://image.yes24.com/goods/104491194/XL" alt="책1" class="w-40 md:w-52 rounded-r-lg shadow-2xl border-l-2 border-gray-700">
-                        </a>
-                        <a href="https://www.yes24.com/product/goods/122689813" target="_blank" class="absolute transform rotate-6 translate-x-8 z-10 hover:z-20 hover:scale-110 hover:rotate-0 transition-all duration-500 cursor-pointer">
-                            <img src="https://image.yes24.com/goods/122689813/XL" alt="책2" class="w-40 md:w-52 rounded-r-lg shadow-2xl border-l-2 border-gray-700">
-                        </a>
-                    </div>
-                </div>
-            </section>
-
-            <!-- About Section -->
-            <section id="about" class="py-24 bg-white">
-                <div class="max-w-6xl mx-auto px-4">
-                    <div class="flex flex-col lg:flex-row items-center gap-16">
-                        <div class="w-full lg:w-1/2 relative">
-                            <div class="bg-gray-100 rounded-[2.5rem] p-6 relative z-10 border border-gray-200 shadow-xl">
-                                <div class="aspect-[4/5] bg-gray-200 rounded-[2rem] overflow-hidden relative border-2 border-gray-300">
-                                    <img src="./3.jpg" onerror="this.src='https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1000&auto=format&fit=crop'" alt="시크릿브라더" class="w-full h-full object-cover">
+<button class="px-8 py-4 rounded-full font-bold text-lg bg-indigo-600 text-white hover:bg-indigo-500 transition-all shadow-[0_0_30px_rgba(79,70,229,0.4)] flex items-center justify-center gap-2 mx-auto md:mx-0" onclick="window.App.scrollToSection('pricing')">
+                            지금 바로 시작하기 <i class="w-5 h-5" data-lucide="arrow-right"></i>
+</button>
+</div>
+<!-- 책 이미지 -->
+<div class="w-full md:w-[40%] relative h-[300px] md:h-[400px] flex items-center justify-center animate-float">
+<div class="absolute w-72 h-72 bg-indigo-600/30 rounded-full blur-[80px] animate-pulse"></div>
+<a class="absolute transform -rotate-12 -translate-x-8 hover:z-20 hover:scale-110 hover:rotate-0 transition-all duration-500 cursor-pointer z-10" href="https://www.yes24.com/product/goods/104491194" target="_blank">
+<img alt="책1" class="w-40 md:w-52 rounded-r-lg shadow-2xl border-l-2 border-gray-700" src="https://image.yes24.com/goods/104491194/XL"/>
+</a>
+<a class="absolute transform rotate-6 translate-x-8 z-10 hover:z-20 hover:scale-110 hover:rotate-0 transition-all duration-500 cursor-pointer" href="https://www.yes24.com/product/goods/122689813" target="_blank">
+<img alt="책2" class="w-40 md:w-52 rounded-r-lg shadow-2xl border-l-2 border-gray-700" src="https://image.yes24.com/goods/122689813/XL"/>
+</a>
+</div>
+</div>
+</section>
+<!-- About Section -->
+<section class="py-24 bg-white" id="about">
+<div class="max-w-6xl mx-auto px-4">
+<div class="flex flex-col lg:flex-row items-center gap-16">
+<div class="w-full lg:w-1/2 relative">
+<div class="bg-gray-100 rounded-[2.5rem] p-6 relative z-10 border border-gray-200 shadow-xl">
+<div class="aspect-[4/5] bg-gray-200 rounded-[2rem] overflow-hidden relative border-2 border-gray-300">
+<img alt="시크릿브라더" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&amp;w=1000&amp;auto=format&amp;fit=crop'" src="./3.jpg"/>
+</div>
+<div class="absolute top-10 right-10 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg border border-gray-100 text-sm font-bold text-indigo-600 flex items-center gap-2 animate-bounce">
+<i class="w-4 h-4 fill-current" data-lucide="award"></i> 서울머니쇼 초청강사
                                 </div>
-                                <div class="absolute top-10 right-10 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg border border-gray-100 text-sm font-bold text-indigo-600 flex items-center gap-2 animate-bounce">
-                                    <i data-lucide="award" class="w-4 h-4 fill-current"></i> 서울머니쇼 초청강사
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="w-full lg:w-1/2">
-                            <span class="text-indigo-600 font-bold tracking-widest text-sm mb-2 block">WHO AM I</span>
-                            <h2 class="text-3xl md:text-4xl font-jalnan mb-6 leading-tight">
-                                '아파트 큐레이터'<br>
-                                <span class="text-indigo-600 relative inline-block">시크릿브라더</span>입니다.
+</div>
+</div>
+<div class="w-full lg:w-1/2">
+<span class="text-indigo-600 font-bold tracking-widest text-sm mb-2 block">WHO AM I</span>
+<h2 class="text-3xl md:text-4xl font-jalnan mb-6 leading-tight">
+                                '아파트 큐레이터'<br/>
+<span class="text-indigo-600 relative inline-block">시크릿브라더</span>입니다.
                             </h2>
-                            <div class="text-gray-600 text-lg leading-relaxed mb-8 space-y-4 break-keep border-l-4 border-gray-200 pl-6">
-                                <p class="font-bold text-gray-900">"아직도 살지 말지 고민하시나요?"</p>
-                                <p>저는 대한민국 1호 ‘초이스헬퍼’로서 여러분의 후회 없는 선택을 설계해드리고 있습니다. 실제 투자와 상담으로 검증된 인사이트로, 당신에게 맞는 한 채를 함께 고르겠습니다.</p>
-                            </div>
-                            
-                            <div class="space-y-3 mb-8">
-                                <a href="https://youtu.be/Xg5GV-b-7rU?si=UtnPM4Z31Hnn-VxB" target="_blank" class="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100 hover:bg-white hover:border-red-200 hover:shadow-lg transition-all group">
-                                    <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">1</span>
-                                    <div class="flex-1 font-bold text-gray-800 group-hover:text-red-600">김작가TV & 신사임당 & 월부 출연 영상</div>
-                                    <i data-lucide="youtube" class="text-gray-400 group-hover:text-red-600"></i>
-                                </a>
-                                <a href="https://blog.naver.com/secret-brother" target="_blank" class="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100 hover:bg-white hover:border-green-200 hover:shadow-lg transition-all group">
-                                    <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">2</span>
-                                    <div class="flex-1 font-bold text-gray-800 group-hover:text-green-600">누적 방문자 200만 블로거 <span class="text-gray-400 font-normal text-xs">(성공한 형의 비밀일기장)</span></div>
-                                    <i data-lucide="external-link" class="text-gray-400 group-hover:text-green-600"></i>
-                                </a>
-                                <a href="https://www.youtube.com/@secretbrother_official" target="_blank" class="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100 hover:bg-white hover:border-red-200 hover:shadow-lg transition-all group">
-                                    <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">3</span>
-                                    <div class="flex-1 font-bold text-gray-800 group-hover:text-red-600">시크릿브라더 유튜브 채널 운영</div>
-                                    <i data-lucide="youtube" class="text-gray-400 group-hover:text-red-600"></i>
-                                </a>
-                                <a href="https://cafe.naver.com/f-e/cafes/12730407/members/NLGMlLKgwIgd43sXBQbqw63HggHmL08BGrf6Q6JMNJM?tab=articles" target="_blank" class="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100 hover:bg-white hover:border-green-200 hover:shadow-lg transition-all group">
-                                    <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">4</span>
-                                    <div class="flex-1 font-bold text-gray-800 group-hover:text-green-600">부동산스터디카페 인기 칼럼리스트</div>
-                                    <i data-lucide="external-link" class="text-gray-400 group-hover:text-green-600"></i>
-                                </a>
-                            </div>
-                            
-                            <a href="https://youtu.be/j0hFCMX5Qlc?si=U3O5iBJjyOPEQl1g" target="_blank" class="w-full md:w-auto px-8 py-4 bg-gray-900 text-white rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-800 transition-all shadow-lg">
-                                <i data-lucide="play-circle" class="w-5 h-5"></i> 시크릿브라더 대표 영상 보기
+<div class="text-gray-600 text-lg leading-relaxed mb-8 space-y-4 break-keep border-l-4 border-gray-200 pl-6">
+<p class="font-bold text-gray-900">"아직도 살지 말지 고민하시나요?"</p>
+<p>저는 대한민국 1호 ‘초이스헬퍼’로서 여러분의 후회 없는 선택을 설계해드리고 있습니다. 실제 투자와 상담으로 검증된 인사이트로, 당신에게 맞는 한 채를 함께 고르겠습니다.</p>
+</div>
+<div class="space-y-3 mb-8">
+<a class="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100 hover:bg-white hover:border-red-200 hover:shadow-lg transition-all group" href="https://youtu.be/Xg5GV-b-7rU?si=UtnPM4Z31Hnn-VxB" target="_blank">
+<span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">1</span>
+<div class="flex-1 font-bold text-gray-800 group-hover:text-red-600">김작가TV &amp; 신사임당 &amp; 월부 출연 영상</div>
+<i class="text-gray-400 group-hover:text-red-600" data-lucide="youtube"></i>
+</a>
+<a class="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100 hover:bg-white hover:border-green-200 hover:shadow-lg transition-all group" href="https://blog.naver.com/secret-brother" target="_blank">
+<span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">2</span>
+<div class="flex-1 font-bold text-gray-800 group-hover:text-green-600">누적 방문자 200만 블로거 <span class="text-gray-400 font-normal text-xs">(성공한 형의 비밀일기장)</span></div>
+<i class="text-gray-400 group-hover:text-green-600" data-lucide="external-link"></i>
+</a>
+<a class="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100 hover:bg-white hover:border-red-200 hover:shadow-lg transition-all group" href="https://www.youtube.com/@secretbrother_official" target="_blank">
+<span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">3</span>
+<div class="flex-1 font-bold text-gray-800 group-hover:text-red-600">시크릿브라더 유튜브 채널 운영</div>
+<i class="text-gray-400 group-hover:text-red-600" data-lucide="youtube"></i>
+</a>
+<a class="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100 hover:bg-white hover:border-green-200 hover:shadow-lg transition-all group" href="https://cafe.naver.com/f-e/cafes/12730407/members/NLGMlLKgwIgd43sXBQbqw63HggHmL08BGrf6Q6JMNJM?tab=articles" target="_blank">
+<span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">4</span>
+<div class="flex-1 font-bold text-gray-800 group-hover:text-green-600">부동산스터디카페 인기 칼럼리스트</div>
+<i class="text-gray-400 group-hover:text-green-600" data-lucide="external-link"></i>
+</a>
+</div>
+<a class="w-full md:w-auto px-8 py-4 bg-gray-900 text-white rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-800 transition-all shadow-lg" href="https://youtu.be/j0hFCMX5Qlc?si=U3O5iBJjyOPEQl1g" target="_blank">
+<i class="w-5 h-5" data-lucide="play-circle"></i> 시크릿브라더 대표 영상 보기
                             </a>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Curriculum Section -->
-            <section id="curriculum" class="py-24 bg-gray-900 text-white relative overflow-hidden">
-                <div class="absolute inset-0 bg-gray-900 opacity-20" style="background-image: url('https://www.transparenttextures.com/patterns/stardust.png');"></div>
-                <div class="max-w-6xl mx-auto px-4 relative z-10">
-                    <div class="text-center mb-16">
-                        <span class="text-indigo-400 font-bold tracking-widest text-sm mb-2 block">SYSTEM</span>
-                        <h2 class="text-3xl md:text-4xl font-jalnan mb-4">1:1 큐레이팅 프로세스</h2>
-                        <p class="text-gray-400">체계적인 4단계 시스템으로 당신의 내 집 마련을 완성합니다.</p>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
-                        <div class="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-gradient-to-r from-gray-800 via-indigo-600 to-gray-800"></div>
-                        <div class="bg-gray-800/50 backdrop-blur border border-gray-700 p-8 rounded-2xl relative group hover:-translate-y-2 transition-transform duration-300">
-                            <div class="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-2xl mb-6 mx-auto shadow-[0_0_20px_rgba(79,70,229,0.5)] z-10 relative">1</div>
-                            <h3 class="text-xl font-bold mb-2 text-center">사전 설문</h3>
-                            <p class="text-sm text-gray-400 text-center break-keep">투자 성향 및 자산 현황을 정밀하게 진단합니다.</p>
-                        </div>
-                        <div class="bg-gray-800/50 backdrop-blur border border-gray-700 p-8 rounded-2xl relative group hover:-translate-y-2 transition-transform duration-300">
-                            <div class="w-16 h-16 rounded-full bg-indigo-700 flex items-center justify-center font-bold text-2xl mb-6 mx-auto shadow-[0_0_20px_rgba(67,56,202,0.5)] z-10 relative">2</div>
-                            <h3 class="text-xl font-bold mb-2 text-center">맞춤 분석</h3>
-                            <p class="text-sm text-gray-400 text-center break-keep">최적의 지역과 단지를 선정하고 포트폴리오를 설계합니다.</p>
-                        </div>
-                        <div class="bg-gray-800/50 backdrop-blur border border-gray-700 p-8 rounded-2xl relative group hover:-translate-y-2 transition-transform duration-300">
-                            <div class="w-16 h-16 rounded-full bg-indigo-800 flex items-center justify-center font-bold text-2xl mb-6 mx-auto shadow-[0_0_20px_rgba(55,48,163,0.5)] z-10 relative">3</div>
-                            <h3 class="text-xl font-bold mb-2 text-center">1:1 밀착 상담</h3>
-                            <p class="text-sm text-gray-400 text-center break-keep">7일간 카카오톡을 통해 실시간 솔루션을 제공합니다.</p>
-                        </div>
-                        <div class="bg-gray-800/50 backdrop-blur border border-yellow-500/30 p-8 rounded-2xl relative group hover:-translate-y-2 transition-transform duration-300">
-                            <div class="w-16 h-16 rounded-full bg-yellow-500 text-indigo-900 flex items-center justify-center font-bold text-2xl mb-6 mx-auto shadow-[0_0_20px_rgba(234,179,8,0.5)] z-10 relative">4</div>
-                            <h3 class="text-xl font-bold mb-2 text-center text-yellow-400">실행 및 관리</h3>
-                            <p class="text-sm text-gray-400 text-center break-keep">매수 타이밍 설정 및 향후 방향성까지 제시합니다.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Pricing Section -->
-            <section id="pricing" class="py-24 bg-indigo-50/50">
-                <div class="max-w-4xl mx-auto px-4">
-                    <div class="bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-indigo-100 relative">
-                        <div class="absolute top-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
-                        <div class="p-10 md:p-14 text-center">
-                            <span class="inline-block py-1 px-3 rounded-full text-xs font-bold mb-6 bg-indigo-100 text-indigo-700 tracking-wide">PREMIUM SERVICE</span>
-                            <h2 class="text-3xl md:text-4xl font-jalnan text-gray-900 mb-4">1:1 맞춤형 투자 큐레이팅</h2>
-                            <p class="text-gray-500 mb-10 max-w-lg mx-auto break-keep">당신의 자산 상황과 목표에 맞춘 100% 개인화 포트폴리오 제안 및 심층 상담 서비스입니다.</p>
-                            
-                            <div class="flex flex-col items-center justify-center mb-10">
-                                <span class="text-gray-400 text-xl line-through decoration-red-400 decoration-2 mb-1">699,000원</span>
-                                <div class="flex items-center gap-3">
-                                    <div class="flex items-baseline gap-1">
-                                        <span class="text-6xl font-extrabold text-indigo-600 font-jalnan">349,000</span>
-                                        <span class="text-2xl text-gray-600 font-bold">원</span>
-                                    </div>
-                                    <span class="bg-red-500 text-white text-base font-bold px-3 py-1 rounded-full shadow-lg animate-bounce transform -rotate-2">
+</div>
+</div>
+</div>
+</section>
+<!-- Curriculum Section -->
+<section class="py-24 bg-gray-900 text-white relative overflow-hidden" id="curriculum">
+<div class="absolute inset-0 bg-gray-900 opacity-20" style="background-image: url('https://www.transparenttextures.com/patterns/stardust.png');"></div>
+<div class="max-w-6xl mx-auto px-4 relative z-10">
+<div class="text-center mb-16">
+<span class="text-indigo-400 font-bold tracking-widest text-sm mb-2 block">SYSTEM</span>
+<h2 class="text-3xl md:text-4xl font-jalnan mb-4">1:1 큐레이팅 프로세스</h2>
+<p class="text-gray-400">체계적인 4단계 시스템으로 당신의 내 집 마련을 완성합니다.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
+<div class="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-gradient-to-r from-gray-800 via-indigo-600 to-gray-800"></div>
+<div class="bg-gray-800/50 backdrop-blur border border-gray-700 p-8 rounded-2xl relative group hover:-translate-y-2 transition-transform duration-300">
+<div class="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-2xl mb-6 mx-auto shadow-[0_0_20px_rgba(79,70,229,0.5)] z-10 relative">1</div>
+<h3 class="text-xl font-bold mb-2 text-center">사전 설문</h3>
+<p class="text-sm text-gray-400 text-center break-keep">투자 성향 및 자산 현황을 정밀하게 진단합니다.</p>
+</div>
+<div class="bg-gray-800/50 backdrop-blur border border-gray-700 p-8 rounded-2xl relative group hover:-translate-y-2 transition-transform duration-300">
+<div class="w-16 h-16 rounded-full bg-indigo-700 flex items-center justify-center font-bold text-2xl mb-6 mx-auto shadow-[0_0_20px_rgba(67,56,202,0.5)] z-10 relative">2</div>
+<h3 class="text-xl font-bold mb-2 text-center">맞춤 분석</h3>
+<p class="text-sm text-gray-400 text-center break-keep">최적의 지역과 단지를 선정하고 포트폴리오를 설계합니다.</p>
+</div>
+<div class="bg-gray-800/50 backdrop-blur border border-gray-700 p-8 rounded-2xl relative group hover:-translate-y-2 transition-transform duration-300">
+<div class="w-16 h-16 rounded-full bg-indigo-800 flex items-center justify-center font-bold text-2xl mb-6 mx-auto shadow-[0_0_20px_rgba(55,48,163,0.5)] z-10 relative">3</div>
+<h3 class="text-xl font-bold mb-2 text-center">1:1 밀착 상담</h3>
+<p class="text-sm text-gray-400 text-center break-keep">7일간 카카오톡을 통해 실시간 솔루션을 제공합니다.</p>
+</div>
+<div class="bg-gray-800/50 backdrop-blur border border-yellow-500/30 p-8 rounded-2xl relative group hover:-translate-y-2 transition-transform duration-300">
+<div class="w-16 h-16 rounded-full bg-yellow-500 text-indigo-900 flex items-center justify-center font-bold text-2xl mb-6 mx-auto shadow-[0_0_20px_rgba(234,179,8,0.5)] z-10 relative">4</div>
+<h3 class="text-xl font-bold mb-2 text-center text-yellow-400">실행 및 관리</h3>
+<p class="text-sm text-gray-400 text-center break-keep">매수 타이밍 설정 및 향후 방향성까지 제시합니다.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Pricing Section -->
+<section class="py-24 bg-indigo-50/50" id="pricing">
+<div class="max-w-4xl mx-auto px-4">
+<div class="bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-indigo-100 relative">
+<div class="absolute top-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
+<div class="p-10 md:p-14 text-center">
+<span class="inline-block py-1 px-3 rounded-full text-xs font-bold mb-6 bg-indigo-100 text-indigo-700 tracking-wide">PREMIUM SERVICE</span>
+<h2 class="text-3xl md:text-4xl font-jalnan text-gray-900 mb-4">1:1 맞춤형 투자 큐레이팅</h2>
+<p class="text-gray-500 mb-10 max-w-lg mx-auto break-keep">당신의 자산 상황과 목표에 맞춘 100% 개인화 포트폴리오 제안 및 심층 상담 서비스입니다.</p>
+<div class="flex flex-col items-center justify-center mb-10">
+<span class="text-gray-400 text-xl line-through decoration-red-400 decoration-2 mb-1">699,000원</span>
+<div class="flex items-center gap-3">
+<div class="flex items-baseline gap-1">
+<span class="text-6xl font-extrabold text-indigo-600 font-jalnan">349,000</span>
+<span class="text-2xl text-gray-600 font-bold">원</span>
+</div>
+<span class="bg-red-500 text-white text-base font-bold px-3 py-1 rounded-full shadow-lg animate-bounce transform -rotate-2">
                                         50% OFF
                                     </span>
-                                </div>
-                            </div>
-
-                            <div class="grid gap-4 max-w-sm mx-auto">
-                                <a href="https://portone.io/korea/ko" target="_blank" onclick="window.App.checkPayment(event, this.href)" class="w-full py-4 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
-                                    <i data-lucide="credit-card" class="w-5 h-5"></i> 카드 / 간편결제 신청
+</div>
+</div>
+<div class="grid gap-4 max-w-sm mx-auto">
+<a class="w-full py-4 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2" href="https://portone.io/korea/ko" onclick="window.App.checkPayment(event, this.href)" target="_blank">
+<i class="w-5 h-5" data-lucide="credit-card"></i> 카드 / 간편결제 신청
                                 </a>
-                                <button onclick="window.App.openModal('depositModal')" class="w-full py-4 bg-white border-2 border-gray-200 text-gray-700 hover:border-indigo-500 hover:text-indigo-600 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
-                                    <i data-lucide="wallet" class="w-5 h-5"></i> 무통장 입금 신청
+<button class="w-full py-4 bg-white border-2 border-gray-200 text-gray-700 hover:border-indigo-500 hover:text-indigo-600 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2" onclick="window.App.openModal('depositModal')">
+<i class="w-5 h-5" data-lucide="wallet"></i> 무통장 입금 신청
                                 </button>
-                            </div>
-                            
-                            <div class="mt-8 p-4 bg-red-50 rounded-xl text-left border border-red-100">
-                                <div class="flex gap-2 items-start">
-                                    <i data-lucide="alert-circle" class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5"></i>
-                                    <p class="text-sm text-red-600 font-medium leading-relaxed break-keep">
+</div>
+<div class="mt-8 p-4 bg-red-50 rounded-xl text-left border border-red-100">
+<div class="flex gap-2 items-start">
+<i class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" data-lucide="alert-circle"></i>
+<p class="text-sm text-red-600 font-medium leading-relaxed break-keep">
                                         현재 결제 시스템 점검으로 인해 카드 결제가 원활하지 않을 수 있습니다. 문제 발생 시 <strong>'무통장 입금'</strong> 후 폼 작성을 부탁드립니다. (현금영수증 발행 가능)
                                     </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Reviews Section -->
-            <section id="reviews" class="py-24 bg-white">
-                <div class="max-w-7xl mx-auto px-4">
-                    <div class="text-center mb-16">
-                        <span class="text-indigo-600 font-bold tracking-widest text-sm mb-2 block">REVIEWS</span>
-                        <h2 class="text-3xl md:text-4xl font-jalnan mb-4">수강생 리얼 후기</h2>
-                        <p class="text-gray-600">조작 없는 100% 실제 수강생들의 이야기입니다.</p>
-                    </div>
-                    
-                    <div class="mb-12">
-                        <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                            <i data-lucide="trophy" class="text-yellow-500 fill-current w-6 h-6"></i> 명예의 전당 (BEST)
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Reviews Section -->
+<section class="py-24 bg-white" id="reviews">
+<div class="max-w-7xl mx-auto px-4">
+<div class="text-center mb-16">
+<span class="text-indigo-600 font-bold tracking-widest text-sm mb-2 block">REVIEWS</span>
+<h2 class="text-3xl md:text-4xl font-jalnan mb-4">수강생 리얼 후기</h2>
+<p class="text-gray-600">조작 없는 100% 실제 수강생들의 이야기입니다.</p>
+</div>
+<div class="mb-12">
+<h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+<i class="text-yellow-500 fill-current w-6 h-6" data-lucide="trophy"></i> 명예의 전당 (BEST)
                         </h3>
-                        <div id="best-reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[200px]"></div>
-                    </div>
-                    
-                    <div class="text-center">
-                        <button onclick="window.App.navigate('reviews')" class="inline-flex items-center gap-2 bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white px-10 py-4 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-lg group">
-                            실시간 전체 후기 보러가기 <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
-                        </button>
-                        <p class="text-gray-400 text-sm mt-3">지금 이 순간에도 후기가 올라오고 있습니다!</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- FAQ Section -->
-            <section id="faq" class="py-24 bg-gray-50">
-                <div class="max-w-3xl mx-auto px-4">
-                    <h2 class="text-3xl font-jalnan text-center mb-12">자주 묻는 질문</h2>
-                    <div class="space-y-4">
-                        <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                            <button onclick="window.App.toggleFaq(this)" class="w-full flex justify-between items-center p-6 text-left hover:bg-gray-50 transition-colors">
-                                <span class="font-bold text-lg text-gray-800 flex items-center gap-3"><span class="text-indigo-600">Q.</span> 큐레이팅 진행 방식이 어떻게 되나요?</span>
-                                <i data-lucide="chevron-down" class="text-gray-400 transition-transform duration-300"></i>
-                            </button>
-                            <div class="hidden px-6 pb-6 pt-0 text-gray-600 leading-relaxed pl-12 border-t border-dashed border-gray-100 mt-2">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[200px]" id="best-reviews-container"></div>
+</div>
+<div class="text-center">
+<button class="inline-flex items-center gap-2 bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white px-10 py-4 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-lg group" onclick="window.App.navigate('reviews')">
+                            실시간 전체 후기 보러가기 <i class="w-5 h-5 group-hover:translate-x-1 transition-transform" data-lucide="arrow-right"></i>
+</button>
+<p class="text-gray-400 text-sm mt-3">지금 이 순간에도 후기가 올라오고 있습니다!</p>
+</div>
+</div>
+</section>
+<!-- FAQ Section -->
+<section class="py-24 bg-gray-50" id="faq">
+<div class="max-w-3xl mx-auto px-4">
+<h2 class="text-3xl font-jalnan text-center mb-12">자주 묻는 질문</h2>
+<div class="space-y-4">
+<div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+<button class="w-full flex justify-between items-center p-6 text-left hover:bg-gray-50 transition-colors" onclick="window.App.toggleFaq(this)">
+<span class="font-bold text-lg text-gray-800 flex items-center gap-3"><span class="text-indigo-600">Q.</span> 큐레이팅 진행 방식이 어떻게 되나요?</span>
+<i class="text-gray-400 transition-transform duration-300" data-lucide="chevron-down"></i>
+</button>
+<div class="hidden px-6 pb-6 pt-0 text-gray-600 leading-relaxed pl-12 border-t border-dashed border-gray-100 mt-2">
                                 결제 후 사전 설문지를 작성해주시면, 시크릿브라더가 직접 분석 후 7일간 카카오톡을 통해 실시간으로 1:1 상담과 솔루션을 제공해드립니다.
                             </div>
-                        </div>
-                        <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                            <button onclick="window.App.toggleFaq(this)" class="w-full flex justify-between items-center p-6 text-left hover:bg-gray-50 transition-colors">
-                                <span class="font-bold text-lg text-gray-800 flex items-center gap-3"><span class="text-indigo-600">Q.</span> 결제 후 언제부터 시작되나요?</span>
-                                <i data-lucide="chevron-down" class="text-gray-400 transition-transform duration-300"></i>
-                            </button>
-                            <div class="hidden px-6 pb-6 pt-0 text-gray-600 leading-relaxed pl-12 border-t border-dashed border-gray-100 mt-2">
+</div>
+<div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+<button class="w-full flex justify-between items-center p-6 text-left hover:bg-gray-50 transition-colors" onclick="window.App.toggleFaq(this)">
+<span class="font-bold text-lg text-gray-800 flex items-center gap-3"><span class="text-indigo-600">Q.</span> 결제 후 언제부터 시작되나요?</span>
+<i class="text-gray-400 transition-transform duration-300" data-lucide="chevron-down"></i>
+</button>
+<div class="hidden px-6 pb-6 pt-0 text-gray-600 leading-relaxed pl-12 border-t border-dashed border-gray-100 mt-2">
                                 결제 완료 후 24시간 이내에 해피콜(또는 안내 문자)을 드리며, 고객님의 일정에 맞춰 상담 시작일을 조율합니다.
                             </div>
-                        </div>
-                    </div>
-                    <div class="mt-12 text-center">
-                        <a href="https://open.kakao.com/o/sheKqImd" target="_blank" class="inline-flex items-center gap-2 bg-[#FEE500] text-[#3c1e1e] px-8 py-4 rounded-xl font-bold hover:shadow-md transition-all">
-                            <i data-lucide="message-circle" class="w-5 h-5"></i> 카카오톡 문의하기
+</div>
+</div>
+<div class="mt-12 text-center">
+<a class="inline-flex items-center gap-2 bg-[#FEE500] text-[#3c1e1e] px-8 py-4 rounded-xl font-bold hover:shadow-md transition-all" href="https://open.kakao.com/o/sheKqImd" target="_blank">
+<i class="w-5 h-5" data-lucide="message-circle"></i> 카카오톡 문의하기
                         </a>
-                    </div>
-                </div>
-            </section>
-        </div>
-
-        <!-- [VIEW 2] 전체 후기 화면 -->
-        <div id="view-reviews" class="view-section hidden">
-            <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
-                <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-                    <button onclick="window.App.navigate('home')" class="flex items-center gap-2 group text-indigo-600 font-bold hover:text-indigo-800 transition-colors">
-                        <i data-lucide="arrow-left" class="w-6 h-6"></i> 홈으로 돌아가기
+</div>
+</div>
+</section>
+</div>
+<!-- [VIEW 2] 전체 후기 화면 -->
+<div class="view-section hidden" id="view-reviews">
+<header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+<div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+<button class="flex items-center gap-2 group text-indigo-600 font-bold hover:text-indigo-800 transition-colors" onclick="window.App.navigate('home')">
+<i class="w-6 h-6" data-lucide="arrow-left"></i> 홈으로 돌아가기
                     </button>
-                    <div class="text-xl font-bold text-indigo-900">수강생 리얼 후기</div>
-                </div>
-            </header>
-            
-            <div class="max-w-7xl mx-auto px-4 py-12">
-                <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
-                    <div>
-                        <h1 class="text-3xl font-jalnan text-gray-900 mb-2">실시간 수강 후기</h1>
-                        <p class="text-gray-600">지금 이 순간에도 새로운 후기가 올라오고 있습니다. (총 <span id="total-review-count" class="font-bold text-indigo-600">0</span>개)</p>
-                    </div>
-                    <button onclick="window.App.checkWritePermission()" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md flex items-center gap-2">
-                        <i data-lucide="pen-tool" class="w-4 h-4"></i> 나도 후기 쓰기
+<div class="text-xl font-bold text-indigo-900">수강생 리얼 후기</div>
+</div>
+</header>
+<div class="max-w-7xl mx-auto px-4 py-12">
+<div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+<div>
+<h1 class="text-3xl font-jalnan text-gray-900 mb-2">실시간 수강 후기</h1>
+<p class="text-gray-600">지금 이 순간에도 새로운 후기가 올라오고 있습니다. (총 <span class="font-bold text-indigo-600" id="total-review-count">0</span>개)</p>
+</div>
+<button class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md flex items-center gap-2" onclick="window.App.checkWritePermission()">
+<i class="w-4 h-4" data-lucide="pen-tool"></i> 나도 후기 쓰기
                     </button>
-                </div>
-                
-                <div id="all-reviews-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- JS로 렌더링 -->
-                </div>
-                
-                <div class="text-center mt-12">
-                    <button id="load-more-btn" onclick="window.App.loadMoreReviews()" class="bg-white border border-gray-300 text-gray-600 px-12 py-3 rounded-full font-bold hover:border-indigo-600 hover:text-indigo-600 transition-all">
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="all-reviews-container">
+<!-- JS로 렌더링 -->
+</div>
+<div class="text-center mt-12">
+<button class="bg-white border border-gray-300 text-gray-600 px-12 py-3 rounded-full font-bold hover:border-indigo-600 hover:text-indigo-600 transition-all" id="load-more-btn" onclick="window.App.loadMoreReviews()">
                         후기 더보기 +
                     </button>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-gray-400 py-16 text-sm mt-auto">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="grid md:grid-cols-2 gap-10 border-b border-gray-800 pb-10 mb-10">
-                <div>
-                    <h3 class="text-white text-2xl font-jalnan mb-4">SecretClass</h3>
-                    <p class="leading-relaxed opacity-70 break-keep">시크릿클래스는 여러분의 경제적 자유를 응원합니다.<br>투자는 본인의 판단과 책임하에 이루어져야 하며, 저희는 올바른 투자의 기준과 원칙을 제시합니다.</p>
-                </div>
-                <div class="md:text-right">
-                    <h4 class="text-white font-bold mb-4">Customer Center</h4>
-                    <p class="text-lg font-bold text-white mb-1">010-8298-4024</p>
-                    <p class="opacity-60 mb-6">평일 10:00 - 18:00 (점심시간 12:00 - 13:00)</p>
-                    <div class="flex flex-col md:items-end gap-1 text-xs opacity-50">
-                        <p>상호명: 주식회사 아율 | 대표: 김아림</p>
-                        <p>사업자등록번호: 458-88-02428 | 주소: 경기도 김포시 김포한강10로133번길 127</p>
-                    </div>
-                </div>
-            </div>
-            <div class="text-center text-xs opacity-40">© 2025 SecretClass. All rights reserved.</div>
-        </div>
-    </footer>
-
-    <!-- ================= MODALS ================= -->
-
-    <!-- 1. 로그인/회원가입 모달 -->
-    <div id="loginModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity" onclick="window.App.closeModal('loginModal')">
-        <div class="bg-white w-full max-w-md rounded-2xl p-8 shadow-2xl relative" onclick="event.stopPropagation()">
-            <button onclick="window.App.closeModal('loginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-black"><i data-lucide="x"></i></button>
-            <div class="flex border-b border-gray-200 mb-6">
-                <button id="tab-login" onclick="window.App.switchAuthTab('login')" class="flex-1 py-3 font-bold text-indigo-600 border-b-2 border-indigo-600 transition-colors">로그인</button>
-                <button id="tab-signup" onclick="window.App.switchAuthTab('signup')" class="flex-1 py-3 font-bold text-gray-400 hover:text-gray-600 transition-colors">회원가입</button>
-            </div>
-            <div id="form-login" class="space-y-4">
-                <input type="email" id="login-email" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-indigo-500 transition-colors" placeholder="이메일">
-                <input type="password" id="login-pw" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-indigo-500 transition-colors" placeholder="비밀번호">
-                <button onclick="window.App.processLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-indigo-200 transition-all mt-2">로그인</button>
-            </div>
-            <div id="form-signup" class="hidden space-y-3">
-                <input type="text" id="reg-name" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-500" placeholder="이름">
-                <input type="email" id="reg-email" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-500" placeholder="이메일">
-                <input type="password" id="reg-pw" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-500" placeholder="비밀번호 (6자리 이상)">
-                <button onclick="window.App.processSignup()" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-4 rounded-xl font-bold shadow-lg transition-all mt-4">가입완료</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. 입금 신청 모달 -->
-    <div id="depositModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="window.App.closeModal('depositModal')">
-        <div class="bg-white w-full max-w-md rounded-2xl p-8 relative" onclick="event.stopPropagation()">
-            <button onclick="window.App.closeModal('depositModal')" class="absolute top-4 right-4 text-gray-400 hover:text-black"><i data-lucide="x"></i></button>
-            <h3 class="text-2xl font-bold text-center mb-6 font-jalnan">무통장 입금 안내</h3>
-            <div class="bg-gray-50 p-6 rounded-xl border border-gray-100 mb-6 text-center">
-                <p class="text-gray-500 text-sm mb-1">기업은행</p>
-                <p class="text-2xl font-bold text-indigo-600 cursor-pointer hover:scale-105 transition-transform" onclick="window.App.copyToClipboard('521-063745-04-011')">521-063745-04-011</p>
-                <p class="text-xs text-gray-400 mt-2">(주)아율</p>
-            </div>
-            <a href="https://naver.me/FeN7ayAf" target="_blank" onclick="window.App.confirmDeposit()" class="block w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-center hover:bg-indigo-700 shadow-lg transition-all">입금 확인 폼 작성하기</a>
-        </div>
-    </div>
-
-    <!-- 3. 후기 상세 모달 -->
-    <div id="reviewDetailModal" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="window.App.closeModal('reviewDetailModal')">
-        <div class="bg-white w-full max-w-2xl max-h-[80vh] rounded-2xl shadow-2xl relative flex flex-col overflow-hidden" onclick="event.stopPropagation()">
-            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-gray-900">후기 상세</h3>
-                <button onclick="window.App.closeModal('reviewDetailModal')" class="text-gray-400 hover:text-gray-600"><i data-lucide="x"></i></button>
-            </div>
-            <div class="p-8 overflow-y-auto flex-grow custom-scrollbar">
-                <div class="flex items-center gap-2 mb-4" id="modal-stars"></div>
-                <h2 id="modal-review-title" class="text-2xl font-bold text-gray-900 mb-6 leading-snug break-keep"></h2>
-                <div id="modal-review-content" class="raw-content text-base decoded-content"></div>
-                <div class="mt-8 pt-6 border-t border-gray-100 flex justify-between items-center text-sm text-gray-500">
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold text-gray-900" id="modal-review-author"></span>
-                        <span class="w-px h-3 bg-gray-300"></span>
-                        <span id="modal-review-date"></span>
-                    </div>
-                    <div class="flex items-center gap-1"><i data-lucide="eye" class="w-4 h-4"></i> <span id="modal-review-views"></span></div>
-                </div>
-            </div>
-            <div class="p-4 bg-gray-50 border-t border-gray-100 text-center">
-                <button onclick="window.App.closeModal('reviewDetailModal')" class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors">닫기</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 4. 후기 작성 모달 -->
-    <div id="writeReviewModal" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="window.App.closeModal('writeReviewModal')">
-        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl relative" onclick="event.stopPropagation()">
-            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-gray-900">후기 작성</h3>
-                <button onclick="window.App.closeModal('writeReviewModal')" class="text-gray-400 hover:text-black"><i data-lucide="x"></i></button>
-            </div>
-            <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">제목</label>
-                    <input type="text" id="w-title" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-indigo-500 focus:outline-none" placeholder="제목을 입력하세요">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">내용</label>
-                    <textarea id="w-content" rows="6" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-indigo-500 focus:outline-none" placeholder="솔직한 후기를 남겨주세요"></textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">별점</label>
-                    <select id="w-rating" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-indigo-500 focus:outline-none">
-                        <option value="5">★★★★★ (5점)</option>
-                        <option value="4">★★★★☆ (4점)</option>
-                        <option value="3">★★★☆☆ (3점)</option>
-                    </select>
-                </div>
-                <button onclick="window.App.submitReview()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all mt-2">등록하기</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 5. 마이페이지 모달 -->
-    <div id="mypageModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="window.App.closeModal('mypageModal')">
-        <div class="bg-white w-full max-w-sm rounded-2xl p-0 shadow-2xl overflow-hidden relative" onclick="event.stopPropagation()">
-            <div class="bg-indigo-600 p-6 text-white text-center relative">
-                <button onclick="window.App.closeModal('mypageModal')" class="absolute top-4 right-4 text-white/70 hover:text-white"><i data-lucide="x"></i></button>
-                <div class="w-16 h-16 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-2xl font-bold text-indigo-600">S</div>
-                <h3 class="font-bold text-lg" id="mp-name">게스트</h3>
-                <p class="text-xs text-indigo-200" id="mp-email">로그인이 필요합니다</p>
-            </div>
-            <div class="p-6">
-                <div id="mp-status-guest" class="text-center py-4">
-                    <p class="text-gray-500 mb-4 text-sm">로그인 후 이용해주세요.</p>
-                    <button onclick="window.App.closeModal('mypageModal'); window.App.openModal('loginModal','login')" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold text-sm">로그인하기</button>
-                </div>
-                <div id="mp-status-user" class="hidden text-center space-y-3">
-                    <div id="pay-none" class="bg-gray-100 p-4 rounded-xl">
-                        <p class="text-gray-500 text-xs mb-2">수강 신청 내역이 없습니다.</p>
-                        <button onclick="window.App.closeModal('mypageModal'); window.App.scrollToSection('pricing')" class="text-indigo-600 font-bold text-sm hover:underline">신청하러 가기</button>
-                    </div>
-                    <div id="pay-pending" class="hidden bg-yellow-50 p-4 rounded-xl border border-yellow-100">
-                        <p class="font-bold text-yellow-700 text-sm">입금 확인 중입니다</p>
-                        <p class="text-xs text-yellow-600 mt-1">24시간 내 승인 예정</p>
-                    </div>
-                    <div id="pay-complete" class="hidden bg-green-50 p-4 rounded-xl border border-green-100">
-                        <p class="font-bold text-green-700 text-sm mb-2">PREMIUM 수강 중</p>
-                        <a href="https://open.kakao.com/o/sfyp9Qxh" target="_blank" class="block bg-[#FEE500] py-2 rounded-lg text-xs font-bold text-[#3c1e1e]">1:1 채팅방 입장</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 6. 관리자 모달 -->
-    <div id="adminModal" class="hidden fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="window.App.closeModal('adminModal')">
-        <div class="bg-white w-full max-w-2xl rounded-2xl p-0 shadow-2xl overflow-hidden relative flex flex-col max-h-[80vh]" onclick="event.stopPropagation()">
-            <div class="bg-gray-800 p-6 text-white flex justify-between items-center">
-                <div>
-                    <h3 class="font-bold text-lg"><i data-lucide="shield" class="w-5 h-5 inline mr-1"></i> 관리자 패널</h3>
-                    <p class="text-xs text-gray-400">회원 및 결제 관리</p>
-                </div>
-                <button onclick="window.App.closeModal('adminModal')" class="text-white/70 hover:text-white"><i data-lucide="x"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto bg-gray-50">
-                <h4 class="font-bold text-gray-800 mb-4">회원 목록 (최근 가입순)</h4>
-                <div id="admin-user-list" class="space-y-3">
-                    <!-- JS로 렌더링 -->
-                    <div class="text-center py-10 text-gray-400">불러오는 중...</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 7. 이미지/비디오 모달 -->
-    <div id="imageModal" class="hidden fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/90" onclick="window.App.closeModal('imageModal')">
-        <div class="relative max-w-4xl" onclick="event.stopPropagation()">
-            <button onclick="window.App.closeModal('imageModal')" class="absolute -top-10 right-0 text-white"><i data-lucide="x"></i></button>
-            <img id="modal-image-src" src="" class="max-h-[85vh] rounded-lg">
-        </div>
-    </div>
-    
-    <div id="videoModal" class="hidden fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/90" onclick="window.App.closeModal('videoModal')">
-        <div class="relative w-full max-w-4xl aspect-video bg-black rounded-xl overflow-hidden shadow-2xl" onclick="event.stopPropagation()">
-            <button onclick="window.App.closeModal('videoModal')" class="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2 hover:bg-black/80 transition-colors z-10"><i data-lucide="x"></i></button>
-            <iframe class="w-full h-full" src="https://www.youtube.com/embed/j0hFCMX5Qlc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </div>
-    </div>
-
-    <script>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-gray-900 text-gray-400 py-16 text-sm mt-auto">
+<div class="max-w-7xl mx-auto px-4">
+<div class="grid md:grid-cols-2 gap-10 border-b border-gray-800 pb-10 mb-10">
+<div>
+<h3 class="text-white text-2xl font-jalnan mb-4">SecretClass</h3>
+<p class="leading-relaxed opacity-70 break-keep">시크릿클래스는 여러분의 경제적 자유를 응원합니다.<br/>투자는 본인의 판단과 책임하에 이루어져야 하며, 저희는 올바른 투자의 기준과 원칙을 제시합니다.</p>
+</div>
+<div class="md:text-right">
+<h4 class="text-white font-bold mb-4">Customer Center</h4>
+<p class="text-lg font-bold text-white mb-1">010-8298-4024</p>
+<p class="opacity-60 mb-6">평일 10:00 - 18:00 (점심시간 12:00 - 13:00)</p>
+<div class="flex flex-col md:items-end gap-1 text-xs opacity-50">
+<p>상호명: 주식회사 아율 | 대표: 김아림</p>
+<p>사업자등록번호: 458-88-02428 | 주소: 경기도 김포시 김포한강10로133번길 127</p>
+</div>
+</div>
+</div>
+<div class="text-center text-xs opacity-40">© 2025 SecretClass. All rights reserved.</div>
+</div>
+</footer>
+<!-- ================= MODALS ================= -->
+<!-- 1. 로그인/회원가입 모달 -->
+<div class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity" id="loginModal" onclick="window.App.closeModal('loginModal')">
+<div class="bg-white w-full max-w-md rounded-2xl p-8 shadow-2xl relative" onclick="event.stopPropagation()">
+<button class="absolute top-4 right-4 text-gray-400 hover:text-black" onclick="window.App.closeModal('loginModal')"><i data-lucide="x"></i></button>
+<div class="flex border-b border-gray-200 mb-6">
+<button class="flex-1 py-3 font-bold text-indigo-600 border-b-2 border-indigo-600 transition-colors" id="tab-login" onclick="window.App.switchAuthTab('login')">로그인</button>
+<button class="flex-1 py-3 font-bold text-gray-400 hover:text-gray-600 transition-colors" id="tab-signup" onclick="window.App.switchAuthTab('signup')">회원가입</button>
+</div>
+<div class="space-y-4" id="form-login">
+<input class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-indigo-500 transition-colors" id="login-email" placeholder="아이디 또는 이메일" type="text"/>
+<input class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-indigo-500 transition-colors" id="login-pw" placeholder="비밀번호" type="password"/>
+<button class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-indigo-200 transition-all mt-2" onclick="window.App.processLogin()">로그인</button>
+</div>
+<div class="hidden space-y-3" id="form-signup"><input class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500" id="reg-name" placeholder="이름(실명)" type="text"/>
+<input class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500" id="reg-phone" placeholder="핸드폰번호 (예: 01012345678)" type="tel"/>
+<input class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500" id="reg-username" placeholder="아이디 (영문/숫자 4~20)" type="text"/>
+<input class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500" id="reg-email" placeholder="이메일 (로그인용)" type="email"/>
+<input class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500" id="reg-pw" placeholder="비밀번호 (6자리 이상)" type="password"/>
+<input class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500" id="reg-pw2" placeholder="비밀번호 재확인" type="password"/>
+<input class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500" id="reg-chat" placeholder="단톡방 닉네임(또는 아이디)" type="text"/>
+<select class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500" id="reg-source"><option selected="selected" value="">가입경로 선택</option><option value="blog">블로그 (성공한 형의 비밀일기장)</option><option value="youtube">유튜브</option><option value="etc">기타</option></select>
+<button class="w-full bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl font-bold shadow-lg transition-all mt-4" onclick="window.App.processSignup()">가입완료</button></div>
+</div>
+</div>
+<!-- 2. 입금 신청 모달 -->
+<div class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" id="depositModal" onclick="window.App.closeModal('depositModal')">
+<div class="bg-white w-full max-w-md rounded-2xl p-8 relative" onclick="event.stopPropagation()">
+<button class="absolute top-4 right-4 text-gray-400 hover:text-black" onclick="window.App.closeModal('depositModal')"><i data-lucide="x"></i></button>
+<h3 class="text-2xl font-bold text-center mb-6 font-jalnan">무통장 입금 안내</h3>
+<div class="bg-gray-50 p-6 rounded-xl border border-gray-100 mb-6 text-center">
+<p class="text-gray-500 text-sm mb-1">기업은행</p>
+<p class="text-2xl font-bold text-indigo-600 cursor-pointer hover:scale-105 transition-transform" onclick="window.App.copyToClipboard('521-063745-04-011')">521-063745-04-011</p>
+<p class="text-xs text-gray-400 mt-2">(주)아율</p>
+</div>
+<a class="block w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-center hover:bg-indigo-700 shadow-lg transition-all" href="https://naver.me/FeN7ayAf" onclick="window.App.confirmDeposit()" target="_blank">입금 확인 폼 작성하기</a>
+</div>
+</div>
+<!-- 3. 후기 상세 모달 -->
+<div class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" id="reviewDetailModal" onclick="window.App.closeModal('reviewDetailModal')">
+<div class="bg-white w-full max-w-2xl max-h-[80vh] rounded-2xl shadow-2xl relative flex flex-col overflow-hidden" onclick="event.stopPropagation()">
+<div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+<h3 class="font-bold text-gray-900">후기 상세</h3>
+<button class="text-gray-400 hover:text-gray-600" onclick="window.App.closeModal('reviewDetailModal')"><i data-lucide="x"></i></button>
+</div>
+<div class="p-8 overflow-y-auto flex-grow custom-scrollbar">
+<div class="flex items-center gap-2 mb-4" id="modal-stars"></div>
+<h2 class="text-2xl font-bold text-gray-900 mb-6 leading-snug break-keep" id="modal-review-title"></h2>
+<div class="raw-content text-base decoded-content" id="modal-review-content"></div>
+<div class="mt-8 pt-6 border-t border-gray-100 flex justify-between items-center text-sm text-gray-500">
+<div class="flex items-center gap-2">
+<span class="font-bold text-gray-900" id="modal-review-author"></span>
+<span class="w-px h-3 bg-gray-300"></span>
+<span id="modal-review-date"></span>
+</div>
+<div class="flex items-center gap-1"><i class="w-4 h-4" data-lucide="eye"></i> <span id="modal-review-views"></span></div>
+</div>
+</div>
+<div class="p-4 bg-gray-50 border-t border-gray-100 text-center">
+<button class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors" onclick="window.App.closeModal('reviewDetailModal')">닫기</button>
+</div>
+</div>
+</div>
+<!-- 4. 후기 작성 모달 -->
+<div class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" id="writeReviewModal" onclick="window.App.closeModal('writeReviewModal')">
+<div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl relative" onclick="event.stopPropagation()">
+<div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+<h3 class="font-bold text-gray-900">후기 작성</h3>
+<button class="text-gray-400 hover:text-black" onclick="window.App.closeModal('writeReviewModal')"><i data-lucide="x"></i></button>
+</div>
+<div class="p-6 space-y-4">
+<div>
+<label class="block text-sm font-bold text-gray-700 mb-1">제목</label>
+<input class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-indigo-500 focus:outline-none" id="w-title" placeholder="제목을 입력하세요" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-bold text-gray-700 mb-1">내용</label>
+<textarea class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-indigo-500 focus:outline-none" id="w-content" placeholder="솔직한 후기를 남겨주세요" rows="6"></textarea>
+</div>
+<div>
+<label class="block text-sm font-bold text-gray-700 mb-1">별점</label>
+<select class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-indigo-500 focus:outline-none" id="w-rating">
+<option value="5">★★★★★ (5점)</option>
+<option value="4">★★★★☆ (4점)</option>
+<option value="3">★★★☆☆ (3점)</option>
+</select>
+</div>
+<button class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all mt-2" onclick="window.App.submitReview()">등록하기</button>
+</div>
+</div>
+</div>
+<!-- 5. 마이페이지 모달 -->
+<div class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" id="mypageModal" onclick="window.App.closeModal('mypageModal')">
+<div class="bg-white w-full max-w-sm rounded-2xl p-0 shadow-2xl overflow-hidden relative" onclick="event.stopPropagation()">
+<div class="bg-indigo-600 p-6 text-white text-center relative">
+<button class="absolute top-4 right-4 text-white/70 hover:text-white" onclick="window.App.closeModal('mypageModal')"><i data-lucide="x"></i></button>
+<div class="w-16 h-16 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-2xl font-bold text-indigo-600">S</div>
+<h3 class="font-bold text-lg" id="mp-name">게스트</h3>
+<p class="text-xs text-indigo-200" id="mp-email">로그인이 필요합니다</p>
+</div>
+<div class="p-6">
+<div class="text-center py-4" id="mp-status-guest">
+<p class="text-gray-500 mb-4 text-sm">로그인 후 이용해주세요.</p>
+<button class="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold text-sm" onclick="window.App.closeModal('mypageModal'); window.App.openModal('loginModal','login')">로그인하기</button>
+</div>
+<div class="hidden text-center space-y-3" id="mp-status-user">
+<div class="bg-gray-100 p-4 rounded-xl" id="pay-none">
+<p class="text-gray-500 text-xs mb-2">수강 신청 내역이 없습니다.</p>
+<button class="text-indigo-600 font-bold text-sm hover:underline" onclick="window.App.closeModal('mypageModal'); window.App.scrollToSection('pricing')">신청하러 가기</button>
+</div>
+<div class="hidden bg-yellow-50 p-4 rounded-xl border border-yellow-100" id="pay-pending">
+<p class="font-bold text-yellow-700 text-sm">입금 확인 중입니다</p>
+<p class="text-xs text-yellow-600 mt-1">24시간 내 승인 예정</p>
+</div>
+<div class="hidden bg-green-50 p-4 rounded-xl border border-green-100" id="pay-complete">
+<p class="font-bold text-green-700 text-sm mb-2">PREMIUM 수강 중</p>
+<a class="block bg-[#FEE500] py-2 rounded-lg text-xs font-bold text-[#3c1e1e]" href="https://open.kakao.com/o/sfyp9Qxh" target="_blank">1:1 채팅방 입장</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 6. 관리자 모달 -->
+<div class="hidden fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" id="adminModal" onclick="window.App.closeModal('adminModal')">
+<div class="bg-white w-full max-w-2xl rounded-2xl p-0 shadow-2xl overflow-hidden relative flex flex-col max-h-[80vh]" onclick="event.stopPropagation()">
+<div class="bg-gray-800 p-6 text-white flex justify-between items-center">
+<div>
+<h3 class="font-bold text-lg"><i class="w-5 h-5 inline mr-1" data-lucide="shield"></i> 관리자 패널</h3>
+<p class="text-xs text-gray-400">회원 및 결제 관리</p>
+</div>
+<button class="text-white/70 hover:text-white" onclick="window.App.closeModal('adminModal')"><i data-lucide="x"></i></button>
+</div>
+<div class="p-6 overflow-y-auto bg-gray-50">
+<h4 class="font-bold text-gray-800 mb-4">회원 목록 (최근 가입순)</h4>
+<div class="space-y-3" id="admin-user-list">
+<!-- JS로 렌더링 -->
+<div class="text-center py-10 text-gray-400">불러오는 중...</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 7. 이미지/비디오 모달 -->
+<div class="hidden fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/90" id="imageModal" onclick="window.App.closeModal('imageModal')">
+<div class="relative max-w-4xl" onclick="event.stopPropagation()">
+<button class="absolute -top-10 right-0 text-white" onclick="window.App.closeModal('imageModal')"><i data-lucide="x"></i></button>
+<img class="max-h-[85vh] rounded-lg" id="modal-image-src" src=""/>
+</div>
+</div>
+<div class="hidden fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/90" id="videoModal" onclick="window.App.closeModal('videoModal')">
+<div class="relative w-full max-w-4xl aspect-video bg-black rounded-xl overflow-hidden shadow-2xl" onclick="event.stopPropagation()">
+<button class="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2 hover:bg-black/80 transition-colors z-10" onclick="window.App.closeModal('videoModal')"><i data-lucide="x"></i></button>
+<iframe allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="" class="w-full h-full" frameborder="0" src="https://www.youtube.com/embed/j0hFCMX5Qlc" title="YouTube video player"></iframe>
+</div>
+</div>
+<script>
         // *** [중요] 전역 객체 App 선언 (No Module) ***
         // 이 스크립트는 일반 스크립트로 가장 먼저 실행되어 window.App을 만듭니다.
         // 모든 함수는 빈 껍데기(Stub)로 시작하며, 아래 모듈 스크립트에서 실제 로직으로 교체됩니다.
@@ -650,8 +613,7 @@
         // 초기 데이터 로딩 (즉시 반영)
         window.App.state.reviews = [...STATIC_REVIEWS];
     </script>
-
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, query, onSnapshot, orderBy, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -675,7 +637,8 @@
 
         // Helpers
         const getPublicReviewColl = () => collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
-        const getPublicMemberColl = () => collection(db, 'artifacts', appId, 'public', 'data', 'members'); 
+        const getPublicMemberColl = () => collection(db, 'artifacts', appId, 'public', 'data', 'members');
+        const getPublicUsernameColl = () => collection(db, 'artifacts', appId, 'public', 'data', 'usernames');
         const getUserDoc = (uid) => doc(db, 'artifacts', appId, 'users', uid, 'profile', 'info');
 
         // Core Implementation
@@ -842,31 +805,139 @@
         };
 
         window.App.processLogin = async () => {
-            const email = document.getElementById('login-email').value;
+            const idOrEmailRaw = document.getElementById('login-email').value.trim();
             const pw = document.getElementById('login-pw').value;
-            if(!email || !pw) return alert('이메일과 비밀번호를 입력해주세요.');
+
+            if(!idOrEmailRaw || !pw) return alert('아이디/이메일과 비밀번호를 입력해주세요.');
 
             try {
+                let email = idOrEmailRaw;
+                if(!idOrEmailRaw.includes('@')) {
+                    const username = idOrEmailRaw.toLowerCase();
+                    const snap = await getDoc(doc(getPublicUsernameColl(), username));
+                    if(!snap.exists()) {
+                        return alert('존재하지 않는 아이디입니다.');
+                    }
+                    email = snap.data().email;
+                }
                 await signInWithEmailAndPassword(auth, email, pw);
                 alert("로그인되었습니다.");
                 window.App.closeModal('loginModal');
             } catch (e) {
                 console.error(e);
-                alert("로그인 실패: 이메일 또는 비밀번호를 확인해주세요.");
+                // Firebase가 API key 문제를 일반 에러로 뭉개는 경우가 있어 메시지 보강
+                const msg = (e && e.message) ? e.message : '';
+                if(msg.includes('api-key-not-valid') || msg.includes('API key not valid') || e.code === 'auth/invalid-api-key') {
+                    alert("로그인 실패: Firebase API Key 설정/제한 문제가 있습니다. (Google Cloud 콘솔에서 'API 제한사항'을 '키 제한 안함'으로 바꾼 뒤 다시 시도하세요.)");
+                } else {
+                    alert("로그인 실패: 아이디/이메일 또는 비밀번호를 확인해주세요.");
+                }
             }
         };
 
         window.App.processSignup = async () => {
-            const name = document.getElementById('reg-name').value;
-            const email = document.getElementById('reg-email').value;
+            const name = document.getElementById('reg-name').value.trim();
+            const phoneRaw = document.getElementById('reg-phone').value.trim();
+            const usernameRaw = document.getElementById('reg-username').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
             const pw = document.getElementById('reg-pw').value;
+            const pw2 = document.getElementById('reg-pw2').value;
+            const chatId = document.getElementById('reg-chat').value.trim();
+            const joinSource = document.getElementById('reg-source').value;
 
-            if(!name || !email || !pw) return alert('모든 필드를 입력해주세요.');
+            if(!name || !phoneRaw || !usernameRaw || !email || !pw || !pw2 || !chatId || !joinSource) {
+                return alert('모든 항목을 입력해주세요.');
+            }
+
+            const phone = phoneRaw.replace(/[^0-9]/g, '');
+            if(!(phone.length === 10 || phone.length === 11) || !phone.startsWith('01')) {
+                return alert('핸드폰번호 형식이 올바르지 않습니다. 예) 01012345678');
+            }
+
+            const username = usernameRaw.toLowerCase();
+            if(!/^[a-z0-9_]{4,20}$/.test(username)) {
+                return alert('아이디는 영문/숫자/밑줄(_)만 사용 가능하며 4~20자여야 합니다.');
+            }
+
             if(pw.length < 6) return alert('비밀번호는 6자리 이상이어야 합니다.');
+            if(pw !== pw2) return alert('비밀번호와 재확인이 일치하지 않습니다.');
 
             try {
+                // 아이디 중복 체크
+                const existsSnap = await getDoc(doc(getPublicUsernameColl(), username));
+                if(existsSnap.exists()) return alert('이미 사용 중인 아이디입니다.');
+
+                // 이메일 가입
                 const cred = await createUserWithEmailAndPassword(auth, email, pw);
-                const profileData = { name, email, payStatus: 'none', joinDate: new Date().toISOString() };
+
+                const nowIso = new Date().toISOString();
+                const profileData = {
+                    // 핵심 정보
+                    name,
+                    phone,
+                    username,
+                    id: username,              // admin 호환
+                    email,
+                    chatId,                    // admin 호환
+                    chatNickname: chatId,      // 호환
+                    joinSource,                // admin 호환
+                    source: joinSource,        // 호환
+
+                    // 상태/시간
+                    payStatus: 'none',
+                    createdAt: nowIso,         // admin 호환
+                    joinDate: nowIso
+                };
+
+                // 사용자 프로필 저장
+                await setDoc(getUserDoc(cred.user.uid), profileData);
+                await setDoc(doc(getPublicMemberColl(), cred.user.uid), profileData);
+
+                // 아이디 -> 이메일 매핑 저장 (로그인용)
+                await setDoc(doc(getPublicUsernameColl(), username), {
+                    uid: cred.user.uid,
+                    email,
+                    username,
+                    createdAt: nowIso
+                });
+
+                alert("가입이 완료되었습니다.");
+                window.App.switchAuthTab('login');
+            } catch (e) {
+                console.error(e);
+                const msg = (e && e.message) ? e.message : '';
+                if(e.code === 'auth/email-already-in-use') return alert("이미 가입된 이메일입니다.");
+                if(msg.includes('api-key-not-valid') || msg.includes('API key not valid') || e.code === 'auth/invalid-api-key') {
+                    return alert("가입 실패: Firebase API Key 설정/제한 문제가 있습니다. (Google Cloud 콘솔에서 'API 제한사항'을 '키 제한 안함'으로 바꾼 뒤 다시 시도하세요.)");
+                }
+                alert("가입 중 오류가 발생했습니다: " + (e.message || e.code || e));
+            }
+        };
+
+                // 사용자 프로필 저장
+                await setDoc(getUserDoc(cred.user.uid), profileData);
+                await setDoc(doc(getPublicMemberColl(), cred.user.uid), profileData);
+
+                // 아이디 -> 이메일 매핑 저장 (로그인용)
+                await setDoc(doc(getPublicUsernameColl(), username), {
+                    uid: cred.user.uid,
+                    email,
+                    username,
+                    createdAt: new Date().toISOString()
+                });
+
+                alert("가입이 완료되었습니다.");
+                window.App.switchAuthTab('login');
+            } catch (e) {
+                console.error(e);
+                const msg = (e && e.message) ? e.message : '';
+                if(e.code === 'auth/email-already-in-use') return alert("이미 가입된 이메일입니다.");
+                if(msg.includes('api-key-not-valid') || msg.includes('API key not valid') || e.code === 'auth/invalid-api-key') {
+                    return alert("가입 실패: Firebase API Key 설정/제한 문제가 있습니다. (Google Cloud 콘솔에서 'API 제한사항'을 '키 제한 안함'으로 바꾼 뒤 다시 시도하세요.)");
+                }
+                alert("가입 중 오류가 발생했습니다: " + (e.message || e.code || e));
+            }
+        };
                 await setDoc(getUserDoc(cred.user.uid), profileData);
                 await setDoc(doc(getPublicMemberColl(), cred.user.uid), profileData);
 
