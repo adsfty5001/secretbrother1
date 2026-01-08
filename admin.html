@@ -89,47 +89,22 @@
   </main>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+  import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-const FIREBASE_CONFIG = {
-  "apiKey": "AIzaSyCvFTB5GVkVZLLVily_hCoJ0Fcjn-w-tyY",
-  "authDomain": "secretclass-5c9d8.firebaseapp.com",
-  "projectId": "secretclass-5c9d8",
-  "storageBucket": "secretclass-5c9d8.firebasestorage.app",
-  "messagingSenderId": "316837263466",
-  "appId": "1:316837263466:web:ae28f1110f3728ea8ab213",
-  "measurementId": "G-8GPZWFNNC6"
-};
-
-  // --- Firebase API Key 오류 진단(도메인/키 제한 설정) ---
-  window.addEventListener("unhandledrejection", (ev) => {
-    const msg = String(ev?.reason?.message || ev?.reason || "");
-    if (msg.includes("api-key-not-valid") || msg.includes("API key not valid")) {
-      alert(
-        "Firebase API 키가 현재 도메인에서 거부되었습니다.
-
-" +
-        "해결: Google Cloud Console → APIs & Services → Credentials → API Keys에서 해당 키를 열고
-" +
-        "HTTP referrers(웹사이트) 제한을 쓰고 있다면 아래를 추가하세요:
-" +
-        " - https://secretclass.co.kr/*
-" +
-        " - https://www.secretclass.co.kr/*
-
-" +
-        "또는(테스트용) 제한을 '없음(None)'으로 바꾼 뒤 다시 시도하세요.
-" +
-        "Firebase Console → Authentication → Settings → Authorized domains에도 동일 도메인을 추가해야 합니다."
-      );
-    }
-  });
-
+const firebaseConfig = {
+  apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJ0Fcjn-w-tyY",
+  authDomain: "secretclass-5c9d8.firebaseapp.com",
+  projectId: "secretclass-5c9d8",
+  storageBucket: "secretclass-5c9d8.firebasestorage.app",
+  messagingSenderId: "316837263466",
+  appId: "1:316837263466:web:ae28f1110f3728ea8ab213",
+  measurementId: "G-8GPZWFNNC6"
+  };
   const ADMIN_EMAILS = ["admin@secretclass.com"];
 
-  const app = initializeApp(FIREBASE_CONFIG);
+  const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
