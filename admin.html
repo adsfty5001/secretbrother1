@@ -94,7 +94,7 @@
   import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJOFcjn-w-tyY",
+  apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJ0Fcjn-w-tyY",
   authDomain: "secretclass-5c9d8.firebaseapp.com",
   projectId: "secretclass-5c9d8",
   storageBucket: "secretclass-5c9d8.firebasestorage.app",
@@ -102,9 +102,9 @@ const firebaseConfig = {
   appId: "1:316837263466:web:ae28f1110f3728ea8ab213",
   measurementId: "G-8GPZWFNNC6"
   };
-  const ADMIN_EMAILS = ["secret-brother@naver.com"];
+  const ADMIN_EMAILS = ["admin@secretclass.com"];
 
-  const app = initializeApp(FIREBASE_CONFIG);
+  const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 

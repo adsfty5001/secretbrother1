@@ -41,7 +41,7 @@
   import { getFirestore, doc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJOFcjn-w-tyY",
+  apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJ0Fcjn-w-tyY",
   authDomain: "secretclass-5c9d8.firebaseapp.com",
   projectId: "secretclass-5c9d8",
   storageBucket: "secretclass-5c9d8.firebasestorage.app",
@@ -50,7 +50,7 @@ const firebaseConfig = {
   measurementId: "G-8GPZWFNNC6"
   };
 
-  const app = initializeApp(FIREBASE_CONFIG);
+  const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
