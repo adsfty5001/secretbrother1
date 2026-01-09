@@ -675,7 +675,9 @@
         window.STATIC_REVIEWS = STATIC_REVIEWS;
 
 
-        // 초기 데이터 로<script type="module">
+        // 초기 데이터 로드
+</script>
+<script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
   import {
     getAuth,
@@ -717,7 +719,7 @@
 
   // TODO: 관리자 이메일만 여기에 입력하세요 (여러 개 가능)
   const ADMIN_EMAILS = [
-    "admin@secretclass.com"
+    "secret-brother.naver.com"
   ];
 
   const $ = (id) => document.getElementById(id);
@@ -1075,7 +1077,7 @@
   const openAllReviews = () => {
     const url = new URL(window.location.href);
     url.searchParams.set("view", "reviews");
-    window.location.href = url.toString();
+    window.open(url.toString(), "_blank");
   };
 
   const switchTab = (mode) => {
@@ -1151,12 +1153,7 @@
       }, 150);
     }
   } catch {}
-</script>rUI();
-        });
+</script>
 
-        // Initial Render
-        Impl.renderUI();
-
-    </script>
 </body>
 </html>
