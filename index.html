@@ -46,7 +46,7 @@
         .animate-float { animation: float 6s ease-in-out infinite; }
 
         /* 화면 전환 유틸리티 */
-        .hidden-section { display: none !important; }
+        .hidden-section { display: none; }
         .hidden { display: none !important; }
         
         /* 후기 카드 텍스트 줄임 (일정 높이 유지) */
@@ -724,11 +724,12 @@
   const APP_ID = window.APP_ID || "secretclass";
 
   const P = {
-    user: (uid) => doc(db, "users", uid),
-    member: (uid) => doc(db, "members", uid),
-    username: (uname) => doc(db, "usernames", String(uname).toLowerCase()),
-    reviewViews: (rid) => doc(db, "reviewViews", String(rid))
+    userProfile: (uid) => doc(db, "artifacts", APP_ID, "users", uid, "profile", "info"),
+    publicMember: (uid) => doc(db, "artifacts", APP_ID, "public", "data", "members", uid),
+    reviewCounter: (rid) => doc(db, "artifacts", APP_ID, "public", "data", "reviewCounters", String(rid)),
+    usernames: (uname) => doc(db, "artifacts", APP_ID, "public", "data", "usernames", String(uname).toLowerCase())
   };
+  const colReviewCounters = () => collection(db, "artifacts", APP_ID, "public", "data", "reviewCounters");
 // TODO: 관리자 이메일만 여기에 입력하세요 (여러 개 가능)
   const ADMIN_EMAILS = Array.isArray(window.ADMIN_EMAILS)
     ? window.ADMIN_EMAILS.map(v => String(v).toLowerCase())
@@ -768,11 +769,32 @@
     const guest = $("auth-guest");
     const authed = $("auth-user");
     const adminBtn = $("btn-admin-open");
+    const nameEl = $("user-name-display");
 
-    if (guest) guest.style.display = user ? "none" : "flex";
-    if (authed) authed.style.display = user ? "flex" : "none";
+    // Anonymous(조회수용) 로그인은 '게스트'로 취급 (로그인/회원가입 버튼을 계속 보여줌)
+    const isRealUser = !!user && !user.isAnonymous;
+
+    if (guest) guest.style.display = isRealUser ? "none" : "flex";
+    if (authed) authed.style.display = isRealUser ? "flex" : "none";
+
+    // 이름 표시
+    if (nameEl) {
+      if (!isRealUser) {
+        nameEl.textContent = "";
+      } else {
+        try {
+          const snap = await getDoc(P.userProfile(user.uid));
+          const nm = snap.exists() ? String(snap.data()?.name || "") : "";
+          nameEl.textContent = nm || String(user.email || "");
+        } catch {
+          nameEl.textContent = String(user.email || "");
+        }
+      }
+    }
+
+    // 관리자 버튼
     if (adminBtn) {
-      const isAdmin = !!user && ADMIN_EMAILS.map(String).includes(String(user.email || "").toLowerCase());
+      const isAdmin = isRealUser && ADMIN_EMAILS.map(String).includes(String(user.email || "").toLowerCase());
       adminBtn.style.display = isAdmin ? "inline-flex" : "none";
     }
   };
@@ -800,13 +822,99 @@
     } catch { return String(html || ""); }
   };
 
+  // ---------
+  // Review content prettifier (HTML -> readable text + 링크/이미지 정리)
+  // ---------
+  const escapeHtml = (s) => String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+  const escapeAttr = (s) => escapeHtml(String(s || "")).replace(/`/g, "&#096;");
+
+  const decodeHtmlEntities = (s) => {
+    const t = document.createElement("textarea");
+    t.innerHTML = String(s || "");
+    return t.value;
+  };
+
+  const sanitizeHtmlBasic = (html) => {
+    let s = String(html || "");
+    s = s.replace(/<script[\s\S]*?<\/script>/gi, "");
+    s = s.replace(/<style[\s\S]*?<\/style>/gi, "");
+    s = s.replace(/\son\w+="[^"]*"/gi, "");
+    s = s.replace(/\son\w+='[^']*'/gi, "");
+    s = s.replace(/javascript:/gi, "");
+    return s;
+  };
+
+  const buildPrettyReviewHtml = (raw) => {
+    const decoded = decodeHtmlEntities(raw);
+    const safe = sanitizeHtmlBasic(decoded);
+
+    const doc = new DOMParser().parseFromString(safe, "text/html");
+    const bodyText = (doc.body.textContent || "").trim();
+
+    // 1) 원문 링크(가능하면 외부 링크 우선)
+    let link = "";
+    const firstA = doc.querySelector('a[href^="http"]');
+    if (firstA) link = String(firstA.getAttribute("href") || "");
+    if (!link) {
+      const m = bodyText.match(/https?:\/\/[^\s)]+/);
+      if (m) link = m[0];
+    }
+
+    // 2) 본문(문장만)
+    const paras = Array.from(doc.querySelectorAll("p"))
+      .map(p => (p.textContent || "").replace(/\s+/g, " ").trim())
+      .filter(Boolean);
+
+    const mainParas = paras.length
+      ? paras
+      : (bodyText ? bodyText.split(/\n{2,}/).map(s => s.trim()).filter(Boolean) : []);
+
+    // 3) 이미지(최대 6개)
+    const imgs = Array.from(doc.querySelectorAll("img"))
+      .map(img => String(img.getAttribute("src") || ""))
+      .filter(u => /^https?:\/\//.test(u))
+      .slice(0, 6);
+
+    let out = "";
+    if (link) {
+      out += `<div class="mb-3">
+        <a href="${escapeAttr(link)}" target="_blank" rel="noopener noreferrer"
+           class="text-indigo-600 font-semibold underline">원문 링크 열기</a>
+      </div>`;
+    }
+
+    if (mainParas.length) {
+      out += mainParas.map(p => `<p class="mb-3 leading-relaxed text-gray-800">${escapeHtml(p)}</p>`).join("");
+    } else {
+      out += `<p class="text-gray-500">내용이 없습니다.</p>`;
+    }
+
+    if (imgs.length) {
+      out += `<div class="mt-4 grid grid-cols-2 gap-3">` +
+        imgs.map(u => `
+          <a href="${escapeAttr(u)}" target="_blank" rel="noopener noreferrer" class="block">
+            <img src="${escapeAttr(u)}" alt="" class="w-full h-auto rounded-xl border border-gray-200" loading="lazy" referrerpolicy="no-referrer">
+          </a>`).join("") +
+        `</div>`;
+    }
+
+    return out;
+  };
+
+
   const normalizeReviews = (raw) => {
     if (!Array.isArray(raw)) return [];
     return raw.map((r, i) => {
       const id = (r && (r.id ?? r.reviewId ?? r.no ?? r.seq)) ?? (i + 1);
       const title = String(r?.title ?? r?.subject ?? "").trim();
       const author = String(r?.author ?? r?.name ?? "").trim();
-      const date = String(r?.date ?? r?.createdDate ?? r?.createdAt ?? r?.created_at ?? "").trim();
+      const date = String(r?.date ?? r?.createdAt ?? r?.created_at ?? "").trim();
       const rating = Number(r?.rating ?? r?.stars ?? 5) || 0;
       const contentHtml = (r?.contentHtml ?? r?.content_html ?? r?.content ?? "");
       const baseViews = Number(r?.baseViews ?? r?.base_views ?? r?.views ?? 0) || 0;
@@ -819,7 +927,7 @@
   const ensureReviewsLoaded = async () => {
     if (state.reviewsLoaded) return;
     try {
-      const res = await fetch("./reviews.json", { cache: "no-store" });
+      const res = await fetch("./reviews.json", { cache: "no-store" }).catch(() => fetch("./data/reviews.json", { cache: "no-store" }));
       if (!res.ok) throw new Error("reviews.json fetch failed: " + res.status);
       const raw = await res.json();
       const normalized = normalizeReviews(raw);
@@ -855,7 +963,7 @@
       for (let i = 0; i < uniq.length; i += 10) batches.push(uniq.slice(i, i + 10));
 
       for (const batch of batches) {
-        const qy = query(collection(db, "reviewViews"), where(documentId(), "in", batch));
+        const qy = query(colReviewCounters(), where(documentId(), "in", batch));
         const snap = await getDocs(qy);
         snap.forEach(d => {
           const delta = Number(d.data()?.views || 0) || 0;
@@ -965,26 +1073,24 @@
     const review = getStaticReviews().find(r => String(r.id) === id);
     const base = getBaseViews(review);
 
-    const ref = P.reviewViews(id);
-
-    // Firestore 규칙(/reviewViews/{reviewId})에 맞게:
-    // - 문서가 없으면 {views:1}로 생성
-    // - 있으면 views를 정확히 +1 증가
-    let newDelta = 0;
     await runTransaction(db, async (tx) => {
+      const ref = P.reviewCounter(id);
       const snap = await tx.get(ref);
+
       if (!snap.exists()) {
-        newDelta = 1;
+        // create: {views:1} only
         tx.set(ref, { views: 1 });
-        return;
+      } else {
+        const prev = Number(snap.data()?.views || 0) || 0;
+        // update: views must increase by exactly +1 (rules)
+        tx.update(ref, { views: prev + 1 });
       }
-      const prev = Number(snap.data()?.views || 0);
-      newDelta = prev + 1;
-      tx.update(ref, { views: newDelta });
     });
 
-    viewDeltaCache.set(id, Number(newDelta || 0));
-    return base + Number(newDelta || 0);
+    const snap = await getDoc(P.reviewCounter(id));
+    const delta = snap.exists() ? Number(snap.data()?.views || 0) : 0;
+    viewDeltaCache.set(id, delta);
+    return base + delta;
   };
 
   const openReviewDetail = async (reviewId) => {
@@ -1001,9 +1107,9 @@
 
     if (titleEl) titleEl.textContent = String(review.title || "");
     if (contentEl) {
-      const html = (review.contentHtml ?? review.content ?? "");
-      if (review.contentHtml) contentEl.innerHTML = String(html);
-      else contentEl.textContent = String(html);
+      const raw = String(review.contentHtml ?? review.content ?? "");
+      // HTML이든 텍스트든, 보기 좋게 정리해서 보여주기
+      contentEl.innerHTML = buildPrettyReviewHtml(raw);
     }
     if (authorEl) authorEl.textContent = String(review.author || "");
     if (dateEl) dateEl.textContent = String(review.date || "");
@@ -1056,13 +1162,13 @@
       const uid = cred.user.uid;
 
       await runTransaction(db, async (tx) => {
-        const unameRef = P.username(username);
+        const unameRef = P.usernames(username);
         const unameSnap = await tx.get(unameRef);
         if (unameSnap.exists()) throw new Error("이미 사용 중인 아이디입니다.");
 
         tx.set(unameRef, { uid, email, createdAt: serverTimestamp() });
 
-        tx.set(P.user(uid), {
+        tx.set(P.userProfile(uid), {
           uid,
           email,
           name,
@@ -1074,7 +1180,7 @@
           createdAt: serverTimestamp()
         }, { merge: true });
 
-        tx.set(P.member(uid), {
+        tx.set(P.publicMember(uid), {
           uid,
           email,
           name,
@@ -1110,7 +1216,7 @@
       let email = idOrEmail;
       if (!isEmail(idOrEmail)) {
         const uname = normalizeUsername(idOrEmail);
-        const snap = await getDoc(P.username(uname));
+        const snap = await getDoc(P.usernames(uname));
         if (!snap.exists()) throw new Error("아이디를 찾을 수 없습니다.");
         email = String(snap.data()?.email || "");
         if (!email) throw new Error("아이디 매핑 정보가 올바르지 않습니다.");
@@ -1137,7 +1243,7 @@
       let email = idOrEmail;
       if (!isEmail(idOrEmail)) {
         const uname = normalizeUsername(idOrEmail);
-        const snap = await getDoc(P.username(uname));
+        const snap = await getDoc(P.usernames(uname));
         if (!snap.exists()) throw new Error("아이디를 찾을 수 없습니다.");
         email = String(snap.data()?.email || "");
       }
@@ -1155,14 +1261,22 @@
   };
 
   const openAllReviews = () => {
-    // 새 탭(새 화면)으로 전체 후기를 엽니다.
-    const target = "./index.html?view=reviews#reviews";
+    const target = "./reviews.html";
+    const fallback = () => {
+      const base = window.location.pathname.replace(/\/[^\/]*$/, "/index.html");
+      window.location.href = base + "?view=reviews#reviews";
+    };
     try {
       const w = window.open(target, "_blank", "noopener,noreferrer");
       if (w) return;
-    } catch (e) {}
-    // 팝업 차단 등으로 새 탭이 막히면 현재 탭에서 이동
-    window.location.href = target;
+    } catch (e) {
+      // ignore
+    }
+    fetch(target, { method: "HEAD" })
+      .then(res => {
+        window.location.href = res.ok ? target : (window.location.pathname + "?view=reviews#reviews");
+      })
+      .catch(() => fallback());
   };
 
   const switchTab = (mode) => {
@@ -1203,6 +1317,27 @@
     processSignup,
     resetPassword,
     logout,
+    openMypage: () => {
+      const u = auth.currentUser;
+      if (u && !u.isAnonymous) {
+        window.location.href = "./classroom.html";
+      } else {
+        openModal("loginModal");
+        switchTab("login");
+      }
+    },
+    toggleFaq: (btn) => {
+      try {
+        const item = btn?.closest?.(".faq-item") || btn?.parentElement?.parentElement;
+        if (!item) return;
+        const body = item.querySelector(".faq-body") || item.querySelector('[data-faq-body]');
+        const icon = item.querySelector(".faq-icon") || item.querySelector('[data-faq-icon]');
+        if (!body) return;
+        const isHidden = body.classList.contains("hidden");
+        body.classList.toggle("hidden", !isHidden);
+        if (icon) icon.classList.toggle("rotate-180", isHidden);
+      } catch {}
+    },
     openAllReviews,
     openReviewDetail,
     loadMoreReviews: () => {

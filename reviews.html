@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>전체 수강생 후기 - 시크릿클래스</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./styles.css" />
+
+  <!-- Firebase config (둘 중 존재하는 경로를 사용) -->
+  <script src="./config.js"></script>
+  <script src="./js/config.js"></script>
+
+  <style>
+    .card-hover { transition: transform .15s ease, box-shadow .15s ease; }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.06); }
+  </style>
+</head>
+<body class="bg-white">
+  <header class="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-200">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="./index.html" class="text-gray-700 font-semibold hover:underline">← 메인으로</a>
+        <span class="text-gray-300">|</span>
+        <h1 class="text-lg font-bold text-gray-900">전체 수강생 후기</h1>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <input id="searchInput" type="text" placeholder="후기 검색 (제목/작성자/내용)"
+               class="w-64 max-w-[60vw] px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-200" />
+        <select id="sortSelect"
+                class="px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-200">
+          <option value="recent">최신순</option>
+          <option value="views">조회수순</option>
+          <option value="rating">별점순</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <div id="statusMsg" class="text-gray-600 mb-4">불러오는 중…</div>
+
+    <div id="list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+    <div class="mt-8 flex items-center justify-between">
+      <button id="prevBtn" class="px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50">이전</button>
+      <div id="pageInfo" class="text-gray-600"></div>
+      <button id="nextBtn" class="px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50">다음</button>
+    </div>
+  </main>
+
+  <!-- Review Modal -->
+  <div id="reviewModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white w-[min(900px,94vw)] max-h-[90vh] rounded-2xl shadow-xl overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <div>
+          <div class="text-sm text-gray-500">후기 상세</div>
+          <div id="modalTitle" class="text-lg font-bold text-gray-900"></div>
+          <div class="text-sm text-gray-500 mt-1">
+            <span id="modalMeta"></span>
+          </div>
+        </div>
+        <button id="modalClose" class="text-gray-400 hover:text-gray-700 text-2xl leading-none">×</button>
+      </div>
+      <div class="px-6 py-5 overflow-y-auto" style="max-height: calc(90vh - 150px);">
+        <div id="modalContent" class="text-gray-800"></div>
+      </div>
+      <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-end">
+        <button id="modalClose2" class="px-5 py-3 rounded-xl bg-gray-900 text-white font-semibold">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, getDocs, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+
+    const $ = (id) => document.getElementById(id);
+
+    // Config: window.FIREBASE_CONFIG 우선, 없으면 (빈) 기본값
+    const FIREBASE_CONFIG = (window && window.FIREBASE_CONFIG) ? window.FIREBASE_CONFIG : {
+      apiKey: "",
+      authDomain: "",
+      projectId: "",
+      storageBucket: "",
+      messagingSenderId: "",
+      appId: ""
+    };
+
+    let app, auth, db;
+    try {
+      if (!FIREBASE_CONFIG || !FIREBASE_CONFIG.apiKey) throw new Error("Firebase config missing (config.js 확인)");
+      app = initializeApp(FIREBASE_CONFIG);
+      auth = getAuth(app);
+      db = getFirestore(app);
+    } catch (e) {
+      console.error(e);
+      $("statusMsg").textContent = "Firebase 설정이 없어 후기 조회수 기능이 비활성화되었습니다. (config.js 확인)";
+    }
+
+    const P = {
+      reviewCounter: (reviewId) => doc(db, "reviewViews", String(reviewId)),
+    };
+
+    const escapeHtml = (s) => String(s || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+    const escapeAttr = (s) => escapeHtml(String(s || "")).replace(/`/g, "&#096;");
+
+    const decodeHtmlEntities = (s) => {
+      const t = document.createElement("textarea");
+      t.innerHTML = String(s || "");
+      return t.value;
+    };
+
+    const sanitizeHtmlBasic = (html) => {
+      let s = String(html || "");
+      s = s.replace(/<script[\s\S]*?<\/script>/gi, "");
+      s = s.replace(/<style[\s\S]*?<\/style>/gi, "");
+      s = s.replace(/\son\w+="[^"]*"/gi, "");
+      s = s.replace(/\son\w+='[^']*'/gi, "");
+      s = s.replace(/javascript:/gi, "");
+      return s;
+    };
+
+    const buildPrettyReviewHtml = (raw) => {
+      const decoded = decodeHtmlEntities(raw);
+      const safe = sanitizeHtmlBasic(decoded);
+      const doc = new DOMParser().parseFromString(safe, "text/html");
+      const bodyText = (doc.body.textContent || "").trim();
+
+      let link = "";
+      const firstA = doc.querySelector('a[href^="http"]');
+      if (firstA) link = String(firstA.getAttribute("href") || "");
+      if (!link) {
+        const m = bodyText.match(/https?:\/\/[^\s)]+/);
+        if (m) link = m[0];
+      }
+
+      const paras = Array.from(doc.querySelectorAll("p"))
+        .map(p => (p.textContent || "").replace(/\s+/g, " ").trim())
+        .filter(Boolean);
+
+      const mainParas = paras.length ? paras : (bodyText ? bodyText.split(/\n{2,}/).map(s => s.trim()).filter(Boolean) : []);
+      const imgs = Array.from(doc.querySelectorAll("img"))
+        .map(img => String(img.getAttribute("src") || ""))
+        .filter(u => /^https?:\/\//.test(u))
+        .slice(0, 6);
+
+      let out = "";
+      if (link) {
+        out += \`<div class="mb-3">
+          <a href="\${escapeAttr(link)}" target="_blank" rel="noopener noreferrer"
+             class="text-indigo-600 font-semibold underline">원문 링크 열기</a>
+        </div>\`;
+      }
+
+      if (mainParas.length) {
+        out += mainParas.map(p => \`<p class="mb-3 leading-relaxed text-gray-800">\${escapeHtml(p)}</p>\`).join("");
+      } else {
+        out += \`<p class="text-gray-500">내용이 없습니다.</p>\`;
+      }
+
+      if (imgs.length) {
+        out += \`<div class="mt-4 grid grid-cols-2 gap-3">\` + imgs.map(u => \`
+          <a href="\${escapeAttr(u)}" target="_blank" rel="noopener noreferrer" class="block">
+            <img src="\${escapeAttr(u)}" alt="" class="w-full h-auto rounded-xl border border-gray-200" loading="lazy" referrerpolicy="no-referrer">
+          </a>\`).join("") + \`</div>\`;
+      }
+
+      return out;
+    };
+
+    const stripHtml = (html) => {
+      const decoded = decodeHtmlEntities(html);
+      const doc = new DOMParser().parseFromString(decoded, "text/html");
+      return (doc.body.textContent || "").replace(/\s+/g, " ").trim();
+    };
+
+    const normalizeReviews = (raw) => {
+      const arr = Array.isArray(raw) ? raw : (raw?.reviews || []);
+      return arr.map((r, i) => ({
+        id: String(r.id ?? r.reviewId ?? i),
+        title: String(r.title || "후기"),
+        author: String(r.author || r.writer || ""),
+        date: String(r.date || r.createdAt || ""),
+        rating: Number(r.rating || 5) || 5,
+        isBest: !!r.isBest,
+        baseViews: Number(r.views || 0) || 0,
+        contentHtml: String(r.contentHtml ?? r.content ?? ""),
+      }));
+    };
+
+    async function loadReviews() {
+      const status = $("statusMsg");
+      try {
+        const res = await fetch("./reviews.json", { cache: "no-store" }).catch(() => fetch("./data/reviews.json", { cache: "no-store" }));
+        if (!res.ok) throw new Error("reviews.json fetch failed");
+        const raw = await res.json();
+        const all = normalizeReviews(raw);
+
+        // 일반 후기만 (BEST 제외)
+        return all.filter(r => !r.isBest);
+      } catch (e) {
+        console.error(e);
+        status.textContent = "후기 데이터를 불러오지 못했습니다. (reviews.json 경로 확인)";
+        return [];
+      }
+    }
+
+    // View counters (optional)
+    const viewCache = new Map(); // id -> delta
+    async function refreshViewCache() {
+      if (!db) return;
+      try {
+        const snap = await getDocs(collection(db, "reviewViews"));
+        snap.forEach(d => {
+          const delta = Number(d.data()?.views || 0) || 0;
+          viewCache.set(d.id, delta);
+        });
+      } catch (e) {
+        console.warn("view cache failed", e);
+      }
+    }
+    function totalViews(review) {
+      const delta = viewCache.get(String(review.id)) || 0;
+      return (Number(review.baseViews || 0) || 0) + delta;
+    }
+
+    async function incrementViewCount(reviewId) {
+      if (!db) return 0;
+      const id = String(reviewId);
+      await runTransaction(db, async (tx) => {
+        const ref = P.reviewCounter(id);
+        const snap = await tx.get(ref);
+        if (!snap.exists()) {
+          tx.set(ref, { views: 1 });
+        } else {
+          const prev = Number(snap.data()?.views || 0) || 0;
+          tx.update(ref, { views: prev + 1 });
+        }
+      });
+      const snap = await getDoc(P.reviewCounter(id));
+      const delta = snap.exists() ? (Number(snap.data()?.views || 0) || 0) : 0;
+      viewCache.set(id, delta);
+      return delta;
+    }
+
+    // UI state
+    let allReviews = [];
+    let filtered = [];
+    let page = 1;
+    const pageSize = 20;
+
+    function applyFilterSort() {
+      const q = $("searchInput").value.trim().toLowerCase();
+      const sort = $("sortSelect").value;
+
+      filtered = allReviews.filter(r => {
+        if (!q) return true;
+        const hay = (r.title + " " + r.author + " " + stripHtml(r.contentHtml)).toLowerCase();
+        return hay.includes(q);
+      });
+
+      if (sort === "recent") {
+        filtered.sort((a,b) => String(b.date).localeCompare(String(a.date)));
+      } else if (sort === "views") {
+        filtered.sort((a,b) => totalViews(b) - totalViews(a));
+      } else if (sort === "rating") {
+        filtered.sort((a,b) => (b.rating||0) - (a.rating||0));
+      }
+
+      page = 1;
+      renderPage();
+    }
+
+    function renderPage() {
+      const list = $("list");
+      const status = $("statusMsg");
+      list.innerHTML = "";
+
+      if (!filtered.length) {
+        status.textContent = "표시할 후기가 없습니다.";
+        $("pageInfo").textContent = "";
+        return;
+      }
+
+      status.textContent = `총 ${filtered.length}개 후기`;
+      const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+      page = Math.min(page, totalPages);
+
+      const start = (page - 1) * pageSize;
+      const items = filtered.slice(start, start + pageSize);
+
+      for (const r of items) {
+        const stars = "★★★★★".slice(0, Math.max(0, Math.min(5, Math.round(r.rating||5))));
+        const v = totalViews(r);
+        const snippet = stripHtml(r.contentHtml).slice(0, 120);
+
+        const el = document.createElement("div");
+        el.className = "card-hover bg-white border border-gray-200 rounded-2xl p-5 cursor-pointer";
+        el.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div class="text-sm text-gray-500">${escapeHtml(r.date || "")}</div>
+            <div class="text-sm text-gray-500">조회수 <span data-views="${escapeAttr(r.id)}" class="font-semibold text-gray-700">${v}</span></div>
+          </div>
+          <div class="mt-2 text-lg font-bold text-gray-900">${escapeHtml(r.title)}</div>
+          <div class="mt-1 text-sm text-gray-600">${escapeHtml(r.author || "")}</div>
+          <div class="mt-2 text-sm text-amber-500">${stars} <span class="text-gray-400 ml-1">${Number(r.rating||5).toFixed(1)}</span></div>
+          <div class="mt-3 text-sm text-gray-700 leading-relaxed">${escapeHtml(snippet)}${snippet.length>=120 ? "…" : ""}</div>
+        `;
+        el.addEventListener("click", async () => openReview(r));
+        list.appendChild(el);
+      }
+
+      $("pageInfo").textContent = `${page} / ${totalPages}`;
+      $("prevBtn").disabled = (page <= 1);
+      $("nextBtn").disabled = (page >= totalPages);
+    }
+
+    async function openReview(review) {
+      $("modalTitle").textContent = review.title;
+      $("modalMeta").textContent = `${review.author || ""} · ${review.date || ""} · 별점 ${Number(review.rating||5).toFixed(1)}`;
+      $("modalContent").innerHTML = buildPrettyReviewHtml(review.contentHtml || "");
+
+      $("reviewModal").classList.remove("hidden");
+      $("reviewModal").classList.add("flex");
+
+      // 조회수 +1 (가능할 때만)
+      try {
+        await incrementViewCount(review.id);
+        const v = totalViews(review);
+        // card count 갱신
+        document.querySelectorAll(`[data-views="${CSS.escape(String(review.id))}"]`).forEach(el => el.textContent = String(v));
+      } catch {}
+    }
+
+    function closeModal() {
+      $("reviewModal").classList.add("hidden");
+      $("reviewModal").classList.remove("flex");
+      $("modalContent").innerHTML = "";
+    }
+
+    $("modalClose").addEventListener("click", closeModal);
+    $("modalClose2").addEventListener("click", closeModal);
+    $("reviewModal").addEventListener("click", (e) => {
+      if (e.target === $("reviewModal")) closeModal();
+    });
+
+    $("searchInput").addEventListener("input", () => applyFilterSort());
+    $("sortSelect").addEventListener("change", () => applyFilterSort());
+    $("prevBtn").addEventListener("click", () => { page = Math.max(1, page-1); renderPage(); });
+    $("nextBtn").addEventListener("click", () => { page = page+1; renderPage(); });
+
+    // Boot
+    allReviews = await loadReviews();
+    await refreshViewCache();
+    applyFilterSort();
+  </script>
+</body>
+</html>

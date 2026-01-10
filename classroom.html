@@ -69,8 +69,8 @@ apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJ0Fcjn-w-tyY",
   const db = getFirestore(app);
 
   const P = {
-    user: (uid) => doc(db, "users", uid),
-    coursesCol: () => collection(db, "courses"),
+    userProfile: (uid) => doc(db, "artifacts", APP_ID, "users", uid, "profile", "info"),
+    coursesCol: () => collection(db, "artifacts", APP_ID, "public", "data", "courses"),
   };
 
   const elUserEmail = document.getElementById("user-email");
@@ -104,10 +104,10 @@ apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJ0Fcjn-w-tyY",
     if (elUserEmail) elUserEmail.textContent = user.email || "";
 
     try {
-      const snap = await getDoc(P.user(user.uid));
+      const snap = await getDoc(P.userProfile(user.uid));
       const payStatus = snap.exists() ? String(snap.data()?.payStatus || "") : "";
 
-      if (!["complete","active"].includes(payStatus)) {
+      if (payStatus !== "active") {
         showGate(payStatus ? `결제 상태: ${payStatus}` : "결제 상태: 미설정");
         return;
       }
