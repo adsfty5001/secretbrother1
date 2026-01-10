@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>시크릿클래스 관리자</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Optional: centralized Firebase config for GitHub Pages -->
+  <script src="./js/config.js"></script>
 </head>
 <body class="bg-gray-50">
   <header class="bg-white border-b">
@@ -89,24 +91,45 @@
   </main>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-  import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    updateDoc,
+    collection,
+    query,
+    orderBy,
+    onSnapshot,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJ0Fcjn-w-tyY",
+  const firebaseConfig = (window.FIREBASE_CONFIG && typeof window.FIREBASE_CONFIG === "object")
+    ? window.FIREBASE_CONFIG
+    : {
+apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJ0Fcjn-w-tyY",
   authDomain: "secretclass-5c9d8.firebaseapp.com",
   projectId: "secretclass-5c9d8",
   storageBucket: "secretclass-5c9d8.firebasestorage.app",
   messagingSenderId: "316837263466",
   appId: "1:316837263466:web:ae28f1110f3728ea8ab213",
   measurementId: "G-8GPZWFNNC6"
-  };
-  const ADMIN_EMAILS = ["admin@secretclass.com"];
+    };
+
+  const APP_ID = window.APP_ID || "secretclass";
+  const ADMIN_EMAILS = Array.isArray(window.ADMIN_EMAILS)
+    ? window.ADMIN_EMAILS.map(v => String(v).toLowerCase())
+    : ["secret-brother@naver.com"];
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+
+  const P = {
+    userProfile: (uid) => doc(db, "artifacts", APP_ID, "users", uid, "profile", "info"),
+    publicMember: (uid) => doc(db, "artifacts", APP_ID, "public", "data", "members", uid),
+    membersCol: () => collection(db, "artifacts", APP_ID, "public", "data", "members"),
+  };
 
   const elGuard = document.getElementById("guard");
   const elDash = document.getElementById("dashboard");
@@ -115,123 +138,103 @@ const firebaseConfig = {
   const elFS = document.getElementById("f-source");
   const elFP = document.getElementById("f-pay");
 
-  document.getElementById("btn-logout").onclick = () => signOut(auth).then(()=>location.href="./index.html");
+  const fmt = (v) => (v == null ? "" : String(v));
+  const lower = (v) => fmt(v).toLowerCase();
 
   let all = [];
 
-  function fmtDate(ts) {
-    if(!ts) return "";
-    try {
-      // Firestore Timestamp
-      if(ts.seconds) return new Date(ts.seconds*1000).toISOString().slice(0,10);
-    } catch(e){}
-    return String(ts).slice(0,10);
-  }
+  const applyFilters = () => {
+    const qText = lower(elQ?.value || "");
+    const fSource = fmt(elFS?.value || "");
+    const fPay = fmt(elFP?.value || "");
 
-  function applyFilters() {
-    const q = (elQ.value||"").trim().toLowerCase();
-    const fs = elFS.value;
-    const fp = elFP.value;
-
-    const filtered = all.filter(u => {
-      if(fs && u.joinSource !== fs) return false;
-      if(fp && (u.payStatus||"none") !== fp) return false;
-      if(!q) return true;
-      const blob = [u.name,u.username,u.email,u.chatId].join(" ").toLowerCase();
-      return blob.includes(q);
+    const rows = all.filter(r => {
+      if (qText) {
+        const blob = lower([r.name, r.email, r.phone, r.username, r.chatNickname, r.source, r.payStatus].join(" "));
+        if (!blob.includes(qText)) return false;
+      }
+      if (fSource && fmt(r.source) !== fSource) return false;
+      if (fPay && fmt(r.payStatus) !== fPay) return false;
+      return true;
     });
 
-    // stats
-    document.getElementById("stat-total").innerText = all.length.toLocaleString();
-    document.getElementById("stat-complete").innerText = all.filter(x=>(x.payStatus||"none")==="complete").length.toLocaleString();
-    document.getElementById("stat-pending").innerText = all.filter(x=>(x.payStatus||"none")==="pending").length.toLocaleString();
-    document.getElementById("stat-none").innerText = all.filter(x=>(x.payStatus||"none")==="none").length.toLocaleString();
-
-    elRows.innerHTML = filtered.map(u => {
-      const pay = (u.payStatus||"none");
+    elRows.innerHTML = rows.map(r => {
+      const uid = fmt(r.uid);
+      const pay = fmt(r.payStatus || "");
+      const sel = (v) => (v === pay ? "selected" : "");
       return `
-        <tr>
-          <td class="py-2 pr-2 text-gray-500">${fmtDate(u.createdAt)}</td>
-          <td class="py-2 pr-2 font-semibold">${u.name||""}</td>
-          <td class="py-2 pr-2">${u.username||""}</td>
-          <td class="py-2 pr-2">${u.email||""}</td>
-          <td class="py-2 pr-2">${u.chatId||""}</td>
-          <td class="py-2 pr-2">${u.joinSource||""}</td>
-          <td class="py-2 pr-2"><span class="px-2 py-0.5 rounded-full text-xs ${pay==="complete"?"bg-green-100 text-green-700":pay==="pending"?"bg-yellow-100 text-yellow-700":"bg-gray-100 text-gray-700"}">${pay}</span></td>
-          <td class="py-2 pr-2">
-            <select data-uid="${u.uid}" class="paySel px-2 py-1 rounded-lg border bg-gray-50 text-xs">
-              <option value="none" ${pay==="none"?"selected":""}>none</option>
-              <option value="pending" ${pay==="pending"?"selected":""}>pending</option>
-              <option value="complete" ${pay==="complete"?"selected":""}>complete</option>
+        <tr class="border-b">
+          <td class="p-3 text-xs text-gray-500">${fmt(r.joinDate)}</td>
+          <td class="p-3">
+            <div class="font-bold text-gray-900">${fmt(r.name)}</div>
+            <div class="text-xs text-gray-500">${fmt(r.email)}</div>
+          </td>
+          <td class="p-3 text-sm text-gray-700">${fmt(r.phone)}</td>
+          <td class="p-3 text-sm text-gray-700">${fmt(r.username)}</td>
+          <td class="p-3 text-sm text-gray-700">${fmt(r.source)}</td>
+          <td class="p-3">
+            <select data-uid="${uid}" class="paySel border rounded px-2 py-1 text-sm">
+              <option value="">(미설정)</option>
+              <option value="pending" ${sel("pending")}>입금확인중</option>
+              <option value="active"  ${sel("active")}>수강중</option>
+              <option value="none"    ${sel("none")}>취소/미수강</option>
             </select>
           </td>
-        </tr>`;
-    }).join("");
+          <td class="p-3">
+            <button data-uid="${uid}" class="saveBtn px-3 py-1.5 rounded bg-indigo-600 text-white text-sm font-bold">저장</button>
+          </td>
+        </tr>
+      `;
+    }).join("") || `<tr><td class="py-10 text-center text-gray-400" colspan="7">결과가 없습니다.</td></tr>`;
 
-    document.querySelectorAll(".paySel").forEach(sel => {
-      sel.onchange = async (e) => {
-        const uid = e.target.getAttribute("data-uid");
-        const v = e.target.value;
-        if(!uid) return;
+    document.querySelectorAll(".saveBtn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const uid = btn.getAttribute("data-uid");
+        const selEl = document.querySelector(`.paySel[data-uid="${uid}"]`);
+        const v = fmt(selEl?.value || "");
+        if (!uid) return;
 
-        // users/{uid} 와 members/{uid} 둘 다 업데이트
-        await updateDoc(doc(db,"users",uid), { payStatus: v });
-        await updateDoc(doc(db,"members",uid), { payStatus: v });
-        alert("결제상태가 변경되었습니다.");
-      };
+        try {
+          await updateDoc(P.userProfile(uid), { payStatus: v, updatedAt: serverTimestamp() });
+          await updateDoc(P.publicMember(uid), { payStatus: v, updatedAt: serverTimestamp() });
+          alert("저장 완료");
+        } catch (e) {
+          console.error(e);
+          alert("저장 실패: " + (e?.message || e));
+        }
+      });
     });
-  }
-
-  elQ.oninput = applyFilters;
-  elFS.onchange = applyFilters;
-  elFP.onchange = applyFilters;
-
-  document.getElementById("btn-export").onclick = () => {
-    const headers = ["createdAt","name","username","email","chatId","joinSource","payStatus"];
-    const lines = [headers.join(",")];
-    all.forEach(u => {
-      const row = headers.map(h => {
-        const v = (h==="createdAt") ? fmtDate(u.createdAt) : (u[h]||"");
-        const safe = String(v).replaceAll('"','""');
-        return `"${safe}"`;
-      }).join(",");
-      lines.push(row);
-    });
-    const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "members.csv";
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
+  elQ && (elQ.oninput = applyFilters);
+  elFS && (elFS.onchange = applyFilters);
+  elFP && (elFP.onchange = applyFilters);
+
+  document.getElementById("btn-logout")?.addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "./index.html";
+  });
+
   onAuthStateChanged(auth, (user) => {
-    if(!user) {
-      elGuard.innerHTML = `<div class="font-bold text-gray-900">로그인이 필요합니다.</div>
-        <div class="text-sm text-gray-500 mt-1">메인에서 관리자 계정으로 로그인 후 다시 접속하세요.</div>`;
-      elDash.classList.add("hidden");
-      return;
-    }
-    const isAdmin = ADMIN_EMAILS.includes(String(user.email||"").toLowerCase());
-    if(!isAdmin) {
-      elGuard.innerHTML = `<div class="font-bold text-gray-900">권한이 없습니다.</div>
-        <div class="text-sm text-gray-500 mt-1">관리자 이메일이 아닙니다: ${user.email||""}</div>`;
-      elDash.classList.add("hidden");
+    const isAdmin = !!user && ADMIN_EMAILS.includes(String(user.email || "").toLowerCase());
+    if (!isAdmin) {
+      if (elGuard) elGuard.classList.remove("hidden");
+      if (elDash) elDash.classList.add("hidden");
       return;
     }
 
-    elGuard.classList.add("hidden");
-    elDash.classList.remove("hidden");
+    if (elGuard) elGuard.classList.add("hidden");
+    if (elDash) elDash.classList.remove("hidden");
 
-    onSnapshot(query(collection(db,"members"), orderBy("createdAt","desc")), (snap) => {
+    const qy = query(P.membersCol(), orderBy("joinDate", "desc"));
+    onSnapshot(qy, (snap) => {
       all = [];
       snap.forEach(d => all.push({ uid: d.id, ...d.data() }));
       applyFilters();
     }, (err) => {
-      elRows.innerHTML = `<tr><td class="py-6 text-center text-red-600" colspan="8">members 읽기 권한이 없습니다: ${err.code}</td></tr>`;
+      console.error(err);
+      elRows.innerHTML = `<tr><td class="py-6 text-center text-red-600" colspan="7">members 읽기 권한이 없습니다: ${err.code}</td></tr>`;
     });
-  });
-</script>
+  });</script>
 </body>
 </html>

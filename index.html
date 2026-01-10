@@ -68,6 +68,8 @@
         /* HTML 엔티티 디코딩용 */
         .decoded-content p { margin-bottom: 1em; }
     </style>
+  <!-- Optional: centralized Firebase config for GitHub Pages -->
+  <script src="./js/config.js"></script>
 </head>
 <body class="bg-white text-gray-900 font-body flex flex-col min-h-screen">
 
@@ -704,23 +706,34 @@
   // -----------------------------
   // Firebase init (Vercel static hosting)
   // -----------------------------
-  const firebaseConfig = {
-  "apiKey": "AIzaSyCvFTB5GVkVZLLVilv_hCoJOFcjn-w-tyY",
+  const firebaseConfig = (window.FIREBASE_CONFIG && typeof window.FIREBASE_CONFIG === "object")
+    ? window.FIREBASE_CONFIG
+    : {
+"apiKey": "AIzaSyCvFTB5GVkVZLLVilv_hCoJOFcjn-w-tyY",
   "authDomain": "secretclass-5c9d8.firebaseapp.com",
   "projectId": "secretclass-5c9d8",
   "storageBucket": "secretclass-5c9d8.firebasestorage.app",
   "messagingSenderId": "316837263466",
   "appId": "1:316837263466:web:ae28f1110f3728ea8ab213",
   "measurementId": "G-8GPZWFNNC6"
-};
+  };
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // TODO: 관리자 이메일만 여기에 입력하세요 (여러 개 가능)
-  const ADMIN_EMAILS = [
-    "secret-brother.naver.com"
-  ];
+  const APP_ID = window.APP_ID || "secretclass";
+
+  const P = {
+    userProfile: (uid) => doc(db, "artifacts", APP_ID, "users", uid, "profile", "info"),
+    publicMember: (uid) => doc(db, "artifacts", APP_ID, "public", "data", "members", uid),
+    reviewCounter: (rid) => doc(db, "artifacts", APP_ID, "public", "data", "reviewCounters", String(rid)),
+    usernames: (uname) => doc(db, "artifacts", APP_ID, "public", "data", "usernames", String(uname).toLowerCase())
+  };
+  const colReviewCounters = () => collection(db, "artifacts", APP_ID, "public", "data", "reviewCounters");
+// TODO: 관리자 이메일만 여기에 입력하세요 (여러 개 가능)
+  const ADMIN_EMAILS = Array.isArray(window.ADMIN_EMAILS)
+    ? window.ADMIN_EMAILS.map(v => String(v).toLowerCase())
+    : ["secret-brother@naver.com"];
 
   const $ = (id) => document.getElementById(id);
   const showMsg = (id, msg) => {
@@ -776,7 +789,47 @@
   };
 
   const state = {
-    visibleReviews: 9
+    visibleReviews: 9,
+    reviewsLoaded: false
+  };
+
+  const stripHtml = (html) => {
+    try {
+      const div = document.createElement("div");
+      div.innerHTML = String(html || "");
+      return (div.textContent || div.innerText || "").trim();
+    } catch { return String(html || ""); }
+  };
+
+  const normalizeReviews = (raw) => {
+    if (!Array.isArray(raw)) return [];
+    return raw.map((r, i) => {
+      const id = (r && (r.id ?? r.reviewId ?? r.no ?? r.seq)) ?? (i + 1);
+      const title = String(r?.title ?? r?.subject ?? "").trim();
+      const author = String(r?.author ?? r?.name ?? "").trim();
+      const date = String(r?.date ?? r?.createdAt ?? r?.created_at ?? "").trim();
+      const rating = Number(r?.rating ?? r?.stars ?? 5) || 0;
+      const contentHtml = (r?.contentHtml ?? r?.content_html ?? r?.content ?? "");
+      const baseViews = Number(r?.baseViews ?? r?.base_views ?? r?.views ?? 0) || 0;
+      const isBest = !!(r?.isBest ?? r?.is_best) || String(r?.badge || "").toUpperCase() === "BEST";
+      const badge = isBest ? "BEST" : String(r?.badge ?? "");
+      return { id: String(id), title, author, date, rating, badge, isBest, contentHtml, baseViews };
+    }).filter(r => r.title || r.contentHtml);
+  };
+
+  const ensureReviewsLoaded = async () => {
+    if (state.reviewsLoaded) return;
+    try {
+      const res = await fetch("./data/reviews.json", { cache: "no-store" });
+      if (!res.ok) throw new Error("reviews.json fetch failed: " + res.status);
+      const raw = await res.json();
+      const normalized = normalizeReviews(raw);
+      if (normalized.length) window.STATIC_REVIEWS = normalized;
+    } catch (e) {
+      console.warn("reviews.json load skipped (using embedded fallback):", e?.message || e);
+    } finally {
+      state.reviewsLoaded = true;
+    }
   };
 
   const starsHtml = (rating) => {
@@ -789,28 +842,36 @@
     return out;
   };
 
+  const viewDeltaCache = new Map();
+  const getBaseViews = (r) => Number(r?.baseViews ?? r?.views ?? 0) || 0;
+  const getTotalViews = (r) => getBaseViews(r) + (viewDeltaCache.get(String(r?.id)) || 0);
+
   const fetchAndPaintViewCounts = async (ids) => {
     try {
-      const uniq = Array.from(new Set((ids || []).filter(Boolean)));
+      const uniq = Array.from(new Set((ids || []).filter(Boolean).map(v => String(v))));
       if (uniq.length === 0) return;
+      const reviewById = new Map(getStaticReviews().map(r => [String(r.id), r]));
 
       const batches = [];
       for (let i = 0; i < uniq.length; i += 10) batches.push(uniq.slice(i, i + 10));
 
       for (const batch of batches) {
-        const qy = query(collection(db, "reviewViews"), where(documentId(), "in", batch));
+        const qy = query(colReviewCounters(), where(documentId(), "in", batch));
         const snap = await getDocs(qy);
         snap.forEach(d => {
-          const v = Number(d.data()?.views || 0);
+          const delta = Number(d.data()?.deltaViews || 0) || 0;
           const id = d.id;
+          viewDeltaCache.set(id, delta);
+          const base = getBaseViews(reviewById.get(id));
+          const total = base + delta;
           const el1 = $("views-b-" + id);
           const el2 = $("views-a-" + id);
-          if (el1) el1.textContent = String(v);
-          if (el2) el2.textContent = String(v);
+          if (el1) el1.textContent = String(total);
+          if (el2) el2.textContent = String(total);
         });
       }
     } catch (e) {
-      console.warn("viewCounts fetch skipped:", e?.message || e);
+      console.warn("fetchAndPaintViewCounts skipped:", e?.message || e);
     }
   };
 
@@ -819,7 +880,7 @@
     if (!container) return;
 
     const reviews = getStaticReviews();
-    const best = reviews.filter(r => String(r.badge || "").toUpperCase() === "BEST");
+    const best = reviews.filter(r => String(r.badge || "").toUpperCase() === "BEST" || r.isBest === true);
     const list = (best.length ? best : reviews).slice(0, 6);
 
     container.innerHTML = list.map(r => {
@@ -829,18 +890,19 @@
       const date = String(r.date || "");
       const rating = Number(r.rating || 0);
       const badge = String(r.badge || "BEST");
+      const baseViews = getBaseViews(r);
       return `
-        <div class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition-all cursor-pointer" onclick="window.App.openReviewDetail(${id})">
+        <div class="bg-white border border-gray-100 rounded-2xl ...ll cursor-pointer" onclick="window.App.openReviewDetail(\'${id}\')">
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
               <div class="flex gap-0.5">${starsHtml(rating)}</div>
-              <span class="text-xs text-gray-400">${rating.toFixed(1)}</span>
+              <span class="text-xs text-gray-400">${Number(rating).toFixed(1)}</span>
             </div>
             <span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full font-bold">${badge}</span>
           </div>
           <div class="font-bold text-gray-900 line-clamp-2">${title}</div>
-          <div class="text-xs text-gray-500 mt-2">${author} · ${date}</div>
-          <div class="text-xs text-gray-400 mt-3">조회수 <span id="views-b-${id}" class="font-semibold text-gray-700">${Number(r.views || 0)}</span></div>
+          <div class="text-xs text-gray-500 mt-2">${author}${author && date ? " · " : ""}${date}</div>
+          <div class="text-xs text-gray-400 mt-3">조회수 <span id="views-b-${id}" class="font-semibold text-gray-700">${baseViews}</span></div>
         </div>
       `;
     }).join("");
@@ -851,7 +913,7 @@
 
   const renderAllReviews = () => {
     const container = $("all-reviews-container");
-    const countEl = $("totalReviewCount");
+    const countEl = $("total-review-count") || $("totalReviewCount");
     const moreBtn = $("load-more-btn");
     if (!container) return;
 
@@ -868,24 +930,24 @@
       const date = String(r.date || "");
       const rating = Number(r.rating || 0);
       const badge = String(r.badge || "");
-      const badgeHtml = badge ? `<span class="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full font-bold">${badge}</span>` : "";
-      const content = String(r.content || "");
-      const snippet = content.slice(0, 120) + (content.length > 120 ? "…" : "");
+      const badgeHtml = badge ? `<span class="text-xs bg-emerald...ald-700 px-2 py-1 rounded-full font-bold">${badge}</span>` : "";
+      const rawHtml = String(r.contentHtml ?? r.content ?? "");
+      const snippetText = stripHtml(rawHtml);
+      const snippet = snippetText.slice(0, 120) + (snippetText.length > 120 ? "…" : "");
+      const baseViews = getBaseViews(r);
       return `
-        <div class="bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-lg transition-all cursor-pointer" onclick="window.App.openReviewDetail(${id})">
+        <div class="bg-white border border-gray-100 rounded-2xl ...ll cursor-pointer" onclick="window.App.openReviewDetail(\'${id}\')">
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2">
               <div class="flex gap-0.5">${starsHtml(rating)}</div>
-              <span class="text-xs text-gray-400">${rating.toFixed(1)}</span>
+              <span class="text-xs text-gray-400">${Number(rating).toFixed(1)}</span>
             </div>
             ${badgeHtml}
           </div>
-          <div class="font-bold text-gray-900 line-clamp-2">${title}</div>
-          <div class="text-sm text-gray-500 line-clamp-2 mt-2 whitespace-pre-line">${snippet}</div>
-          <div class="flex items-center justify-between text-xs text-gray-500 mt-4">
-            <div>${author} · ${date}</div>
-            <div>조회수 <span id="views-a-${id}" class="font-semibold text-gray-800">${Number(r.views || 0)}</span></div>
-          </div>
+          <div class="font-bold text-gray-900 line-clamp-1">${title}</div>
+          <div class="text-xs text-gray-500 mt-1">${author}${author && date ? " · " : ""}${date}</div>
+          <div class="text-sm text-gray-600 mt-3 line-clamp-3">${snippet}</div>
+          <div class="text-xs text-gray-400 mt-3">조회수 <span id="views-a-${id}" class="font-semibold text-gray-700">${baseViews}</span></div>
         </div>
       `;
     }).join("");
@@ -901,14 +963,20 @@
 
   const incrementViewCount = async (reviewId) => {
     const id = String(reviewId);
+    const review = getStaticReviews().find(r => String(r.id) === id);
+    const base = getBaseViews(review);
+
     await runTransaction(db, async (tx) => {
-      const ref = doc(db, "reviewViews", id);
+      const ref = P.reviewCounter(id);
       const snap = await tx.get(ref);
-      const prev = snap.exists() ? Number(snap.data()?.views || 0) : 0;
-      tx.set(ref, { views: prev + 1 }, { merge: true });
+      const prev = snap.exists() ? Number(snap.data()?.deltaViews || 0) : 0;
+      tx.set(ref, { deltaViews: prev + 1 }, { merge: true });
     });
-    const snap = await getDoc(doc(db, "reviewViews", id));
-    return snap.exists() ? Number(snap.data()?.views || 0) : 0;
+
+    const snap = await getDoc(P.reviewCounter(id));
+    const delta = snap.exists() ? Number(snap.data()?.deltaViews || 0) : 0;
+    viewDeltaCache.set(id, delta);
+    return base + delta;
   };
 
   const openReviewDetail = async (reviewId) => {
@@ -924,7 +992,11 @@
     const starsEl = $("modal-review-stars");
 
     if (titleEl) titleEl.textContent = String(review.title || "");
-    if (contentEl) contentEl.textContent = String(review.content || "");
+    if (contentEl) {
+      const html = (review.contentHtml ?? review.content ?? "");
+      if (review.contentHtml) contentEl.innerHTML = String(html);
+      else contentEl.textContent = String(html);
+    }
     if (authorEl) authorEl.textContent = String(review.author || "");
     if (dateEl) dateEl.textContent = String(review.date || "");
     if (starsEl) {
@@ -942,7 +1014,7 @@
       if (el1) el1.textContent = String(v);
       if (el2) el2.textContent = String(v);
     } catch (e) {
-      if (viewsEl) viewsEl.textContent = String(Number(review.views || 0));
+      if (viewsEl) viewsEl.textContent = String(getBaseViews(review));
       console.warn("viewCount sync skipped:", e?.message || e);
     }
   };
@@ -976,13 +1048,13 @@
       const uid = cred.user.uid;
 
       await runTransaction(db, async (tx) => {
-        const unameRef = doc(db, "usernames", username);
+        const unameRef = P.usernames(username);
         const unameSnap = await tx.get(unameRef);
         if (unameSnap.exists()) throw new Error("이미 사용 중인 아이디입니다.");
 
         tx.set(unameRef, { uid, email, createdAt: serverTimestamp() });
 
-        tx.set(doc(db, "users", uid), {
+        tx.set(P.userProfile(uid), {
           uid,
           email,
           name,
@@ -994,7 +1066,7 @@
           createdAt: serverTimestamp()
         }, { merge: true });
 
-        tx.set(doc(db, "members", uid), {
+        tx.set(P.publicMember(uid), {
           uid,
           email,
           name,
@@ -1030,7 +1102,7 @@
       let email = idOrEmail;
       if (!isEmail(idOrEmail)) {
         const uname = normalizeUsername(idOrEmail);
-        const snap = await getDoc(doc(db, "usernames", uname));
+        const snap = await getDoc(P.usernames(uname));
         if (!snap.exists()) throw new Error("아이디를 찾을 수 없습니다.");
         email = String(snap.data()?.email || "");
         if (!email) throw new Error("아이디 매핑 정보가 올바르지 않습니다.");
@@ -1057,7 +1129,7 @@
       let email = idOrEmail;
       if (!isEmail(idOrEmail)) {
         const uname = normalizeUsername(idOrEmail);
-        const snap = await getDoc(doc(db, "usernames", uname));
+        const snap = await getDoc(P.usernames(uname));
         if (!snap.exists()) throw new Error("아이디를 찾을 수 없습니다.");
         email = String(snap.data()?.email || "");
       }
@@ -1075,9 +1147,22 @@
   };
 
   const openAllReviews = () => {
-    const url = new URL(window.location.href);
-    url.searchParams.set("view", "reviews");
-    window.open(url.toString(), "_blank");
+    const target = "./reviews.html";
+    const fallback = () => {
+      const base = window.location.pathname.replace(/\/[^\/]*$/, "/index.html");
+      window.location.href = base + "?view=reviews#reviews";
+    };
+    try {
+      const w = window.open(target, "_blank", "noopener,noreferrer");
+      if (w) return;
+    } catch (e) {
+      // ignore
+    }
+    fetch(target, { method: "HEAD" })
+      .then(res => {
+        window.location.href = res.ok ? target : (window.location.pathname + "?view=reviews#reviews");
+      })
+      .catch(() => fallback());
   };
 
   const switchTab = (mode) => {
@@ -1138,8 +1223,10 @@
     await setAuthUI(user);
   });
 
-  renderBestReviews();
-  renderAllReviews();
+  ensureReviewsLoaded().then(() => {
+    renderBestReviews();
+    renderAllReviews();
+  });
 
   // If opened with ?view=reviews, show all + scroll
   try {
