@@ -126,9 +126,9 @@ apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJ0Fcjn-w-tyY",
   const db = getFirestore(app);
 
   const P = {
-    userProfile: (uid) => doc(db, "artifacts", APP_ID, "users", uid, "profile", "info"),
-    publicMember: (uid) => doc(db, "artifacts", APP_ID, "public", "data", "members", uid),
-    membersCol: () => collection(db, "artifacts", APP_ID, "public", "data", "members"),
+    user: (uid) => doc(db, "users", uid),
+    member: (uid) => doc(db, "members", uid),
+    membersCol: () => collection(db, "members"),
   };
 
   const elGuard = document.getElementById("guard");
@@ -161,7 +161,8 @@ apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJ0Fcjn-w-tyY",
     elRows.innerHTML = rows.map(r => {
       const uid = fmt(r.uid);
       const pay = fmt(r.payStatus || "");
-      const sel = (v) => (v === pay ? "selected" : "");
+      const payNorm = (pay === "active") ? "complete" : pay;
+      const sel = (v) => (v === payNorm ? "selected" : "");
       return `
         <tr class="border-b">
           <td class="p-3 text-xs text-gray-500">${fmt(r.joinDate)}</td>
@@ -176,7 +177,7 @@ apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJ0Fcjn-w-tyY",
             <select data-uid="${uid}" class="paySel border rounded px-2 py-1 text-sm">
               <option value="">(미설정)</option>
               <option value="pending" ${sel("pending")}>입금확인중</option>
-              <option value="active"  ${sel("active")}>수강중</option>
+              <option value="complete" ${sel("complete")}>결제완료/수강가능</option>
               <option value="none"    ${sel("none")}>취소/미수강</option>
             </select>
           </td>
@@ -191,12 +192,13 @@ apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJ0Fcjn-w-tyY",
       btn.addEventListener("click", async () => {
         const uid = btn.getAttribute("data-uid");
         const selEl = document.querySelector(`.paySel[data-uid="${uid}"]`);
-        const v = fmt(selEl?.value || "");
+        const v0 = fmt(selEl?.value || "");
+        const v = (v0 === "active") ? "complete" : v0;
         if (!uid) return;
 
         try {
-          await updateDoc(P.userProfile(uid), { payStatus: v, updatedAt: serverTimestamp() });
-          await updateDoc(P.publicMember(uid), { payStatus: v, updatedAt: serverTimestamp() });
+          await updateDoc(P.user(uid), { payStatus: v, updatedAt: serverTimestamp() });
+          await updateDoc(P.member(uid), { payStatus: v, updatedAt: serverTimestamp() });
           alert("저장 완료");
         } catch (e) {
           console.error(e);
