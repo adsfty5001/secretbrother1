@@ -6,7 +6,7 @@
   <title>시크릿클래스 관리자</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Optional: centralized Firebase config for GitHub Pages -->
-  <script src="./js/config.js"></script>
+  <script src="./config.js"></script>
 </head>
 <body class="bg-gray-50">
   <header class="bg-white border-b">
@@ -126,9 +126,10 @@ apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJ0Fcjn-w-tyY",
   const db = getFirestore(app);
 
   const P = {
-    userProfile: (uid) => doc(db, "artifacts", APP_ID, "users", uid, "profile", "info"),
-    publicMember: (uid) => doc(db, "artifacts", APP_ID, "public", "data", "members", uid),
-    membersCol: () => collection(db, "artifacts", APP_ID, "public", "data", "members"),
+    // Root collections (rules와 1:1 매칭)
+    userProfile: (uid) => doc(db, "users", uid),
+    publicMember: (uid) => doc(db, "members", uid),
+    membersCol: () => collection(db, "members"),
   };
 
   const elGuard = document.getElementById("guard");

@@ -46,7 +46,7 @@
         .animate-float { animation: float 6s ease-in-out infinite; }
 
         /* 화면 전환 유틸리티 */
-        .hidden-section { display: none; }
+        .hidden-section { display: none !important; }
         .hidden { display: none !important; }
         
         /* 후기 카드 텍스트 줄임 (일정 높이 유지) */
@@ -69,7 +69,7 @@
         .decoded-content p { margin-bottom: 1em; }
     </style>
   <!-- Optional: centralized Firebase config for GitHub Pages -->
-  <script src="./js/config.js"></script>
+  <script src="./config.js"></script>
 </head>
 <body class="bg-white text-gray-900 font-body flex flex-col min-h-screen">
 
@@ -724,12 +724,13 @@
   const APP_ID = window.APP_ID || "secretclass";
 
   const P = {
-    userProfile: (uid) => doc(db, "artifacts", APP_ID, "users", uid, "profile", "info"),
-    publicMember: (uid) => doc(db, "artifacts", APP_ID, "public", "data", "members", uid),
-    reviewCounter: (rid) => doc(db, "artifacts", APP_ID, "public", "data", "reviewCounters", String(rid)),
-    usernames: (uname) => doc(db, "artifacts", APP_ID, "public", "data", "usernames", String(uname).toLowerCase())
+    // Root collections (rules와 1:1 매칭)
+    userProfile: (uid) => doc(db, "users", uid),
+    publicMember: (uid) => doc(db, "members", uid),
+    reviewCounter: (rid) => doc(db, "reviewViews", String(rid)),
+    usernames: (uname) => doc(db, "usernames", String(uname).toLowerCase())
   };
-  const colReviewCounters = () => collection(db, "artifacts", APP_ID, "public", "data", "reviewCounters");
+  const colReviewCounters = () => collection(db, "reviewViews");
 // TODO: 관리자 이메일만 여기에 입력하세요 (여러 개 가능)
   const ADMIN_EMAILS = Array.isArray(window.ADMIN_EMAILS)
     ? window.ADMIN_EMAILS.map(v => String(v).toLowerCase())
@@ -769,32 +770,11 @@
     const guest = $("auth-guest");
     const authed = $("auth-user");
     const adminBtn = $("btn-admin-open");
-    const nameEl = $("user-name-display");
 
-    // Anonymous(조회수용) 로그인은 '게스트'로 취급 (로그인/회원가입 버튼을 계속 보여줌)
-    const isRealUser = !!user && !user.isAnonymous;
-
-    if (guest) guest.style.display = isRealUser ? "none" : "flex";
-    if (authed) authed.style.display = isRealUser ? "flex" : "none";
-
-    // 이름 표시
-    if (nameEl) {
-      if (!isRealUser) {
-        nameEl.textContent = "";
-      } else {
-        try {
-          const snap = await getDoc(P.userProfile(user.uid));
-          const nm = snap.exists() ? String(snap.data()?.name || "") : "";
-          nameEl.textContent = nm || String(user.email || "");
-        } catch {
-          nameEl.textContent = String(user.email || "");
-        }
-      }
-    }
-
-    // 관리자 버튼
+    if (guest) guest.style.display = user ? "none" : "flex";
+    if (authed) authed.style.display = user ? "flex" : "none";
     if (adminBtn) {
-      const isAdmin = isRealUser && ADMIN_EMAILS.map(String).includes(String(user.email || "").toLowerCase());
+      const isAdmin = !!user && ADMIN_EMAILS.map(String).includes(String(user.email || "").toLowerCase());
       adminBtn.style.display = isAdmin ? "inline-flex" : "none";
     }
   };
@@ -814,6 +794,9 @@
     reviewsLoaded: false
   };
 
+  const BEST_FIXED_IDS = ["11951", "11955", "11954", "11952", "11947", "11946"];
+
+
   const stripHtml = (html) => {
     try {
       const div = document.createElement("div");
@@ -821,92 +804,6 @@
       return (div.textContent || div.innerText || "").trim();
     } catch { return String(html || ""); }
   };
-
-  // ---------
-  // Review content prettifier (HTML -> readable text + 링크/이미지 정리)
-  // ---------
-  const escapeHtml = (s) => String(s || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-
-  const escapeAttr = (s) => escapeHtml(String(s || "")).replace(/`/g, "&#096;");
-
-  const decodeHtmlEntities = (s) => {
-    const t = document.createElement("textarea");
-    t.innerHTML = String(s || "");
-    return t.value;
-  };
-
-  const sanitizeHtmlBasic = (html) => {
-    let s = String(html || "");
-    s = s.replace(/<script[\s\S]*?<\/script>/gi, "");
-    s = s.replace(/<style[\s\S]*?<\/style>/gi, "");
-    s = s.replace(/\son\w+="[^"]*"/gi, "");
-    s = s.replace(/\son\w+='[^']*'/gi, "");
-    s = s.replace(/javascript:/gi, "");
-    return s;
-  };
-
-  const buildPrettyReviewHtml = (raw) => {
-    const decoded = decodeHtmlEntities(raw);
-    const safe = sanitizeHtmlBasic(decoded);
-
-    const doc = new DOMParser().parseFromString(safe, "text/html");
-    const bodyText = (doc.body.textContent || "").trim();
-
-    // 1) 원문 링크(가능하면 외부 링크 우선)
-    let link = "";
-    const firstA = doc.querySelector('a[href^="http"]');
-    if (firstA) link = String(firstA.getAttribute("href") || "");
-    if (!link) {
-      const m = bodyText.match(/https?:\/\/[^\s)]+/);
-      if (m) link = m[0];
-    }
-
-    // 2) 본문(문장만)
-    const paras = Array.from(doc.querySelectorAll("p"))
-      .map(p => (p.textContent || "").replace(/\s+/g, " ").trim())
-      .filter(Boolean);
-
-    const mainParas = paras.length
-      ? paras
-      : (bodyText ? bodyText.split(/\n{2,}/).map(s => s.trim()).filter(Boolean) : []);
-
-    // 3) 이미지(최대 6개)
-    const imgs = Array.from(doc.querySelectorAll("img"))
-      .map(img => String(img.getAttribute("src") || ""))
-      .filter(u => /^https?:\/\//.test(u))
-      .slice(0, 6);
-
-    let out = "";
-    if (link) {
-      out += `<div class="mb-3">
-        <a href="${escapeAttr(link)}" target="_blank" rel="noopener noreferrer"
-           class="text-indigo-600 font-semibold underline">원문 링크 열기</a>
-      </div>`;
-    }
-
-    if (mainParas.length) {
-      out += mainParas.map(p => `<p class="mb-3 leading-relaxed text-gray-800">${escapeHtml(p)}</p>`).join("");
-    } else {
-      out += `<p class="text-gray-500">내용이 없습니다.</p>`;
-    }
-
-    if (imgs.length) {
-      out += `<div class="mt-4 grid grid-cols-2 gap-3">` +
-        imgs.map(u => `
-          <a href="${escapeAttr(u)}" target="_blank" rel="noopener noreferrer" class="block">
-            <img src="${escapeAttr(u)}" alt="" class="w-full h-auto rounded-xl border border-gray-200" loading="lazy" referrerpolicy="no-referrer">
-          </a>`).join("") +
-        `</div>`;
-    }
-
-    return out;
-  };
-
 
   const normalizeReviews = (raw) => {
     if (!Array.isArray(raw)) return [];
@@ -927,7 +824,7 @@
   const ensureReviewsLoaded = async () => {
     if (state.reviewsLoaded) return;
     try {
-      const res = await fetch("./reviews.json", { cache: "no-store" }).catch(() => fetch("./data/reviews.json", { cache: "no-store" }));
+      const res = await fetch("./data/reviews.json", { cache: "no-store" });
       if (!res.ok) throw new Error("reviews.json fetch failed: " + res.status);
       const raw = await res.json();
       const normalized = normalizeReviews(raw);
@@ -955,27 +852,22 @@
 
   const fetchAndPaintViewCounts = async (ids) => {
     try {
-      const uniq = Array.from(new Set((ids || []).filter(Boolean).map(v => String(v))));
-      if (uniq.length === 0) return;
-      const reviewById = new Map(getStaticReviews().map(r => [String(r.id), r]));
-
-      const batches = [];
-      for (let i = 0; i < uniq.length; i += 10) batches.push(uniq.slice(i, i + 10));
-
-      for (const batch of batches) {
-        const qy = query(colReviewCounters(), where(documentId(), "in", batch));
-        const snap = await getDocs(qy);
-        snap.forEach(d => {
-          const delta = Number(d.data()?.views || 0) || 0;
-          const id = d.id;
+      const uniq = Array.from(new Set((ids || []).map(String))).filter(Boolean);
+      for (const id of uniq) {
+        try {
+          const snap = await getDoc(P.reviewCounter(id));
+          const delta = snap.exists() ? (Number(snap.data()?.views || 0) || 0) : 0;
           viewDeltaCache.set(id, delta);
+
           const base = getBaseViews(reviewById.get(id));
           const total = base + delta;
           const el1 = $("views-b-" + id);
           const el2 = $("views-a-" + id);
           if (el1) el1.textContent = String(total);
           if (el2) el2.textContent = String(total);
-        });
+        } catch (e2) {
+          // 단건 실패는 무시하고 계속
+        }
       }
     } catch (e) {
       console.warn("fetchAndPaintViewCounts skipped:", e?.message || e);
@@ -987,8 +879,10 @@
     if (!container) return;
 
     const reviews = getStaticReviews();
+    const byId = new Map(reviews.map(r => [String(r.id), r]));
+    const fixed = BEST_FIXED_IDS.map(id => byId.get(String(id))).filter(Boolean);
     const best = reviews.filter(r => String(r.badge || "").toUpperCase() === "BEST" || r.isBest === true);
-    const list = (best.length ? best : reviews).slice(0, 6);
+    const list = (fixed.length === 6 ? fixed : (best.length ? best : reviews).slice(0, 6));
 
     container.innerHTML = list.map(r => {
       const id = String(r.id);
@@ -1076,15 +970,8 @@
     await runTransaction(db, async (tx) => {
       const ref = P.reviewCounter(id);
       const snap = await tx.get(ref);
-
-      if (!snap.exists()) {
-        // create: {views:1} only
-        tx.set(ref, { views: 1 });
-      } else {
-        const prev = Number(snap.data()?.views || 0) || 0;
-        // update: views must increase by exactly +1 (rules)
-        tx.update(ref, { views: prev + 1 });
-      }
+      const prev = snap.exists() ? Number(snap.data()?.views || 0) : 0;
+      tx.set(ref, { views: prev + 1 }, { merge: true });
     });
 
     const snap = await getDoc(P.reviewCounter(id));
@@ -1107,9 +994,9 @@
 
     if (titleEl) titleEl.textContent = String(review.title || "");
     if (contentEl) {
-      const raw = String(review.contentHtml ?? review.content ?? "");
-      // HTML이든 텍스트든, 보기 좋게 정리해서 보여주기
-      contentEl.innerHTML = buildPrettyReviewHtml(raw);
+      const html = (review.contentHtml ?? review.content ?? "");
+      if (review.contentHtml) contentEl.innerHTML = String(html);
+      else contentEl.textContent = String(html);
     }
     if (authorEl) authorEl.textContent = String(review.author || "");
     if (dateEl) dateEl.textContent = String(review.date || "");
@@ -1193,8 +1080,13 @@
         }, { merge: true });
       });
 
-      closeModal("loginModal");
-      window.location.href = "./classroom.html";
+      showMsg("signup-msg", "");
+      // 회원가입 완료 후: 자동 로그인 상태를 해제하고, 로그인 탭으로 유도
+      await signOut(auth);
+      switchTab("login");
+      showMsg("login-msg", "회원가입이 완료되었습니다. 로그인해 주세요.");
+      // 모달은 그대로 둡니다 (로그인 직접 수행)
+      
     } catch (e) {
       console.error(e);
       const raw = String(e?.message || "");
@@ -1222,8 +1114,13 @@
         if (!email) throw new Error("아이디 매핑 정보가 올바르지 않습니다.");
       }
       await signInWithEmailAndPassword(auth, email, pw);
-      closeModal("loginModal");
-      window.location.href = "./classroom.html";
+      showMsg("signup-msg", "");
+      // 회원가입 완료 후: 자동 로그인 상태를 해제하고, 로그인 탭으로 유도
+      await signOut(auth);
+      switchTab("login");
+      showMsg("login-msg", "회원가입이 완료되었습니다. 로그인해 주세요.");
+      // 모달은 그대로 둡니다 (로그인 직접 수행)
+      
     } catch (e) {
       console.error(e);
       const raw = String(e?.message || "");
@@ -1301,7 +1198,31 @@
     showMsg("signup-msg", "");
   };
 
+  
   // -----------------------------
+  // FAQ toggle (질문 클릭 시 답변 열기/닫기)
+  // -----------------------------
+  const toggleFaq = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const isHidden = el.classList.contains("hidden");
+    // 같은 FAQ 그룹에서 다른 답변을 닫고 싶다면 아래를 활성화:
+    // document.querySelectorAll('[data-faq-answer="1"]').forEach(x => x.classList.add('hidden'));
+    if (isHidden) el.classList.remove("hidden");
+    else el.classList.add("hidden");
+  };
+
+  // 해시로 로그인 모달 열기: reviews.html 등에서 index.html#login 으로 보내면 자동 오픈
+  const openLoginFromHash = () => {
+    try {
+      if (String(window.location.hash || "").toLowerCase() === "#login") {
+        openModal("loginModal");
+        switchTab("login");
+      }
+    } catch {}
+  };
+
+// -----------------------------
   // Wire to window.App (buttons must work)
   // -----------------------------
   window.App = Object.assign(window.App || {}, {
@@ -1317,33 +1238,13 @@
     processSignup,
     resetPassword,
     logout,
-    openMypage: () => {
-      const u = auth.currentUser;
-      if (u && !u.isAnonymous) {
-        window.location.href = "./classroom.html";
-      } else {
-        openModal("loginModal");
-        switchTab("login");
-      }
-    },
-    toggleFaq: (btn) => {
-      try {
-        const item = btn?.closest?.(".faq-item") || btn?.parentElement?.parentElement;
-        if (!item) return;
-        const body = item.querySelector(".faq-body") || item.querySelector('[data-faq-body]');
-        const icon = item.querySelector(".faq-icon") || item.querySelector('[data-faq-icon]');
-        if (!body) return;
-        const isHidden = body.classList.contains("hidden");
-        body.classList.toggle("hidden", !isHidden);
-        if (icon) icon.classList.toggle("rotate-180", isHidden);
-      } catch {}
-    },
     openAllReviews,
     openReviewDetail,
     loadMoreReviews: () => {
       state.visibleReviews = Number(state.visibleReviews || 9) + 9;
       renderAllReviews();
     },
+    toggleFaq,
     navigate: (sectionId) => {
       const el = document.getElementById(sectionId);
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1360,6 +1261,8 @@
 
   ensureReviewsLoaded().then(() => {
     renderBestReviews();
+  openLoginFromHash();
+
     renderAllReviews();
   });
 

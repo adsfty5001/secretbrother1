@@ -6,7 +6,7 @@
   <title>나의 강의실 - 시크릿클래스</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Optional: centralized Firebase config for GitHub Pages -->
-  <script src="./js/config.js"></script>
+  <script src="./config.js"></script>
 </head>
 <body class="bg-gray-50">
   <header class="bg-white border-b">
@@ -69,8 +69,9 @@ apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJ0Fcjn-w-tyY",
   const db = getFirestore(app);
 
   const P = {
-    userProfile: (uid) => doc(db, "artifacts", APP_ID, "users", uid, "profile", "info"),
-    coursesCol: () => collection(db, "artifacts", APP_ID, "public", "data", "courses"),
+    // Root collections (rules와 1:1 매칭)
+    member: (uid) => doc(db, "members", uid),
+    coursesCol: () => collection(db, "courses"),
   };
 
   const elUserEmail = document.getElementById("user-email");
@@ -104,7 +105,7 @@ apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJ0Fcjn-w-tyY",
     if (elUserEmail) elUserEmail.textContent = user.email || "";
 
     try {
-      const snap = await getDoc(P.userProfile(user.uid));
+      const snap = await getDoc(P.member(user.uid));
       const payStatus = snap.exists() ? String(snap.data()?.payStatus || "") : "";
 
       if (payStatus !== "active") {
