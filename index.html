@@ -626,77 +626,108 @@
 
 
 <script>
-  // Bridge for inline onclick handlers
+  // Bridge for inline onclick handlers (kept lightweight; real logic lives in module script)
   window.App = window.App || {};
-  window.App.openModal = function(id){
+
+  const MODAL_IDS = ["loginModal","depositModal","reviewDetailModal","writeReviewModal","mypageModal","adminModal","imageModal","videoModal"];
+
+  window.App.closeAllModals = function(){
+    for(const id of MODAL_IDS){
+      const el = document.getElementById(id);
+      if(!el) continue;
+      el.classList.add("hidden");
+      el.classList.remove("flex");
+    }
+    document.body.classList.remove("overflow-hidden");
+  };
+
+  window.App.openModal = function(id, tab){
+    window.App.closeAllModals();
     const el = document.getElementById(id);
     if(!el) return;
-    el.classList.remove('hidden');
-    el.classList.add('flex');
-    document.body.classList.add('overflow-hidden');
+    el.classList.remove("hidden");
+    el.classList.add("flex");
+    document.body.classList.add("overflow-hidden");
+
+    // Optional: switch auth tab when opening login modal
+    if(id === "loginModal" && tab && typeof window.App.switchTab === "function"){
+      try{ window.App.switchTab(tab); }catch(e){}
+    }
   };
+
   window.App.closeModal = function(id){
     const el = document.getElementById(id);
     if(!el) return;
-    el.classList.add('hidden');
-    el.classList.remove('flex');
-    document.body.classList.remove('overflow-hidden');
+    el.classList.add("hidden");
+    el.classList.remove("flex");
+
+    // If no modals are open, release scroll lock
+    const anyOpen = MODAL_IDS.some(mid=>{
+      const m = document.getElementById(mid);
+      return m && !m.classList.contains("hidden");
+    });
+    if(!anyOpen) document.body.classList.remove("overflow-hidden");
   };
-  window.App.toggleFaq = function(btn){
-    try{
-      const item = btn.closest('.faq-item') || btn.parentElement;
-      const ans = item && (item.querySelector('.faq-answer') || item.querySelector('[data-faq-answer]'));
-      if(!ans) return;
-      const isOpen = !ans.classList.contains('hidden');
-      if(isOpen){
-        ans.classList.add('hidden');
-        btn.setAttribute('aria-expanded','false');
-      } else {
-        ans.classList.remove('hidden');
-        btn.setAttribute('aria-expanded','true');
-      }
-    }catch(e){}
-  };
+
+  // Backdrop close
+  for(const id of MODAL_IDS){
+    const el = document.getElementById(id);
+    if(!el) continue;
+    el.addEventListener("click", (e)=>{ if(e.target === el) window.App.closeModal(id); });
+  }
+
+  // Safe stubs (prevent "onclick is not a function" hard failures)
+  const stub = (name)=> window.App[name] = window.App[name] || function(){ console.warn(`[App] ${name} not ready yet`); };
+  ["navigate","scrollToSection","toggleMobileMenu","switchTab","checkPayment","confirmDeposit","copyToClipboard",
+   "checkWritePermission","loadMoreReviews","submitReview","openAdminModal","updateUserStatus","openMypage",
+   "openAllReviews","openMyClassroom","openReviewDetail","logout","processLogin","processSignup","resetPassword","toggleFaq"].forEach(stub);
+
+  // Escape key closes any open modal
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape") window.App.closeAllModals();
+  });
 </script>
 
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
-    getAuth, onAuthStateChanged,
-    signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile,
-    sendPasswordResetEmail
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+    createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, updateProfile
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import {
-    getFirestore, doc, getDoc, setDoc,
-    serverTimestamp, runTransaction
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    getFirestore, doc, getDoc, setDoc, addDoc,
+    collection, getDocs, query, orderBy, serverTimestamp, runTransaction, limit
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  const CONFIG = window.SECRETCLASS_FIREBASE_CONFIG || window.FIREBASE_CONFIG;
+  // ---------- Config ----------
+  const CONFIG = window.SECRETCLASS_CONFIG;
   if(!CONFIG){
-    console.error("Missing Firebase config. config.js에 SECRETCLASS_FIREBASE_CONFIG를 넣어주세요.");
+    console.error("[Secretclass] config.js(SECRETCLASS_CONFIG)가 로드되지 않았습니다. 루트에 config.js가 있고 <script src='./config.js'></script>가 1회 포함되어야 합니다.");
   }
-  const app = initializeApp(CONFIG);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
 
-  const ADMIN_EMAILS = new Set(["secret-brother@naver.com"]);
+  const ADMIN_EMAILS = new Set([
+    "secretbrother@secretclass.com",
+    "admin@secretclass.com"
+  ]);
 
-  const $ = (id) => document.getElementById(id);
+  // ---------- DOM helpers ----------
+  const $ = (id)=> document.getElementById(id);
 
   const decodeHtml = (s) => {
-    if (s == null) return "";
     const t = document.createElement("textarea");
-    t.innerHTML = String(s);
+    t.innerHTML = String(s ?? "");
     return t.value;
   };
 
+  const escapeHtml = (s) => String(s||"")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+
   const normalizeText = (s) => String(s || "")
-    // Windows/JSON escape sequences like "\r\n" are stored as literal backslash characters in the data.
     .replace(/\\r\\n/g, "\n")
     .replace(/\\n/g, "\n")
     .replace(/\\r/g, "\n")
-    // Real newlines
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n")
     .replace(/\u00A0/g, " ")
@@ -704,57 +735,55 @@
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 
-  const ratingFor = (id) => {
-    // 95%: 5점, 5%: 4점 (id 기반 결정적)
-    let h = 0;
-    const str = String(id || "");
-    for (let i=0;i<str.length;i++) h = (h*31 + str.charCodeAt(i)) >>> 0;
-    return (h % 20 === 0) ? 4 : 5;
+  function excerptFromHtml(htmlStr, maxLen=140){
+    const tmp = document.createElement("div");
+    tmp.innerHTML = decodeHtml(String(htmlStr ?? ""));
+    const text = normalizeText(tmp.textContent || "");
+    if(text.length <= maxLen) return text;
+    return text.slice(0, maxLen).trim() + "…";
+  }
+
+  function fmtDate(d){
+    const s = String(d || "");
+    if(!s) return "";
+    // accept ISO yyyy-mm-dd or yyyy.mm.dd
+    return s.slice(0,10).replaceAll(".","-");
+  }
+
+  // ---------- Firebase ----------
+  // If CONFIG missing, still keep UI alive (stubs), but Firebase features will not work.
+  const app = CONFIG ? initializeApp(CONFIG) : null;
+  const auth = app ? getAuth(app) : null;
+  const db = app ? getFirestore(app) : null;
+
+  // ---------- App State ----------
+  window.App = window.App || {};
+  window.App.state = window.App.state || {
+    user: null,
+    payStatus: "",
+    username: ""
   };
 
-  function renderStars(score){
-    const s = Number(score) || 0;
-    const full = Math.max(0, Math.min(5, Math.round(s)));
-    let html = "";
-    for(let i=0;i<5;i++){
-      html += `<span class="${i<full ? "text-yellow-400" : "text-gray-300"}">★</span>`;
+  async function getMemberPayStatus(uid){
+    if(!db) return "";
+    try{
+      const ref = doc(db, "members", uid);
+      const snap = await getDoc(ref);
+      return snap.exists() ? String(snap.data().payStatus || "") : "";
+    }catch(e){
+      return "";
     }
-    return `<span class="inline-flex items-center gap-0.5">${html}</span><span class="ml-2 text-sm text-gray-500">${full.toFixed(1)}</span>`;
   }
 
-  function escapeHtml(s){
-    return String(s||"")
-      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-  }
-  function escapeAttr(s){
-    return String(s||"").replaceAll('"',"&quot;").replaceAll("'","&#039;");
-  }
-
-  function excerptFromHtml(htmlStr, maxLen=90){
-    const div = document.createElement("div");
-    div.innerHTML = htmlStr || "";
-    const txt = normalizeText(div.textContent || "");
-    if(txt.length <= maxLen) return txt;
-    return txt.slice(0, maxLen) + "…";
-  }
-
-  function fmtDate(dateStr){
-    return String(dateStr || "").slice(0, 10);
-  }
-
-  async function resolveLoginEmail(loginId){
-    const id = String(loginId || "").trim();
-    if(!id) throw new Error("아이디/이메일을 입력해 주세요.");
-    if(id.includes("@")) return id;
-
-    const ref = doc(db, "usernames", id);
-    const snap = await getDoc(ref);
-    if(!snap.exists()) throw new Error("존재하지 않는 아이디입니다.");
-    const data = snap.data() || {};
-    const email = data.email || data.userEmail || data.loginEmail;
-    if(!email) throw new Error("아이디 매핑(email)이 없습니다. usernames/{id} 문서에 email 필드를 저장해 주세요.");
-    return email;
+  async function getMemberProfile(uid){
+    if(!db) return {};
+    try{
+      const ref = doc(db, "members", uid);
+      const snap = await getDoc(ref);
+      return snap.exists() ? (snap.data() || {}) : {};
+    }catch(e){
+      return {};
+    }
   }
 
   function setAuthUI(user){
@@ -764,73 +793,310 @@
     const adminBtn = $("btn-admin-open") || $("adminBtn");
 
     if(user){
-      guest && (guest.classList.add("hidden"), guest.classList.add("hidden-section"));
-      authed && (authed.classList.remove("hidden"), authed.classList.remove("hidden-section"));
+      guest && (guest.classList.add("hidden","hidden-section"));
+      authed && (authed.classList.remove("hidden","hidden-section"));
       if(nameEl) nameEl.textContent = user.displayName || user.email || "로그인";
       if(adminBtn){
         adminBtn.classList.toggle("hidden", !ADMIN_EMAILS.has(user.email || ""));
       }
-    } else {
-      guest && (guest.classList.remove("hidden"), guest.classList.remove("hidden-section"));
-      authed && (authed.classList.add("hidden"), authed.classList.add("hidden-section"));
+    }else{
+      guest && (guest.classList.remove("hidden","hidden-section"));
+      authed && (authed.classList.add("hidden","hidden-section"));
       if(nameEl) nameEl.textContent = "";
       if(adminBtn) adminBtn.classList.add("hidden");
     }
   }
 
-  // -------- Reviews (JSON + delta views in Firestore) --------
+  async function refreshPayStatus(){
+    const user = auth?.currentUser || null;
+    if(!user){
+      window.App.state.payStatus = "";
+      window.App.state.username = "";
+      return;
+    }
+    const prof = await getMemberProfile(user.uid);
+    window.App.state.payStatus = String(prof.payStatus || "");
+    window.App.state.username = String(prof.username || "");
+    updateMypageUI();
+  }
+
+  function updateMypageUI(){
+    const user = auth?.currentUser || null;
+    const mpName = $("mp-name");
+    const mpEmail = $("mp-email");
+    const guestBlock = $("mp-status-guest");
+    const userBlock = $("mp-status-user");
+
+    if(!user){
+      guestBlock && guestBlock.classList.remove("hidden");
+      userBlock && userBlock.classList.add("hidden");
+      mpName && (mpName.textContent = "");
+      mpEmail && (mpEmail.textContent = "");
+      return;
+    }
+
+    guestBlock && guestBlock.classList.add("hidden");
+    userBlock && userBlock.classList.remove("hidden");
+
+    mpName && (mpName.textContent = user.displayName || window.App.state.username || "");
+    mpEmail && (mpEmail.textContent = user.email || "");
+
+    const ps = String(window.App.state.payStatus || "");
+    $("pay-none")?.classList.toggle("hidden", ps === "pending" || ps === "complete");
+    $("pay-pending")?.classList.toggle("hidden", ps !== "pending");
+    $("pay-complete")?.classList.toggle("hidden", ps !== "complete");
+  }
+
+  // ---------- Navigation / UI ----------
+  function navigate(view){
+    const home = $("view-home");
+    const reviews = $("view-reviews");
+    if(home) home.classList.toggle("hidden", view !== "home");
+    if(reviews) reviews.classList.toggle("hidden", view !== "reviews");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function scrollToSection(sectionId){
+    navigate("home");
+    setTimeout(()=>{
+      const el = document.getElementById(sectionId);
+      if(el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  }
+
+  function toggleMobileMenu(){
+    const m = $("mobileMenu");
+    if(!m) return;
+    m.classList.toggle("hidden");
+  }
+
+  function switchTab(tab){
+    const isLogin = (tab === "login");
+    const tabLogin = $("tab-login");
+    const tabSignup = $("tab-signup");
+    const formLogin = $("form-login");
+    const formSignup = $("form-signup");
+
+    if(formLogin) formLogin.classList.toggle("hidden", !isLogin);
+    if(formSignup) formSignup.classList.toggle("hidden", isLogin);
+
+    // button styles
+    tabLogin && tabLogin.classList.toggle("bg-white", isLogin);
+    tabLogin && tabLogin.classList.toggle("text-gray-900", isLogin);
+    tabLogin && tabLogin.classList.toggle("text-gray-500", !isLogin);
+
+    tabSignup && tabSignup.classList.toggle("bg-white", !isLogin);
+    tabSignup && tabSignup.classList.toggle("text-gray-900", !isLogin);
+    tabSignup && tabSignup.classList.toggle("text-gray-500", isLogin);
+
+    // clear messages
+    const lm = $("login-msg"); if(lm) lm.textContent = "";
+    const sm = $("signup-msg"); if(sm) sm.textContent = "";
+  }
+
+  // ---------- Auth helpers ----------
+  async function resolveLoginEmail(input){
+    const id = String(input || "").trim();
+    if(!id) throw new Error("이메일 또는 아이디를 입력해 주세요.");
+    if(id.includes("@")) return id;
+    if(!db) throw new Error("DB 초기화 실패(config.js 확인)");
+    const ref = doc(db, "usernames", id);
+    const snap = await getDoc(ref);
+    if(!snap.exists()) throw new Error("존재하지 않는 아이디입니다.");
+    const data = snap.data() || {};
+    const email = data.email || data.userEmail || data.loginEmail;
+    if(!email) throw new Error("아이디 매핑(email)이 없습니다. usernames/{아이디} 문서에 email 필드를 저장해 주세요.");
+    return email;
+  }
+
+  async function processLogin(){
+    const msg = $("login-msg");
+    if(msg) msg.textContent = "";
+    if(!auth) { msg && (msg.textContent = "Firebase 초기화 실패(config.js 확인)"); return; }
+
+    const loginId = $("login-id")?.value || "";
+    const pw = $("login-pw")?.value || "";
+    try{
+      const email = await resolveLoginEmail(loginId);
+      await signInWithEmailAndPassword(auth, email, pw);
+      await refreshPayStatus();
+
+      // close modal safely
+      window.App.closeAllModals?.();
+    }catch(e){
+      if(msg) msg.textContent = e?.message || "로그인에 실패했습니다.";
+    }
+  }
+
+  async function processSignup(){
+    const msg = $("signup-msg");
+    if(msg) msg.textContent = "";
+    if(!auth || !db) { msg && (msg.textContent = "Firebase 초기화 실패(config.js 확인)"); return; }
+
+    // IDs in this file are reg-pw / reg-pw2 (not reg-password)
+    const username = String($("reg-username")?.value || "").trim();
+    const email = String($("reg-email")?.value || "").trim();
+    const name = String($("reg-name")?.value || "").trim();
+    const phone = String($("reg-phone")?.value || "").trim();
+    const pw = String($("reg-pw")?.value || $("reg-password")?.value || "");
+    const pw2 = String($("reg-pw2")?.value || $("reg-password2")?.value || "");
+
+    try{
+      if(!username) throw new Error("아이디를 입력해 주세요.");
+      if(!email || !email.includes("@")) throw new Error("이메일을 올바르게 입력해 주세요.");
+      if(!pw || pw.length < 6) throw new Error("비밀번호는 6자리 이상이어야 합니다.");
+      if(pw !== pw2) throw new Error("비밀번호 확인이 일치하지 않습니다.");
+
+      // prevent duplicate username
+      const unRef = doc(db, "usernames", username);
+      const unSnap = await getDoc(unRef);
+      if(unSnap.exists()) throw new Error("이미 사용 중인 아이디입니다.");
+
+      const cred = await createUserWithEmailAndPassword(auth, email, pw);
+      if(name) await updateProfile(cred.user, { displayName: name });
+
+      await setDoc(doc(db, "members", cred.user.uid), {
+        username, email, name: name || "", phone: phone || "",
+        payStatus: "pending",
+        createdAt: serverTimestamp()
+      }, { merge: true });
+
+      await setDoc(unRef, { uid: cred.user.uid, email }, { merge: true });
+
+      if(msg) msg.textContent = "회원가입이 완료되었습니다. 로그인해 주세요.";
+      await signOut(auth);
+
+      // switch back to login tab
+      switchTab("login");
+    }catch(e){
+      if(msg) msg.textContent = e?.message || "회원가입에 실패했습니다.";
+    }
+  }
+
+  async function resetPassword(){
+    const msg = $("login-msg");
+    if(msg) msg.textContent = "";
+    if(!auth) { msg && (msg.textContent = "Firebase 초기화 실패(config.js 확인)"); return; }
+
+    const loginId = $("login-id")?.value || "";
+    try{
+      const email = await resolveLoginEmail(loginId);
+      await sendPasswordResetEmail(auth, email);
+      if(msg) msg.textContent = "비밀번호 재설정 메일을 전송했습니다. 메일함을 확인해 주세요.";
+    }catch(e){
+      if(msg) msg.textContent = e?.message || "비밀번호 재설정에 실패했습니다.";
+    }
+  }
+
+  async function logout(){
+    if(!auth) return;
+    try{
+      await signOut(auth);
+    }finally{
+      // Always release UI locks
+      window.App.closeAllModals?.();
+      const m = $("mobileMenu"); if(m) m.classList.add("hidden");
+      // Clear inputs to avoid stale state
+      const ids = ["login-id","login-pw","reg-username","reg-email","reg-name","reg-phone","reg-pw","reg-pw2"];
+      ids.forEach(i=>{ const el = $(i); if(el) el.value = ""; });
+      const lm = $("login-msg"); if(lm) lm.textContent = "";
+      const sm = $("signup-msg"); if(sm) sm.textContent = "";
+    }
+  }
+
+  // ---------- Reviews (JSON + Firestore reviews + delta views in Firestore) ----------
   let REVIEWS = [];
+  let FILTERED = [];
+  let pageSize = 6;
+  let pageCursor = 0;
+
   const viewDeltaCache = new Map();
+
   // BEST 후기 조회수는 '보이는 숫자'를 높게 보이도록, 로컬에서 기본값(900~1500)을 부여합니다.
   // Firestore의 실제 조회수 증가(incView / reviewViews)는 그대로 유지합니다.
   function getBestBaseViews(reviewId){
     try{
       const key = "SB_bestBaseViews__" + reviewId;
       const v = parseInt(localStorage.getItem(key) || "", 10);
-      if(Number.isFinite(v)) return v;
-      const seed = 900 + Math.floor(Math.random() * 601); // 900~1500
-      localStorage.setItem(key, String(seed));
-      return seed;
+      if(Number.isFinite(v) && v >= 900 && v <= 1500) return v;
+      const seeded = 900 + Math.floor(Math.random()*601); // 900~1500
+      localStorage.setItem(key, String(seeded));
+      return seeded;
     }catch(e){
-      return 900;
-    }
-  }
-  function bumpBestBaseViews(reviewId){
-    try{
-      const key = "SB_bestBaseViews__" + reviewId;
-      const cur = getBestBaseViews(reviewId);
-      localStorage.setItem(key, String(cur + 1));
-      return cur + 1;
-    }catch(e){
-      return getBestBaseViews(reviewId) + 1;
+      return 900 + Math.floor(Math.random()*601);
     }
   }
 
+  function ratingFor(reviewId){
+    // if rating provided, use it; otherwise 5.0 default for BEST cards
+    const r = REVIEWS.find(x=>x.id===reviewId);
+    const v = Number(r?.rating ?? 0);
+    return v > 0 ? v : 5;
+  }
+
+  function renderStars(v){
+    const n = Math.max(0, Math.min(5, Math.round(Number(v)||0)));
+    return "★".repeat(n) + "☆".repeat(5-n);
+  }
 
   async function loadReviewsJson(){
-    const urls = ["./reviews.json", "./data/reviews.json", "./reviews/reviews.json"];
-    for(const u of urls){
-      try{
-        const res = await fetch(u, { cache: "no-store" });
-        if(!res.ok) continue;
-        const arr = await res.json();
-        if(Array.isArray(arr)) return arr;
-      }catch(e){}
+    try{
+      const res = await fetch("./reviews.json", { cache: "no-store" });
+      if(!res.ok) return [];
+      return await res.json();
+    }catch(e){
+      return [];
     }
-    return [];
   }
 
-  function normalizeReview(r){
-    const id = String(r.id ?? r.reviewId ?? r.key ?? "");
-    const title = String(r.title ?? r.subject ?? "");
-    const author = String(r.author ?? r.writer ?? r.name ?? "");
-    const date = String(r.date ?? r.createdAt ?? r.created ?? "");
-    const contentHtml = decodeHtml(r.contentHtml ?? r.content ?? r.bodyHtml ?? "");
-    const baseViews = Number(r.views ?? r.viewCount ?? 0) || 0;
-    return { id, title, author, date, contentHtml, baseViews };
+  function tsToDateStr(ts){
+    try{
+      if(!ts) return "";
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      return d.toISOString().slice(0,10);
+    }catch(e){
+      return "";
+    }
+  }
+
+  async function loadFirestoreReviews(){
+    if(!db) return [];
+    try{
+      const q = query(collection(db, "reviews"), orderBy("createdAt", "desc"), limit(200));
+      const snap = await getDocs(q);
+      return snap.docs.map(d=>{
+        const data = d.data() || {};
+        return {
+          id: d.id,
+          title: String(data.title ?? ""),
+          author: String(data.author ?? data.writer ?? data.name ?? ""),
+          date: tsToDateStr(data.createdAt),
+          contentHtml: decodeHtml(data.contentHtml ?? data.content ?? ""),
+          baseViews: 0,
+          source: "firestore",
+          rating: Number(data.rating ?? 0) || null
+        };
+      });
+    }catch(e){
+      return [];
+    }
+  }
+
+  function normalizeReview(r, fallbackId){
+    const id = String(r.id ?? fallbackId ?? "");
+    const title = String(r.title ?? "");
+    const author = String(r.author ?? r.writer ?? r.name ?? r.userName ?? r.username ?? r.nickname ?? r.displayName ?? "");
+    const date = fmtDate(r.date ?? r.createdAt ?? "");
+    const contentHtml = decodeHtml(r.contentHtml ?? r.content ?? "");
+    const baseViews = Number(r.baseViews ?? r.views ?? 0) || 0;
+    const rating = Number(r.rating ?? 0) || null;
+
+    // NOTE: Do NOT mutate original text; only normalize for display.
+    return { id, title, author, date, contentHtml, baseViews, rating, source: r.source || "json" };
   }
 
   async function getDeltaViews(reviewId){
+    if(!db) return 0;
     if(viewDeltaCache.has(reviewId)) return viewDeltaCache.get(reviewId);
     try{
       const ref = doc(db, "reviewViews", reviewId);
@@ -844,6 +1110,7 @@
   }
 
   async function incrementDeltaViews(reviewId){
+    if(!db) return 0;
     const ref = doc(db, "reviewViews", reviewId);
     const newDelta = await runTransaction(db, async (tx) => {
       const snap = await tx.get(ref);
@@ -874,18 +1141,19 @@
       const rating = ratingFor(r.id);
 
       const card = document.createElement("div");
-      card.className = "bg-white rounded-2xl shadow-sm border border-gray-100 p-6 cursor-pointer hover:shadow-md transition";
+      card.className = "bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition cursor-pointer";
       card.innerHTML = `
-        <div class="flex items-center justify-between mb-3">
-          <div class="text-lg font-semibold text-gray-800">${renderStars(rating)}</div>
-          <span class="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-50 text-indigo-600">BEST</span>
+        <div class="flex items-center justify-between">
+          <div class="text-lg font-bold text-gray-900">${escapeHtml(r.title || "후기")}</div>
+          <div class="text-sm text-yellow-500">${escapeHtml(renderStars(rating))}</div>
         </div>
-        <div class="text-xl font-bold text-gray-900 leading-snug">${escapeHtml(r.title)}</div>
-        <div class="mt-3 text-sm text-gray-500">${fmtDate(r.date)}</div>
-        <div class="mt-3 text-sm text-gray-700 leading-relaxed">${escapeHtml(excerptFromHtml(r.contentHtml, 60))}</div>
-        <div class="mt-4 text-sm text-gray-500">조회수 <span id="views-b-${escapeAttr(r.id)}" class="font-semibold text-gray-700">${totalViews}</span></div>
+        <div class="mt-3 text-gray-700 leading-relaxed line-clamp-4">${escapeHtml(excerptFromHtml(r.contentHtml, 170))}</div>
+        <div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+          <div>${escapeHtml(r.author || "")}</div>
+          <div>조회수 <span id="views-${r.id}" class="font-semibold text-gray-800">${totalViews}</span></div>
+        </div>
       `;
-      card.addEventListener("click", async ()=>{ await openReviewDetail(r.id); });
+      card.addEventListener("click", ()=> openReviewDetail(r.id));
       container.appendChild(card);
     }
   }
@@ -894,172 +1162,307 @@
     const r = REVIEWS.find(x=>x.id===reviewId);
     if(!r) return;
 
-    const rating = ratingFor(r.id);
-    const modal = $("reviewDetailModal");
-    if(!modal) return;
-
-    $("modal-review-title") && ($("modal-review-title").textContent = r.title);
-    $("modal-review-author") && ($("modal-review-author").textContent = r.author || "");
-    $("modal-review-date") && ($("modal-review-date").textContent = fmtDate(r.date));
-
+    const titleEl = $("modal-review-title");
     const contentEl = $("modal-review-content");
+    const viewsEl = $("modal-review-views");
+
+    titleEl && (titleEl.textContent = r.title || "후기");
+
     if(contentEl){
-      contentEl.innerHTML = r.contentHtml || "";
+      // Display-only cleanup (do not alter stored data)
+      const cleaned = normalizeText(decodeHtml(r.contentHtml || ""));
+      contentEl.textContent = cleaned;
       contentEl.style.whiteSpace = "pre-wrap";
       contentEl.style.wordBreak = "keep-all";
       contentEl.style.lineHeight = "1.7";
     }
 
-    const starsEl = $("modal-stars");
-    if(starsEl) starsEl.innerHTML = renderStars(rating);
+    // Base views (BEST) + delta views (Firestore)
+    let base = Number(r.baseViews) || 0;
+    if(base === 0) base = getBestBaseViews(reviewId);
 
-    // 조회수 증가 (delta) 후 UI 업데이트
-    let delta = await getDeltaViews(r.id);
-    try{
-      delta = await incrementDeltaViews(r.id);
-    }catch(e){}
+    let delta = await getDeltaViews(reviewId);
+    try{ delta = await incrementDeltaViews(reviewId); }catch(e){}
+    const total = base + (Number(delta)||0);
 
-    const total = r.baseViews + (Number(delta)||0);
+    viewsEl && (viewsEl.textContent = String(total));
 
-    $("modal-review-views") && ($("modal-review-views").textContent = String(total));
-    const bestSpan = document.getElementById(`views-b-${r.id}`);
-    if(bestSpan) bestSpan.textContent = String(total);
+    const span = document.getElementById(`views-${reviewId}`);
+    if(span) span.textContent = String(total);
 
     window.App.openModal("reviewDetailModal");
   }
 
-  // -------- Auth actions exposed to onclick handlers --------
-  async function processLogin(){
-    const id = $("login-id")?.value;
-    const pw = $("login-pw")?.value;
-    const msg = $("login-msg");
-    if(msg) msg.textContent = "";
-
-    try{
-      const email = await resolveLoginEmail(id);
-      await signInWithEmailAndPassword(auth, email, pw);
-      window.App.closeModal("loginModal");
-    }catch(e){
-      if(msg) msg.textContent = e?.message || "로그인에 실패했습니다.";
-    }
-  }
-
-  async function processSignup(){
-    const username = $("reg-username")?.value?.trim();
-    const email = $("reg-email")?.value?.trim();
-    const pw = $("reg-password")?.value;
-    const pw2 = $("reg-password2")?.value;
-    const name = $("reg-name")?.value?.trim();
-    const phone = $("reg-phone")?.value?.trim();
-    const msg = $("signup-msg");
-    if(msg) msg.textContent = "";
-
-    try{
-      if(!username) throw new Error("아이디를 입력해 주세요.");
-      if(!email || !email.includes("@")) throw new Error("이메일을 올바르게 입력해 주세요.");
-      if(!pw || pw.length < 6) throw new Error("비밀번호는 6자리 이상이어야 합니다.");
-      if(pw !== pw2) throw new Error("비밀번호 확인이 일치하지 않습니다.");
-
-      const cred = await createUserWithEmailAndPassword(auth, email, pw);
-      if(name) await updateProfile(cred.user, { displayName: name });
-
-      await setDoc(doc(db, "users", cred.user.uid), {
-        username, email, name: name || "", phone: phone || "",
-        createdAt: serverTimestamp()
-      }, { merge: true });
-
-      await setDoc(doc(db, "members", cred.user.uid), {
-        username, email, name: name || "", phone: phone || "",
-        payStatus: "pending",
-        createdAt: serverTimestamp()
-      }, { merge: true });
-
-      await setDoc(doc(db, "usernames", username), {
-        uid: cred.user.uid,
-        email: email
-      }, { merge: true });
-
-      if(msg) msg.textContent = "회원가입이 완료되었습니다. 로그인해 주세요.";
-      await signOut(auth);
-    }catch(e){
-      if(msg) msg.textContent = e?.message || "회원가입에 실패했습니다.";
-    }
-  }
-
-  async function logout(){ await signOut(auth); }
-
-  async function resetPassword(){
-    const id = $("login-id")?.value;
-    const msg = $("login-msg");
-    if(msg) msg.textContent = "";
-    try{
-      const email = await resolveLoginEmail(id);
-      await sendPasswordResetEmail(auth, email);
-      if(msg) msg.textContent = "비밀번호 재설정 메일을 보냈습니다. 메일함을 확인해 주세요.";
-    }catch(e){
-      if(msg) msg.textContent = e?.message || "비밀번호 재설정에 실패했습니다.";
-    }
-  }
-
+  // "전체후기"는 전용 페이지(reviews.html)를 사용
   function openAllReviews(){ window.location.href = "./reviews.html"; }
 
-  async function openMyClassroom(){
-    const user = auth.currentUser;
+  // Optional internal view list support (if view-reviews is used in this file)
+  async function renderReviewList(reset=false){
+    const grid = $("review-grid");
+    if(!grid) return;
+
+    if(reset){
+      pageCursor = 0;
+      grid.innerHTML = "";
+    }
+
+    const slice = FILTERED.slice(pageCursor, pageCursor + pageSize);
+    pageCursor += slice.length;
+
+    for(const r of slice){
+      const delta = await getDeltaViews(r.id);
+      const total = (Number(r.baseViews)||0) + delta;
+      const card = document.createElement("div");
+      card.className = "bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition cursor-pointer";
+      card.innerHTML = `
+        <div class="flex items-center justify-between">
+          <div class="text-lg font-bold text-gray-900">${escapeHtml(r.title || "후기")}</div>
+          <div class="text-sm text-yellow-500">${escapeHtml(renderStars(ratingFor(r.id)))}</div>
+        </div>
+        <div class="mt-3 text-gray-700 leading-relaxed line-clamp-4">${escapeHtml(excerptFromHtml(r.contentHtml, 170))}</div>
+        <div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+          <div>${escapeHtml(r.author || "")}</div>
+          <div>조회수 <span class="font-semibold text-gray-800">${total}</span></div>
+        </div>
+      `;
+      card.addEventListener("click", ()=> openReviewDetail(r.id));
+      grid.appendChild(card);
+    }
+
+    const moreBtn = $("btn-load-more");
+    if(moreBtn) moreBtn.classList.toggle("hidden", pageCursor >= FILTERED.length);
+  }
+
+  async function loadMoreReviews(){
+    await renderReviewList(false);
+  }
+
+  // ---------- Paid-gated actions ----------
+  async function checkWritePermission(){
+    const user = auth?.currentUser || null;
     if(!user){
-      window.App.openModal("loginModal");
-      const msg = $("login-msg");
-      if(msg) msg.textContent = "로그인이 필요합니다.";
+      window.App.openModal("loginModal","login");
+      $("login-msg") && ($("login-msg").textContent = "로그인이 필요합니다.");
       return;
     }
+    const ps = window.App.state.payStatus || await getMemberPayStatus(user.uid);
+    window.App.state.payStatus = ps;
+
+    if(ps !== "complete"){
+      alert("결제 완료자만 후기 작성이 가능합니다.");
+      return;
+    }
+    window.App.openModal("writeReviewModal");
+  }
+
+  async function submitReview(){
+    const user = auth?.currentUser || null;
+    if(!user){
+      window.App.openModal("loginModal","login");
+      $("login-msg") && ($("login-msg").textContent = "로그인이 필요합니다.");
+      return;
+    }
+    if(!db) { alert("DB 초기화 실패(config.js 확인)"); return; }
+
+    const ps = window.App.state.payStatus || await getMemberPayStatus(user.uid);
+    window.App.state.payStatus = ps;
+    if(ps !== "complete"){
+      alert("결제 완료자만 후기 작성이 가능합니다.");
+      return;
+    }
+
+    const title = normalizeText($("w-title")?.value || "");
+    const content = normalizeText($("w-content")?.value || "");
+    const rating = Number($("w-rating")?.value || 0) || null;
+
+    if(!title) { alert("제목을 입력해 주세요."); return; }
+    if(!content) { alert("후기 내용을 입력해 주세요."); return; }
+
     try{
-      const mSnap = await getDoc(doc(db, "members", user.uid));
-      const ps = mSnap.exists() ? (mSnap.data().payStatus || "") : "";
-      if(ps !== "complete"){
-        alert("결제 완료자만 이용 가능합니다.");
-        return;
-      }
-      window.location.href = "./classroom.html";
+      await addDoc(collection(db, "reviews"), {
+        title,
+        contentHtml: content,       // stored as plain text; displayed with pre-wrap
+        author: user.displayName || window.App.state.username || "",
+        uid: user.uid,
+        rating: rating,
+        createdAt: serverTimestamp()
+      });
+
+      // UI reset
+      if($("w-title")) $("w-title").value = "";
+      if($("w-content")) $("w-content").value = "";
+      if($("w-rating")) $("w-rating").value = "5";
+
+      window.App.closeModal("writeReviewModal");
+
+      // Refresh local cache for BEST view to reflect newly added reviews
+      await bootstrapReviews();
+      alert("후기가 등록되었습니다. 감사합니다.");
     }catch(e){
-      alert("강의실 접근에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+      alert(e?.message || "후기 등록에 실패했습니다.");
     }
   }
 
-  onAuthStateChanged(auth, (user)=> setAuthUI(user));
+  async function openMyClassroom(){
+    const user = auth?.currentUser || null;
+    if(!user){
+      window.App.openModal("loginModal","login");
+      $("login-msg") && ($("login-msg").textContent = "로그인이 필요합니다.");
+      return;
+    }
+    const ps = window.App.state.payStatus || await getMemberPayStatus(user.uid);
+    window.App.state.payStatus = ps;
 
-  const reviewsRaw = await loadReviewsJson();
-  REVIEWS = (reviewsRaw || []).map(normalizeReview).filter(r=>r.id);
-
-  await renderBest();
-
-  
-  // FAQ 토글 (자주 묻는 질문)
-  function toggleFaq(btn){
-    try{
-      const b = (btn && btn.closest) ? btn : null;
-      if(!b) return;
-      // 우선: 버튼 부모의 다음 형제(현재 HTML 구조)
-      let answer = b.parentElement ? b.parentElement.nextElementSibling : null;
-      // 보조: 가장 가까운 카드 컨테이너에서 답변 영역 탐색
-      if(!answer){
-        const card = b.closest(".bg-white") || b.closest(".faq-item") || b.parentElement;
-        answer = card ? card.querySelector(".faq-answer") : null;
-      }
-      if(answer){
-        answer.classList.toggle("hidden");
-      }
-    }catch(e){}
+    if(ps !== "complete"){
+      alert("결제 완료자만 이용 가능합니다.");
+      return;
+    }
+    window.location.href = "./classroom.html";
   }
 
-Object.assign(window.App, {
+  function openMypage(){
+    updateMypageUI();
+    window.App.openModal("mypageModal");
+  }
+
+  function openAdminModal(){
+    const user = auth?.currentUser || null;
+    if(!user){
+      window.App.openModal("loginModal","login");
+      $("login-msg") && ($("login-msg").textContent = "관리자 접근: 로그인 필요");
+      return;
+    }
+    if(!ADMIN_EMAILS.has(user.email || "")){
+      alert("관리자 권한이 없습니다.");
+      return;
+    }
+    window.location.href = "./admin.html";
+  }
+
+  function copyToClipboard(text){
+    const t = String(text ?? "");
+    if(!t) return;
+    navigator.clipboard?.writeText(t).then(()=>{
+      alert("복사되었습니다.");
+    }).catch(()=>{
+      // fallback
+      const ta = document.createElement("textarea");
+      ta.value = t;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      alert("복사되었습니다.");
+    });
+  }
+
+  function checkPayment(evt, url){
+    try{ evt?.preventDefault?.(); }catch(e){}
+    const user = auth?.currentUser || null;
+    if(!user){
+      window.App.openModal("loginModal","login");
+      $("login-msg") && ($("login-msg").textContent = "결제 진행을 위해 로그인해 주세요.");
+      return;
+    }
+    window.open(url, "_blank", "noopener");
+  }
+
+  function confirmDeposit(){
+    alert("입금 확인은 순차 처리됩니다. 확인 후 payStatus가 'complete'로 변경됩니다.");
+  }
+
+  // (Optional) Admin-only payStatus update helper (UI depends on your admin.html)
+  async function updateUserStatus(){
+    alert("관리자 기능은 admin.html에서 처리됩니다.");
+  }
+
+  // FAQ (fallback) - if you have module-local handlers, keep them minimal.
+  function toggleFaq(id){
+    const ans = document.getElementById(id);
+    if(!ans) return;
+    ans.classList.toggle("hidden");
+  }
+
+  // ---------- Bootstrap ----------
+  async function bootstrapReviews(){
+    const [jsonRaw, fsRaw] = await Promise.all([loadReviewsJson(), loadFirestoreReviews()]);
+    const jsonReviews = (jsonRaw || []).map((r,i)=> normalizeReview(r, String(r.id || `json-${i}`)));
+    const fsReviews = (fsRaw || []).map((r)=> normalizeReview(r, r.id));
+
+    // Merge: Firestore can add new ones; keep both sources without duplicates
+    const map = new Map();
+    for(const r of jsonReviews){ if(r.id) map.set(r.id, r); }
+    for(const r of fsReviews){ if(r.id) map.set(r.id, r); }
+
+    REVIEWS = Array.from(map.values());
+
+    // internal list support
+    FILTERED = [...REVIEWS].sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+  }
+
+  async function bootstrap(){
+    // Ensure default auth tab is login
+    switchTab("login");
+
+    if(auth){
+      onAuthStateChanged(auth, async (user)=>{
+        window.App.state.user = user;
+        setAuthUI(user);
+        await refreshPayStatus();
+
+        // Defensive: after auth state changes, ensure no overlay blocks clicks
+        window.App.closeAllModals?.();
+      });
+    }else{
+      // No firebase: show guest UI
+      setAuthUI(null);
+    }
+
+    await bootstrapReviews();
+    await renderBest();
+
+    // internal list container (if present)
+    await renderReviewList(true);
+    updateMypageUI();
+  }
+
+  await bootstrap();
+
+  // ---------- Export to window.App (must include every function used by inline onclick) ----------
+  Object.assign(window.App, {
+    // UI/nav
+    navigate,
+    scrollToSection,
+    toggleMobileMenu,
+    switchTab,
+    openModal: window.App.openModal,
+    closeModal: window.App.closeModal,
+    closeAllModals: window.App.closeAllModals,
+
+    // Auth
     processLogin,
     processSignup,
-    logout,
     resetPassword,
+    logout,
+
+    // Reviews
     openAllReviews,
+    openReviewDetail,
+    loadMoreReviews,
+    checkWritePermission,
+    submitReview,
+
+    // Members / admin
     openMyClassroom,
-    openMypage: openMyClassroom,
-    toggleFaq,
-    openReviewDetail
+    openMypage,
+    openAdminModal,
+    updateUserStatus,
+
+    // Misc
+    copyToClipboard,
+    checkPayment,
+    confirmDeposit,
+    toggleFaq
   });
 </script>
 
