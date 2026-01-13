@@ -8,7 +8,8 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="./styles.css" rel="stylesheet"/>
 <!-- Firebase config (둘 중 존재하는 경로를 사용) -->
-  <script src="./config.js"></script>
+<script src="./config.js"></script>
+<script src="./config.js"></script>
 <style>
     .card-hover { transition: transform .15s ease, box-shadow .15s ease; }
     .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.06); }
@@ -62,452 +63,7 @@
 </div>
 </div>
 </div>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-  import {
-    getFirestore,
-    doc,
-    getDoc,
-    collection,
-    getDocs,
-    addDoc,
-    runTransaction,
-    serverTimestamp,
-    query,
-    orderBy
-  } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-  const $ = (id) => document.getElementById(id);
-
-  // -----------------------------
-  // Firebase init
-  // -----------------------------
-  const firebaseConfig = (window.FIREBASE_CONFIG && typeof window.FIREBASE_CONFIG === "object")
-    ? window.FIREBASE_CONFIG
-    : { apiKey: "", authDomain: "", projectId: "", appId: "" };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  // Root paths (rules와 1:1)
-  const P = {
-    member: (uid) => doc(db, "members", uid),
-    reviewCounter: (rid) => doc(db, "reviewViews", String(rid)),
-    reviewsCol: () => collection(db, "reviews"),
-  };
-
-  // -----------------------------
-  // Utils
-  // -----------------------------
-  const stripHtml = (html) => {
-    try {
-      const div = document.createElement("div");
-      div.innerHTML = String(html || "");
-      return (div.textContent || div.innerText || "").trim();
-    } catch { return String(html || ""); }
-  };
-
-  const parseDate = (v) => {
-    // "YYYY-MM-DD" 또는 Timestamp
-    if (!v) return 0;
-    if (typeof v === "string") {
-      const t = Date.parse(v);
-      return Number.isFinite(t) ? t : 0;
-    }
-    // Firestore Timestamp
-    try {
-      if (typeof v.toMillis === "function") return v.toMillis();
-    } catch {}
-    return 0;
-  };
-
-  const stars = (n) => {
-    const x = Math.max(0, Math.min(5, Number(n) || 0));
-    return "★★★★★".slice(0, x) + "☆☆☆☆☆".slice(0, 5 - x);
-  };
-
-  // -----------------------------
-  // State
-  // -----------------------------
-  const state = {
-    user: null,
-    member: null,          // members/{uid}
-    all: [],               // 전체 후기(정규화)
-    viewDelta: new Map(),  // reviewViews/{id}.views (delta)
-    page: 1,
-    pageSize: 12,
-    sort: "recent",
-    q: ""
-  };
-
-  // -----------------------------
-  // Data loaders
-  // -----------------------------
-  const loadStaticReviews = async () => {
-    try {
-      const res = await fetch("./reviews.json", { cache: "no-store" });
-      if (!res.ok) throw new Error("reviews.json 로드 실패");
-      const data = await res.json();
-      const list = Array.isArray(data) ? data : (Array.isArray(data?.reviews) ? data.reviews : []);
-      return list.map((r) => ({
-        id: String(r.id ?? ""),
-        title: String(r.title ?? ""),
-        author: String(r.author ?? ""),
-        date: String(r.date ?? ""),
-        rating: Number(r.rating ?? 0) || 0,
-        content: String(r.content ?? r.raw ?? ""),
-        originalLink: String(r.originalLink ?? r.link ?? ""),
-        baseViews: Number(r.baseViews ?? r.views ?? 0) || 0,
-        _src: "static"
-      })).filter(r => r.id);
-    } catch (e) {
-      console.warn(e);
-      return [];
-    }
-  };
-
-  const loadFirestoreReviews = async () => {
-    try {
-      // /reviews는 read:true라서 list 가능
-      const qy = query(P.reviewsCol(), orderBy("createdAt", "desc"));
-      const snap = await getDocs(qy);
-      const list = [];
-      snap.forEach(d => {
-        const x = d.data() || {};
-        list.push({
-          id: String(d.id),
-          title: String(x.title ?? ""),
-          author: String(x.author ?? ""),
-          date: x.date ? String(x.date) : "",
-          rating: Number(x.rating ?? 0) || 0,
-          content: String(x.content ?? ""),
-          originalLink: String(x.originalLink ?? ""),
-          baseViews: 0,
-          createdAt: x.createdAt || null,
-          _src: "firestore"
-        });
-      });
-      return list;
-    } catch (e) {
-      console.warn("Firestore reviews load failed:", e?.message || e);
-      return [];
-    }
-  };
-
-  const getDeltaViews = async (id) => {
-    const key = String(id);
-    if (state.viewDelta.has(key)) return state.viewDelta.get(key) || 0;
-    try {
-      const snap = await getDoc(P.reviewCounter(key));
-      const delta = snap.exists() ? (Number(snap.data()?.views || 0) || 0) : 0;
-      state.viewDelta.set(key, delta);
-      return delta;
-    } catch {
-      state.viewDelta.set(key, 0);
-      return 0;
-    }
-  };
-
-  const totalViewsSync = (r) => (Number(r.baseViews || 0) || 0) + (state.viewDelta.get(String(r.id)) || 0);
-
-  // -----------------------------
-  // Render
-  // -----------------------------
-  const applyFilterSort = (list) => {
-    const q = String(state.q || "").trim().toLowerCase();
-    let out = list;
-
-    if (q) {
-      out = out.filter(r => {
-        const hay = (String(r.title||"") + " " + String(r.author||"") + " " + stripHtml(r.content||"")).toLowerCase();
-        return hay.includes(q);
-      });
-    }
-
-    const sort = state.sort;
-    if (sort === "recent") {
-      out = [...out].sort((a,b) => {
-        const ta = parseDate(a.createdAt) || parseDate(a.date);
-        const tb = parseDate(b.createdAt) || parseDate(b.date);
-        return tb - ta;
-      });
-    } else if (sort === "rating") {
-      out = [...out].sort((a,b) => (Number(b.rating||0)-Number(a.rating||0)));
-    } else if (sort === "views") {
-      // 현재 캐시 기준으로 정렬(렌더 중에 캐시가 채워지면 다시 렌더)
-      out = [...out].sort((a,b) => totalViewsSync(b) - totalViewsSync(a));
-    }
-    return out;
-  };
-
-  const render = async () => {
-    const elList = $("list");
-    const elMsg = $("statusMsg");
-    if (!elList || !elMsg) return;
-
-    const filtered = applyFilterSort(state.all);
-    const total = filtered.length;
-    const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
-    state.page = Math.min(Math.max(1, state.page), totalPages);
-
-    const start = (state.page - 1) * state.pageSize;
-    const pageItems = filtered.slice(start, start + state.pageSize);
-
-    elMsg.textContent = total ? `총 ${total.toLocaleString()}개 후기` : "표시할 후기가 없습니다.";
-    elList.innerHTML = "";
-
-    // 페이지 아이템 그리기 (view 카운트는 비동기)
-    for (const r of pageItems) {
-      const id = String(r.id);
-      const card = document.createElement("button");
-      card.className = "text-left p-5 rounded-2xl border border-gray-200 hover:shadow-md transition bg-white";
-      card.innerHTML = `
-        <div class="flex items-start justify-between gap-3">
-          <div class="min-w-0">
-            <div class="font-bold text-gray-900 truncate">${escapeHtml(r.title || "(제목 없음)")}</div>
-            <div class="mt-1 text-sm text-gray-500">${escapeHtml(r.author || "")} ${r.date ? "· " + escapeHtml(r.date) : ""}</div>
-          </div>
-          <div class="text-sm text-gray-700 whitespace-nowrap">${stars(r.rating)} ${Number(r.rating||0).toFixed(1)}</div>
-        </div>
-        <div class="mt-3 text-sm text-gray-700 line-clamp-3">${escapeHtml(snippetText(r.content))}</div>
-        <div class="mt-4 flex items-center justify-between text-xs text-gray-500">
-          <span>${r._src === "firestore" ? "신규" : ""}</span>
-          <span class="flex items-center gap-1">👁 <span id="v-${cssId(id)}">${(Number(r.baseViews||0)||0).toLocaleString()}</span></span>
-        </div>
-      `;
-      card.addEventListener("click", () => openDetail(r));
-      elList.appendChild(card);
-
-      // view count fetch & paint
-      getStoredViews(id).then(() => {
-        const el = $("v-" + cssId(id));
-        if (el) el.textContent = String(totalViewsSync(r).toLocaleString());
-        // views 정렬이면 캐시가 늘어나므로 한 번 더 렌더(가볍게)
-        if (state.sort === "views") {
-          // 너무 잦은 재렌더 방지: microtask로 모아서 처리
-          queueMicrotask(() => render());
-        }
-      });
-    }
-
-    // pagination
-    $("pageInfo").textContent = `${state.page} / ${totalPages}`;
-    $("prevBtn").disabled = state.page <= 1;
-    $("nextBtn").disabled = state.page >= totalPages;
-  };
-
-  // HTML escape helpers
-  const escapeHtml = (s) => String(s||"")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#39;");
-
-  const cssId = (s) => String(s||"").replace(/[^a-zA-Z0-9_-]/g, "_");
-  const snippetText = (html) => {
-    const t = stripHtml(html);
-    return t.length > 160 ? (t.slice(0,160) + "…") : t;
-  };
-
-  // -----------------------------
-  // Detail modal + view increment
-  // -----------------------------
-  const openDetail = async (r) => {
-    const id = String(r.id);
-    const modal = $("reviewModal");
-    if (!modal) return;
-
-    $("modalTitle").textContent = r.title || "";
-    $("modalMeta").textContent = `${r.author || ""}${r.date ? " · " + r.date : ""} · ${stars(r.rating)} ${Number(r.rating||0).toFixed(1)}`;
-
-    const link = (r.originalLink || "").trim();
-    const contentHtml = escapeHtml(stripHtml(r.content)).replaceAll("\n","<br/>");
-    $("modalContent").innerHTML = `
-      ${link ? `<div class="mb-3"><a class="text-indigo-600 font-semibold hover:underline" href="${escapeAttr(link)}" target="_blank" rel="noopener noreferrer">원문 링크 열기</a></div>` : ""}
-      <div class="leading-7 text-gray-800">${contentHtml}</div>
-    `;
-
-    modal.classList.remove("hidden");
-
-    // 조회수 +1 저장(누가 보더라도 누적)
-    try {
-      await runTransaction(db, async (tx) => {
-        const ref = P.reviewCounter(id);
-        const snap = await tx.get(ref);
-        const prev = snap.exists() ? (Number(snap.data()?.views || 0) || 0) : 0;
-        tx.set(ref, { views: prev + 1 }, { merge: true });
-      });
-      // 캐시 갱신
-      const snap2 = await getDoc(P.reviewCounter(id));
-      const delta = snap2.exists() ? (Number(snap2.data()?.views || 0) || 0) : 0;
-      state.viewDelta.set(id, delta);
-      render();
-    } catch (e) {
-      console.warn("view increment failed:", e?.message || e);
-    }
-  };
-
-  const escapeAttr = (s) => escapeHtml(String(s||"")).replaceAll('"',"&quot;");
-
-  const closeDetail = () => {
-    const modal = $("reviewModal");
-    if (modal) modal.classList.add("hidden");
-  };
-
-  // -----------------------------
-  // Write review (결제자만)
-  // -----------------------------
-  const openWrite = async () => {
-    // 1) 로그인 확인
-    if (!state.user) {
-      alert("로그인을 하세요.");
-      window.location.href = "./index.html#login";
-      return;
-    }
-    // 2) 결제 확인 (members 기준)
-    const pay = String(state.member?.payStatus || "");
-    if (pay !== "complete") {
-      alert("강의 수강생만 작성할 수 있습니다.");
-      return;
-    }
-    // 3) 모달 오픈
-    $("writeMsg").textContent = "";
-    $("wTitle").value = "";
-    $("wOriginal").value = "";
-    $("wContent").value = "";
-    $("wRating").value = "5";
-    $("wAuthor").value = String(state.member?.name || state.user.email || "");
-    $("writeModal").classList.remove("hidden");
-  };
-
-  const closeWrite = () => {
-    $("writeModal").classList.add("hidden");
-  };
-
-  const submitWrite = async () => {
-    $("writeMsg").textContent = "";
-    if (!state.user) return;
-
-    const pay = String(state.member?.payStatus || "");
-    if (pay !== "complete") {
-      $("writeMsg").textContent = "강의 수강생만 작성할 수 있습니다.";
-      return;
-    }
-
-    const title = String($("wTitle").value || "").trim();
-    const author = String($("wAuthor").value || "").trim();
-    const rating = Number($("wRating").value || 0) || 0;
-    const originalLink = String($("wOriginal").value || "").trim();
-    const content = String($("wContent").value || "").trim();
-
-    if (!title) return $("writeMsg").textContent = "제목을 입력해 주세요.";
-    if (!author) return $("writeMsg").textContent = "작성자를 입력해 주세요.";
-    if (!content) return $("writeMsg").textContent = "내용을 입력해 주세요.";
-
-    try {
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth()+1).padStart(2,"0");
-      const dd = String(today.getDate()).padStart(2,"0");
-
-      await addDoc(P.reviewsCol(), {
-        title,
-        author,
-        rating,
-        originalLink,
-        content,
-        date: `${yyyy}-${mm}-${dd}`,
-        uid: state.user.uid,
-        createdAt: serverTimestamp()
-      });
-
-      closeWrite();
-      await refreshAll();
-      alert("후기가 등록되었습니다. 감사합니다.");
-    } catch (e) {
-      console.error(e);
-      $("writeMsg").textContent = String(e?.message || "등록 중 오류가 발생했습니다.");
-    }
-  };
-
-  // -----------------------------
-  // Refresh
-  // -----------------------------
-  const refreshAll = async () => {
-    $("statusMsg").textContent = "불러오는 중…";
-    const [staticList, fsList] = await Promise.all([loadStaticReviews(), loadFirestoreReviews()]);
-    // static + firestore 합치기
-    state.all = [...staticList, ...fsList];
-    state.page = 1;
-    await render();
-  };
-
-  // -----------------------------
-  // Events
-  // -----------------------------
-  $("searchInput").addEventListener("input", (e) => {
-    state.q = String(e.target.value || "");
-    state.page = 1;
-    render();
-  });
-
-  $("sortSelect").addEventListener("change", (e) => {
-    state.sort = String(e.target.value || "recent");
-    state.page = 1;
-    render();
-  });
-
-  $("prevBtn").addEventListener("click", () => {
-    state.page = Math.max(1, state.page - 1);
-    render();
-  });
-
-  $("nextBtn").addEventListener("click", () => {
-    state.page = state.page + 1;
-    render();
-  });
-
-  $("modalClose").addEventListener("click", closeDetail);
-  $("modalClose2").addEventListener("click", closeDetail);
-  $("reviewModal").addEventListener("click", (e) => {
-    if (e.target && e.target.id === "reviewModal") closeDetail();
-  });
-
-  // write modal events
-  $("writeBtn").addEventListener("click", openWrite);
-  $("writeClose").addEventListener("click", closeWrite);
-  $("writeModal").addEventListener("click", (e) => {
-    if (e.target && e.target.id === "writeModal") closeWrite();
-  });
-  $("writeSubmit").addEventListener("click", submitWrite);
-
-  // Auth state: member(payStatus) 가져오기
-  onAuthStateChanged(auth, async (user) => {
-    state.user = user || null;
-    state.member = null;
-
-    if (user) {
-      try {
-        const ms = await getDoc(P.member(user.uid));
-        state.member = ms.exists() ? (ms.data() || {}) : null;
-      } catch {}
-    }
-
-    // 힌트 문구 업데이트
-    const hint = $("writeHint");
-    if (hint) {
-      if (!user) hint.textContent = "로그인 후 작성 가능";
-      else if (String(state.member?.payStatus||"") !== "complete") hint.textContent = "결제 완료자만 작성 가능";
-      else hint.textContent = "";
-    }
-  });
-
-  // init
-  refreshAll();
-</script>
 
 <div class="hidden fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4" id="writeModal">
 <div class="bg-white w-full max-w-lg rounded-2xl p-6 shadow-2xl relative">
@@ -533,5 +89,404 @@
 </div>
 </div>
 </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import {
+    getFirestore, collection, getDocs, doc, getDoc, addDoc,
+    serverTimestamp, query, orderBy, runTransaction
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const CONFIG = window.SECRETCLASS_FIREBASE_CONFIG || window.FIREBASE_CONFIG;
+  const app = initializeApp(CONFIG);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const $ = (id) => document.getElementById(id);
+
+  const decodeHtml = (s) => {
+    const t = document.createElement("textarea");
+    t.innerHTML = String(s ?? "");
+    return t.value;
+  };
+  const escapeHtml = (s) => String(s||"")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  const normalizeText = (s) => String(s || "")
+    .replace(/\u00A0/g, " ")
+    .replace(/\s+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  const ratingFor = (id) => {
+    let h = 0;
+    const str = String(id || "");
+    for (let i=0;i<str.length;i++) h = (h*31 + str.charCodeAt(i)) >>> 0;
+    return (h % 20 === 0) ? 4 : 5; // 95% 5점, 5% 4점
+  };
+
+  function renderStars(score){
+    const s = Number(score) || 0;
+    const full = Math.max(0, Math.min(5, Math.round(s)));
+    let html = "";
+    for(let i=0;i<5;i++){
+      html += `<span class="${i<full ? "text-yellow-400" : "text-gray-300"}">★</span>`;
+    }
+    return `<span class="inline-flex items-center gap-0.5">${html}</span><span class="ml-2 text-sm text-gray-500">${full.toFixed(1)}</span>`;
+  }
+
+  function fmtDate(dateStr){
+    return String(dateStr || "").slice(0,10);
+  }
+
+  function excerptFromHtml(htmlStr, maxLen=140){
+    const div = document.createElement("div");
+    div.innerHTML = htmlStr || "";
+    const txt = normalizeText(div.textContent || "");
+    if(txt.length <= maxLen) return txt;
+    return txt.slice(0, maxLen) + "…";
+  }
+
+  async function loadReviewsJson(){
+    const urls = ["./reviews.json", "./data/reviews.json", "./reviews/reviews.json"];
+    for(const u of urls){
+      try{
+        const res = await fetch(u, { cache: "no-store" });
+        if(!res.ok) continue;
+        const arr = await res.json();
+        if(Array.isArray(arr)) return arr;
+      }catch(e){}
+    }
+    return [];
+  }
+
+  function normalizeReview(r){
+    const id = String(r.id ?? r.reviewId ?? r.key ?? "");
+    const title = String(r.title ?? "");
+    const author = String(r.author ?? r.writer ?? r.name ?? "");
+    const date = String(r.date ?? r.createdAt ?? "");
+    const contentHtml = decodeHtml(r.contentHtml ?? r.content ?? "");
+    const baseViews = Number(r.views ?? 0) || 0;
+    return { id, title, author, date, contentHtml, baseViews, source:"json", rating: Number(r.rating ?? 0) || null };
+  }
+
+  function tsToDateStr(ts){
+    try{
+      if(!ts) return "";
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      return d.toISOString().slice(0,10);
+    }catch(e){
+      return "";
+    }
+  }
+
+  async function loadFirestoreReviews(){
+    try{
+      const q = query(collection(db, "reviews"), orderBy("createdAt", "desc"));
+      const snap = await getDocs(q);
+      return snap.docs.map(d=>{
+        const data = d.data() || {};
+        return {
+          id: d.id,
+          title: String(data.title ?? ""),
+          author: String(data.author ?? data.writer ?? data.name ?? ""),
+          date: tsToDateStr(data.createdAt),
+          contentHtml: decodeHtml(data.contentHtml ?? data.content ?? ""),
+          baseViews: 0,
+          source:"firestore",
+          rating: Number(data.rating ?? 0) || null
+        };
+      });
+    }catch(e){
+      try{
+        const snap = await getDocs(collection(db, "reviews"));
+        return snap.docs.map(d=>{
+          const data = d.data() || {};
+          return {
+            id: d.id,
+            title: String(data.title ?? ""),
+            author: String(data.author ?? data.writer ?? data.name ?? ""),
+            date: tsToDateStr(data.createdAt),
+            contentHtml: decodeHtml(data.contentHtml ?? data.content ?? ""),
+            baseViews: 0,
+            source:"firestore",
+            rating: Number(data.rating ?? 0) || null
+          };
+        });
+      }catch(e2){
+        return [];
+      }
+    }
+  }
+
+  // delta views from reviewViews/{reviewId}.views
+  const viewDeltaCache = new Map();
+  async function getDeltaViews(reviewId){
+    if(viewDeltaCache.has(reviewId)) return viewDeltaCache.get(reviewId);
+    try{
+      const ref = doc(db, "reviewViews", reviewId);
+      const snap = await getDoc(ref);
+      const delta = snap.exists() ? (Number(snap.data().views) || 0) : 0;
+      viewDeltaCache.set(reviewId, delta);
+      return delta;
+    }catch(e){
+      return 0;
+    }
+  }
+  async function incrementDeltaViews(reviewId){
+    const ref = doc(db, "reviewViews", reviewId);
+    const next = await runTransaction(db, async (tx)=>{
+      const snap = await tx.get(ref);
+      if(!snap.exists()){
+        tx.set(ref, { views: 1 }); // create exactly 1
+        return 1;
+      }
+      const cur = Number(snap.data().views) || 0;
+      const n = cur + 1; // update +1
+      tx.update(ref, { views: n });
+      return n;
+    });
+    viewDeltaCache.set(reviewId, next);
+    return next;
+  }
+
+  // ---- UI helpers ----
+  function openModal(id){
+    const el=$(id);
+    if(!el) return;
+    el.classList.remove("hidden");
+    el.classList.add("flex");
+    document.body.classList.add("overflow-hidden");
+  }
+  function closeModal(id){
+    const el=$(id);
+    if(!el) return;
+    el.classList.add("hidden");
+    el.classList.remove("flex");
+    document.body.classList.remove("overflow-hidden");
+  }
+
+  // ---- State ----
+  let ALL = [];
+  let FILTERED = [];
+  let page = 1;
+  const PAGE_SIZE = 10;
+
+  function getRating(r){
+    return r.rating || ratingFor(r.id);
+  }
+
+  function applyFilter(){
+    const q = ($("searchInput")?.value || "").trim().toLowerCase();
+    const sort = $("sortSelect")?.value || "recent";
+
+    let arr = [...ALL];
+
+    if(q){
+      arr = arr.filter(r=>{
+        const t = (r.title||"").toLowerCase();
+        const a = (r.author||"").toLowerCase();
+        const c = normalizeText((r.contentHtml||"")).toLowerCase();
+        return t.includes(q) || a.includes(q) || c.includes(q);
+      });
+    }
+
+    if(sort==="recent"){
+      arr.sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+    } else if(sort==="rating"){
+      arr.sort((a,b)=> getRating(b) - getRating(a));
+    } else if(sort==="views"){
+      arr.sort((a,b)=> ( (b.baseViews+(viewDeltaCache.get(b.id)||0)) - (a.baseViews+(viewDeltaCache.get(a.id)||0)) ));
+    }
+
+    FILTERED = arr;
+    page = 1;
+  }
+
+  async function renderPage(){
+    const list = $("list");
+    if(!list) return;
+
+    const totalPages = Math.max(1, Math.ceil(FILTERED.length / PAGE_SIZE));
+    page = Math.min(page, totalPages);
+
+    const start = (page-1)*PAGE_SIZE;
+    const slice = FILTERED.slice(start, start+PAGE_SIZE);
+
+    list.innerHTML = "";
+
+    for(const r of slice){
+      const delta = await getDeltaViews(r.id);
+      const totalViews = r.baseViews + delta;
+      const rating = getRating(r);
+
+      const card = document.createElement("div");
+      card.className = "bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition cursor-pointer";
+      card.innerHTML = `
+        <div class="flex items-center justify-between">
+          <div class="text-lg font-bold text-gray-900">${escapeHtml(r.title)}</div>
+          <div class="text-sm">${renderStars(rating)}</div>
+        </div>
+        <div class="mt-2 text-sm text-gray-500">${fmtDate(r.date)}${r.author ? " · "+escapeHtml(r.author) : ""}</div>
+        <div class="mt-3 text-sm text-gray-700 leading-relaxed">${escapeHtml(excerptFromHtml(r.contentHtml, 140))}</div>
+        <div class="mt-4 text-sm text-gray-500">조회수 <span id="views-a-${escapeHtml(r.id)}" class="font-semibold text-gray-800">${totalViews}</span></div>
+      `;
+      card.addEventListener("click", ()=> openDetail(r.id));
+      list.appendChild(card);
+    }
+
+    $("pageInfo") && ($("pageInfo").textContent = `${page} / ${totalPages}`);
+    $("prevBtn") && ($("prevBtn").disabled = page<=1);
+    $("nextBtn") && ($("nextBtn").disabled = page>=totalPages);
+  }
+
+  async function openDetail(id){
+    const r = ALL.find(x=>x.id===id);
+    if(!r) return;
+
+    const rating = getRating(r);
+
+    $("modalTitle") && ($("modalTitle").textContent = r.title);
+    $("modalMeta") && ($("modalMeta").innerHTML = `
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="text-sm text-gray-500">${fmtDate(r.date)}${r.author ? " · "+escapeHtml(r.author) : ""}</span>
+        <span class="text-sm">${renderStars(rating)}</span>
+        <span class="text-sm text-gray-500">조회수 <span id="modalViews" class="font-semibold text-gray-800">-</span></span>
+      </div>
+    `);
+
+    const content = $("modalContent");
+    if(content){
+      content.innerHTML = r.contentHtml || "";
+      content.style.whiteSpace = "pre-wrap";
+      content.style.wordBreak = "keep-all";
+      content.style.lineHeight = "1.7";
+    }
+
+    let delta = await getDeltaViews(id);
+    try{
+      delta = await incrementDeltaViews(id);
+    }catch(e){}
+    const total = r.baseViews + (Number(delta)||0);
+
+    const modalViewsEl = document.getElementById("modalViews");
+    if(modalViewsEl) modalViewsEl.textContent = String(total);
+
+    const span = document.getElementById(`views-a-${id}`);
+    if(span) span.textContent = String(total);
+
+    openModal("reviewModal");
+  }
+
+  $("modalClose")?.addEventListener("click", ()=>closeModal("reviewModal"));
+  $("modalClose2")?.addEventListener("click", ()=>closeModal("reviewModal"));
+
+  // ---- Write review ----
+  async function canWrite(){
+    const user = auth.currentUser;
+    if(!user) return { ok:false, reason:"로그인이 필요합니다." };
+    try{
+      const mSnap = await getDoc(doc(db, "members", user.uid));
+      const ps = mSnap.exists() ? (mSnap.data().payStatus || "") : "";
+      if(ps !== "complete") return { ok:false, reason:"결제 완료자만 작성 가능합니다." };
+      return { ok:true, user, member: mSnap.data() };
+    }catch(e){
+      return { ok:false, reason:"결제 상태 확인에 실패했습니다." };
+    }
+  }
+
+  $("writeBtn")?.addEventListener("click", async ()=>{
+    const chk = await canWrite();
+    if(!chk.ok){
+      alert(chk.reason);
+      return;
+    }
+    // 작성자 자동 채움(있으면)
+    if($("wAuthor")){
+      $("wAuthor").value = chk.member?.name || chk.user.displayName || chk.user.email || "";
+    }
+    openModal("writeModal");
+  });
+
+  $("writeClose")?.addEventListener("click", ()=>closeModal("writeModal"));
+
+  $("writeSubmit")?.addEventListener("click", async ()=>{
+    const chk = await canWrite();
+    if(!chk.ok){
+      alert(chk.reason);
+      return;
+    }
+    const title = ($("wTitle")?.value || "").trim();
+    const author = ($("wAuthor")?.value || "").trim();
+    const rating = Number($("wRating")?.value || 5) || 5;
+    const original = ($("wOriginal")?.value || "").trim(); // optional
+    const content = ($("wContent")?.value || "").trim();
+    const msg = $("writeMsg");
+    if(msg) msg.textContent = "";
+
+    if(!title) return (msg ? msg.textContent="제목을 입력해 주세요." : alert("제목을 입력해 주세요."));
+    if(!content) return (msg ? msg.textContent="내용을 입력해 주세요." : alert("내용을 입력해 주세요."));
+
+    const contentHtml = content.split("\n").map(line=>escapeHtml(line)).join("<br/>");
+
+    try{
+      await addDoc(collection(db, "reviews"), {
+        title,
+        contentHtml,
+        author: author || (chk.member?.name || chk.user.displayName || chk.user.email || ""),
+        originalLink: original || "",
+        rating: Math.max(1, Math.min(5, Math.round(rating))),
+        createdAt: serverTimestamp()
+      });
+      alert("후기가 등록되었습니다.");
+      closeModal("writeModal");
+      await bootstrap();
+    }catch(e){
+      console.error(e);
+      if(msg) msg.textContent = "등록에 실패했습니다. 잠시 후 다시 시도해 주세요.";
+      else alert("등록에 실패했습니다.");
+    }
+  });
+
+  // ---- Events ----
+  $("searchInput")?.addEventListener("input", async ()=>{
+    applyFilter();
+    await renderPage();
+  });
+  $("sortSelect")?.addEventListener("change", async ()=>{
+    applyFilter();
+    await renderPage();
+  });
+  $("prevBtn")?.addEventListener("click", async ()=>{
+    page = Math.max(1, page-1);
+    await renderPage();
+  });
+  $("nextBtn")?.addEventListener("click", async ()=>{
+    const totalPages = Math.max(1, Math.ceil(FILTERED.length / PAGE_SIZE));
+    page = Math.min(totalPages, page+1);
+    await renderPage();
+  });
+
+  async function bootstrap(){
+    const jsonRaw = await loadReviewsJson();
+    const jsonReviews = (jsonRaw || []).map(normalizeReview).filter(r=>r.id);
+
+    const fsReviews = await loadFirestoreReviews();
+
+    const map = new Map();
+    for(const r of jsonReviews) map.set(r.id, r);
+    for(const r of fsReviews) map.set(r.id, r);
+
+    ALL = Array.from(map.values());
+    applyFilter();
+    await renderPage();
+  }
+
+  onAuthStateChanged(auth, ()=>{ /* UI 변화만 */ });
+
+  await bootstrap();
+</script>
+
 </body>
 </html>
