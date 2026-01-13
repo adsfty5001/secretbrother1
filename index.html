@@ -805,7 +805,21 @@
     } catch { return String(html || ""); }
   };
 
-  const normalizeReviews = (raw) => {
+  
+  const decodeEntities = (s) => {
+    try {
+      const ta = document.createElement("textarea");
+      ta.innerHTML = String(s || "");
+      return ta.value;
+    } catch { return String(s || ""); }
+  };
+
+  const sanitizeReviewHtml = (html) => {
+    // 방어적으로 script 태그만 제거 (후기 원문은 그대로)
+    return String(html || "").replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "");
+  };
+
+const normalizeReviews = (raw) => {
     if (!Array.isArray(raw)) return [];
     return raw.map((r, i) => {
       const id = (r && (r.id ?? r.reviewId ?? r.no ?? r.seq)) ?? (i + 1);
@@ -813,7 +827,8 @@
       const author = String(r?.author ?? r?.name ?? "").trim();
       const date = String(r?.date ?? r?.createdAt ?? r?.created_at ?? "").trim();
       const rating = Number(r?.rating ?? r?.stars ?? 5) || 0;
-      const contentHtml = (r?.contentHtml ?? r?.content_html ?? r?.content ?? "");
+      const contentHtmlRaw = (r?.contentHtml ?? r?.content_html ?? r?.content ?? "");
+      const contentHtml = sanitizeReviewHtml(decodeEntities(contentHtmlRaw));
       const baseViews = Number(r?.baseViews ?? r?.base_views ?? r?.views ?? 0) || 0;
       const isBest = !!(r?.isBest ?? r?.is_best) || String(r?.badge || "").toUpperCase() === "BEST";
       const badge = isBest ? "BEST" : String(r?.badge ?? "");
@@ -823,15 +838,25 @@
 
   const ensureReviewsLoaded = async () => {
     if (state.reviewsLoaded) return;
+
     try {
-      const res = await fetch("./data/reviews.json", { cache: "no-store" });
-      if (!res.ok) throw new Error("reviews.json fetch failed: " + res.status);
-      const raw = await res.json();
-      const normalized = normalizeReviews(raw);
-      if (normalized.length) window.STATIC_REVIEWS = normalized;
+      // GitHub Pages 루트(/reviews.json) 우선, 과거 구조(/data/reviews.json) fallback
+      const urls = ["./reviews.json", "./data/reviews.json"];
+      let raw = null;
+
+      for (const u of urls) {
+        try {
+          const res = await fetch(u, { cache: "no-store" });
+          if (res.ok) { raw = await res.json(); break; }
+        } catch (e) {}
+      }
+
+      if (!raw) throw new Error("reviews.json을 불러오지 못했습니다.");
+      state.reviews = normalizeReviews(raw);
+      state.reviewsLoaded = true;
     } catch (e) {
-      console.warn("reviews.json load skipped (using embedded fallback):", e?.message || e);
-    } finally {
+      console.warn("[reviews] failed to load reviews.json, fallback to embedded list", e);
+      state.reviews = normalizeReviews(STATIC_REVIEWS);
       state.reviewsLoaded = true;
     }
   };
@@ -1115,11 +1140,8 @@
       }
       await signInWithEmailAndPassword(auth, email, pw);
       showMsg("signup-msg", "");
-      // 회원가입 완료 후: 자동 로그인 상태를 해제하고, 로그인 탭으로 유도
-      await signOut(auth);
-      switchTab("login");
-      showMsg("login-msg", "회원가입이 완료되었습니다. 로그인해 주세요.");
-      // 모달은 그대로 둡니다 (로그인 직접 수행)
+      showMsg("login-msg", "");
+      closeModal("loginModal");
       
     } catch (e) {
       console.error(e);
@@ -1202,14 +1224,36 @@
   // -----------------------------
   // FAQ toggle (질문 클릭 시 답변 열기/닫기)
   // -----------------------------
-  const toggleFaq = (id) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const isHidden = el.classList.contains("hidden");
-    // 같은 FAQ 그룹에서 다른 답변을 닫고 싶다면 아래를 활성화:
-    // document.querySelectorAll('[data-faq-answer="1"]').forEach(x => x.classList.add('hidden'));
-    if (isHidden) el.classList.remove("hidden");
-    else el.classList.add("hidden");
+  const toggleFaq = (target) => {
+    // target: (1) 답변 div id 문자열 또는 (2) 클릭된 버튼 엘리먼트(this)
+    let answerEl = null;
+    let btnEl = null;
+
+    if (typeof target === "string") {
+      answerEl = document.getElementById(target);
+    } else if (target && target.tagName) {
+      btnEl = target;
+      // FAQ 구조: button 다음에 답변 div가 위치
+      answerEl = btnEl.nextElementSibling;
+      if (!answerEl || !(answerEl instanceof HTMLElement)) {
+        // 안전 fallback
+        const wrap = btnEl.closest(".faq-item") || btnEl.parentElement;
+        answerEl = wrap ? wrap.querySelector(".faq-answer") : null;
+      }
+    }
+
+    if (!answerEl) return;
+
+    const isHidden = answerEl.classList.contains("hidden");
+    if (isHidden) answerEl.classList.remove("hidden");
+    else answerEl.classList.add("hidden");
+
+    // 아이콘 회전(chevron-down)
+    const icon = (btnEl ? btnEl.querySelector('[data-lucide="chevron-down"]') : null);
+    if (icon) {
+      if (isHidden) icon.classList.add("rotate-180");
+      else icon.classList.remove("rotate-180");
+    }
   };
 
   // 해시로 로그인 모달 열기: reviews.html 등에서 index.html#login 으로 보내면 자동 오픈

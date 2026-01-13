@@ -84,15 +84,27 @@
   // -----------------------------
   // Firebase init
   // -----------------------------
-  const firebaseConfig = (window.FIREBASE_CONFIG && typeof window.FIREBASE_CONFIG === "object")
-    ? window.FIREBASE_CONFIG
-    : { apiKey: "", authDomain: "", projectId: "", appId: "" };
+  let app = null;
+  let auth = null;
+  let db = null;
+  let firebaseReady = false;
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+  try {
+    const firebaseConfig =
+      window.SECRETCLASS_FIREBASE_CONFIG ||
+      window.FIREBASE_CONFIG ||
+      window.firebaseConfig ||
+      null;
 
-  // Root paths (rules와 1:1)
+    if (!firebaseConfig) throw new Error("Firebase config not found");
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    firebaseReady = true;
+  } catch (e) {
+    console.warn("[firebase] init failed. static reviews only.", e);
+  }
+// Root paths (rules와 1:1)
   const P = {
     member: (uid) => doc(db, "members", uid),
     reviewCounter: (rid) => doc(db, "reviewViews", String(rid)),
@@ -158,7 +170,8 @@
         author: String(r.author ?? ""),
         date: String(r.date ?? ""),
         rating: Number(r.rating ?? 0) || 0,
-        content: String(r.content ?? r.raw ?? ""),
+        contentHtml: sanitizeReviewHtml(decodeEntities(String(r.contentHtml ?? r.content_html ?? ""))),
+      content: stripHtml(decodeEntities(String(r.contentHtml ?? r.content_html ?? r.content ?? r.raw ?? ""))),
         originalLink: String(r.originalLink ?? r.link ?? ""),
         baseViews: Number(r.baseViews ?? r.views ?? 0) || 0,
         _src: "static"
@@ -171,6 +184,8 @@
 
   const loadFirestoreReviews = async () => {
     try {
+      if (!firebaseReady) return [];
+
       // /reviews는 read:true라서 list 가능
       const qy = query(P.reviewsCol(), orderBy("createdAt", "desc"));
       const snap = await getDocs(qy);
@@ -312,6 +327,20 @@
     const t = stripHtml(html);
     return t.length > 160 ? (t.slice(0,160) + "…") : t;
   };
+  const decodeEntities = (s) => {
+    try {
+      const ta = document.createElement("textarea");
+      ta.innerHTML = String(s || "");
+      return ta.value;
+    } catch { return String(s || ""); }
+  };
+
+  const sanitizeReviewHtml = (html) => {
+    // 방어적으로 script 태그만 제거 (후기 원문은 그대로)
+    return String(html || "").replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "");
+  };
+
+
 
   // -----------------------------
   // Detail modal + view increment
@@ -335,7 +364,7 @@
 
     // 조회수 +1 저장(누가 보더라도 누적)
     try {
-      await runTransaction(db, async (tx) => {
+      if (firebaseReady) await runTransaction(db, async (tx) => {
         const ref = P.reviewCounter(id);
         const snap = await tx.get(ref);
         const prev = snap.exists() ? (Number(snap.data()?.views || 0) || 0) : 0;
