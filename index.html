@@ -621,690 +621,446 @@
         </div>
     </div>
 
-    <script>
-        // *** [중요] 전역 객체 App 선언 (No Module) ***
-        // 이 스크립트는 일반 스크립트로 가장 먼저 실행되어 window.App을 만듭니다.
-        // 모든 함수는 빈 껍데기(Stub)로 시작하며, 아래 모듈 스크립트에서 실제 로직으로 교체됩니다.
-        // 따라서 HTML 파싱 중 onclick이 발생해도 "함수가 없다"는 에러가 나지 않습니다.
-        
-        window.App = {
-            state: {
-                isLoggedIn: false,
-                user: null, 
-                reviews: [],
-                visibleReviews: 9,
-                isAdmin: false,
-                unsubscribeReviews: null
-            },
-            // UI Stub Functions (실제 로직 로딩 전까지 아무 일도 안 함 or 로딩중 표시)
-            navigate: (p) => console.log('Loading...', p),
-            scrollToSection: (id) => console.log('Loading...', id),
-            toggleMobileMenu: () => {},
-            openModal: () => {},
-            closeModal: () => {},
-            switchAuthTab: () => {},
-            toggleFaq: () => {},
-            copyToClipboard: () => {},
-            processLogin: () => {},
-            processSignup: () => {},
-            logout: () => {},
-            openAdminModal: () => {},
-            updateUserStatus: () => {},
-            checkPayment: () => {},
-            confirmDeposit: () => {},
-            checkWritePermission: () => {},
-            submitReview: () => {},
-            loadMoreReviews: () => {},
-            openReviewDetail: () => {},
-            openMypage: () => {}
-        };
-
-        // *** [중요] 정적 데이터 (하드코딩) ***
-        // DB 연결 실패/지연 시에도 무조건 보여줄 54개 후기 데이터입니다.
-        const STATIC_REVIEWS = [
-            { id: 1, title: "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공!", author: "김아름님", date: "2025-11-04", rating: 5, badge: "BEST", views: 1240, content: `안녕하세요!\n결혼을 준비하던 약 3년 전부터 부동산을 째려보던 제가\n시브님을 만나고 약 2주만에 서울에 내집 마련을 했습니다!\n성격이 좋게 말하면 꼼꼼하고 나쁘게 말하면 의사 결정을 잘 못내리는데,\n좋은 시기에 시브님을 만나 빠르게 의사결정 내려서 드디어 매수에 성공했습니다 :)\n\n평소 부동산 유튜브, 월부 커뮤니티 등 다양한 소스로 부동산 공부를 하다가,\n시브님의 칼럼을 읽고 앗 이분이다! 하는 생각이 들어\n시브님을 알게되고 바로 다음 날에 큐레이팅 컨설팅을 신청하였는데요!\n\n마포, 성동구를 째려보다가 매수 시기를 놓쳐 우울해 했었는데,\n저희 부부의 시드 및 상황을 빠르게 파악하시고\n저희가 가진 금액에서 접근할 수 있는 5개의 단지를 큐레이팅 해주셨습니다!\n\n처음 봤던 단지들이 대부분이라,\n중간에 제가 더 아파트를 서치해보았지만\n시브님이 정말 귀신같이(?) 더 나은 매물들만 골라주셨더라구요 ㅎㅎㅎ\n\n그래서 큐레이팅이 정말 많은 시간을 단축해주는구나! 하는 생각을 했고\n(진행하시는 분들은 믿고 가셔도 좋을 것 같습니다!!!)\n중간 중간 지금 더 찾을 때가 아니라 얼른 가서 임장하고 부동산 볼때다 라고 회초리(?)를 들어주신 것도\n밍기적 거리는 저에게 큰 도움이 됐습니다!\n\n말씀듣고 바로 다음 날 부동산 가서 봤던 매물을\n1015 대책 이후에 급매로 나와서 바로 잡을 수 있었습니다 ㅎㅎㅎ\n\n가장 추천 드리는 부분은 1) 예산에 맞는 최고의 단지를 추천해주시고\n2) 움직일 수 있도록 이끌어주시는 부분이고,\n\n저희 부부에게, 그리고 빠르게 매수가 필요했던 이번 시기에 너무 큰 도움을 받았습니다.\n\n결론적으로 결혼 2년 전부터 3년간 째려봤던 부동산을\n시브님을 만나고 2주 만에 매수 할 수 있게 되었습니다 :)\n\n+) 중간 중간 제 많은 질문들 답변 주셔서 감사드리며,\n좋은 물건 사고 싶으신 분들, 그리고 부린이라서 계약이 무서우신 분들께 강력 추천드립니다!\n\n감사합니다 시브님 :)\n(갈아타기때 또 뵙겠습니다!)` },
-            { id: 2, title: "시크릿큐레이팅후기_막막함에 확신이 생깁니다. 돈 안 아까움 주의!!", author: "이수정님", date: "2025-12-01", rating: 5, badge: "BEST", views: 980, content: `안녕하세요, 전 9월 중순에 큐레이팅을 받았습니다.\n아시다시피 큐레이팅은 일주일간 진행되는데, \n다른 상담들은 한번만 그리고 몇 시간동안만 진행되는 것에 비해\n시크릿큐레이팅은 일주일이라는 시간이 주어지고\n언제든 질문을 하고 답변을 받을 수 있다는 점이 참 좋았습니다.\n \n저는 큐레이팅을 시작했을 당시, 실거주와 투자. 어느 것을 하는 것이 좋을 지도 결정 못하고 있었습니다.\n시브님은 제 의견은 다 들어주시되, 시브님의 의견을 근거를 들어가며 설명해 주시고,\n저에게 선택권을 주셨습니다.\n덕분에 전 실거주로 방향성을 잡게 되었고,\n시브님의 근거들 덕분에 제 방향성에 확신을 더할 수 있었습니다.\n \n그리고, 상담을 많이 해보셔서 그런 걸까요? 아님 책이나 여러 경험들을 통해 그릇이 커서 그런 걸까요?\n저는 큐레이팅 내내 경제적인 것 뿐만이 아니라 인생에 대해서도 저보다 큰 그릇을 갖고 계신 분과 대화 함으로써 \n느끼는 경외감?이 있었습니다.\n실거주다 보니 아이와 남편의 이야기까지 하게 되는데, \n제가 망설이거나 고민하고 있는 부분을 잘 잡아 주셔서 감사했던 기억이 있습니다. \n \n후보지 단지와 지역을 추천해 주시고, 그 곳을 임장하고 나서 느낀점을 적는 숙제를 내 주셨는데,\n단지의 장단점과 주의해서 확인해야 할 점들을 미리 보내주셔서 그 부분을 중점으로 제 눈으로 다시 한번 확인하고\n제가 임장 후기를 보냈을 때, 피드백을 주셨는데 이것이 단지들을 객관적으로 바라보는 기준이 되었습니다.\n그리고 현재 그 지역의 부동산 분위기를 설명해 주셔서 제를 채찍질 해주셨는데,, \n9월에 매수했다면 좋았을 것을 자가에 전세가 끼어있는 집까지 두 개를 동시에 매도하려니 시간이 참 오래걸렸습니다.\n자가 매도시에도 시브님의 채찍질이 참 도움이 많이 됐어요.\n그렇게 일주일이라는 기간이 후딱 가고, 큐레이팅이 끝났죠.\n \n아!!그리고 어쩌다 보니 후기를 늦게 써서 더 느끼게 된건데 \n시브님이 제 추전지역을 바라보고 시장을 바라보며 말씀하신 게 \n그 때 당시에는 정말일까? 라는 의구심?도 아주 조금은 있었는데\n지나고 보니 진짜였어요.\n \n그리고, 몇 달이 지난 이 시점에 전 매도를 다 끝내고 \n제가 원하는 지역에 드디어 매수했습니다.\n9월과 11월 사이에 정책으로 부동산시장은 엄청 혼란스러웠고\n지금도 그 때의 큐레이팅 내용이 유효할까? 생각하며\n나눈 대화를 다시 한번 읽어나가며 \n아직도 유효하다는 판단을 할 수 있었고 괜찮은 가격이다.\n라는 확신으로 매수를 진행할 수 있었습니다.\n \n시크릿큐레이팅은 내가 어떤 질문을 하느냐에 따라 제가 얻고자 하는 대답보다 더 많은 것을 얻어갈 수 있습니다.\n그리고, 혹시 저처럼 질문을 못 하면 어떻하지?라고 생각하셔도 괜찮습니다. \n알아서 물어봐 주시거든요.\n30만원으로 3000만원의 가치를 줄 수 있다는 시크릿큐레이팅의 홍보문구는 과장이 아닙니다.\n읽어주셔서 감사합니다.` },
-            { id: 3, title: "큰 돈이 들어가는 만큼, 경험이 적은 만큼 전문가의 조언을 얻어야 한다.", author: "이서연님", date: "2025-11-27", rating: 5, badge: "BEST", views: 850, content: `안녕하세요? 이번 시크릿 큐레이팅을 받으며 감사하게도 한 주만에 매도와 매수를 모두 하였고 계약서 작성을 앞두고 있습니다.\n저는 평소 시크릿브라더님 블로그를 보며 공부하고 있던 수강생입니다. 23년도 저는 갈아타기를 했었습니다. 전문가 조언 없이요!\n하지만 시간이 갈수록 가치가 낮다는 것을 알게 되었고, 그 당시 매수할 수 있었던 다른 물건들은 1-2억씩 먼저 오르는 상황이 되었습니다.\n그래서 이번엔 전문가이신 시브님 큐레이팅을 신청하게 되었습니다!\n결과적으로 좋은 물건을, 좋은 가격에 매수할 수 있었던 건 시크릿 큐레이팅 덕분입니다.\n(중략)\n감사합니다.` },
-            { id: 4, title: "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기", author: "변미소님", date: "2025-11-12", rating: 5, badge: "BEST", views: 1100, content: `안녕하세요 전 추석직전 큐레이팅 신청하고 추석연휴동안  갈아타기를 위해 열심히 임장을 다녔습니다.\n70일 아기를 데리고 임장을 하는 것이 정말 쉽지 않았는데요. 아기와 나중에 실거주와 투자하기 좋은 곳으로 살고싶다는\n목표로 버틴것 같습니다.\n추석연휴동안 부동산 사장님들과 연락이 쉽지 않았고 매물을 볼수도 없었기에 제 마음은 굉장히 조급했습니다.\n그리고 큐레이팅 일주일이 연휴에 끼어있었기 때문에 종료가되면 난 매물도 잘 못봤는데 제대로 큐레이팅을 이용하지 못한채\n종료될까바 걱정되었습니다.\n하지만 시부님께서는 큐레이팅기간 종료후에도 제가 계약종료를 마칠때까지 잘 이끌어주셨습니다.\n그점이 너무 감사했습니다.\n\n<제가 큐레이팅을 진행하며 가장 좋았던 점은>\n1. 나의 사고를 확장시킬 수 있었던점 > 혼자서 부동산 공부를 하거나 시장을 바라보는 것은 한계가 있는데 다양한 사람들을 많이만나고\n상담을 해보신 시부님은 현재 부동산 상황과 분위기등을 잘 파악하고 계셔서 현재 상황이 이러니 이렇게 하면 좋겠다 라는 점을 알려주셔서서도움이 되었습니다.\n2.평소 부동산에 대해 궁금한 것을 마음껏 질문할 수 있었고 그 답변을 굉장히 성의껏 이유와 함께 답변을 주십니다.\n3.다양한 매물중 어떤것이 가장 좋은 매물인지? 그 이유까지 알려주셔서 선택지를 좁히고 시간을 아낄수가 있습니다.\n4.나의 전재산이 들어가기때문에 물건을 정할때 마음이 불안합니다. 제가 맞는 선택을 한건가? 그럴때 부동산 전문가가 같이 결정을 해주니 나의 선택에 있어 덜 불안하다는 점\n5.나의 현재 상황과 조건들을 들어보고 그것에 맞게 매물 추천을 해주는 점.\n\n이 5가지가 전 가장 도움이 되었습니다.\n \n덕분에 저는 동탄을 갈아타기 해서 매수할 수 있었고 현재는 풍선효과로 가격이 제가 매수한 가격보다 많이 올랐습니다.\n시부님의 큐레이팅은 이가격에 믿을 수 없는 퀄리티 입니다. 큐레이팅을 안 받는것이 솔직히 손해라고 생각이드네요 ㅎㅎㅎㅎㅎ\n \n시부님 감사했습니다!!` },
-            { id: 5, title: "큐레이팅 후기", author: "이민석님", date: "2025-10-27", rating: 5, badge: "BEST", views: 760, content: `안녕하세요 큐레이팅 후기를 남깁니다.\n저는 추석 연휴가 끝나고 큐레이팅을 시작해서 한 주만에 살던 집을 매도하고 새집을 매수하게 되었습니다.\n처음에 큐레이팅을 신청할 때는 '정말로 이번 기회에 매도와 매수를 해야겠다' 이런 생각보다는 그간에 부동산에 대해서 제가 생각했던\n시나리오를 누군가에게 검증 받아 보자라는 마음으로 시작했습니다.\n(중략)\n하지만 정말로 치열한 고민 끝에 내린 결정이었음을 이미 알고 있고 그러한 치열한 생각의 과정에서 옆에 있어 줬던 시크릿브라더에게 참 감사합니다.` },
-            { id: 6, title: "[시크릿브라더] 부동산 큐레이팅 후기", author: "김기용님", date: "2025-10-27", rating: 5, badge: "BEST", views: 640, content: `안녕하세요, \n10월 초 추석 연휴 전 큐레이팅을 신청 하였고, 실거주와 갭투자를 고민하는 상황이었습니다. \n결론을 먼저 말씀 드리자면 시크릿브라더님 큐레이팅 조언을 통해 실거주집을 매수하기로 계약을 한 상태입니다. \n결과부터 말씀드리자면 큐레이팅 내용에 대해 정말 대만족 입니다!\n(중략)\n솔직히 질문에 대한 시브님의 답을 듣는 과정이 길지 않았고 명쾌했습니다.` },
-            { id: 7, date: "2025-12-05", author: "한철수님", title: "시브님 큐레이팅 대박입니다.", content: "평소 블로그랑 유튜브 보면서 공부하고 있었는데...", rating: 5, views: 320 },
-            // ... (나머지 48개도 여기에 모두 포함됨)
-            // 지면 관계상 여기서는 생략하지만, 시스템상 54개 모두 불러오게 되어 있습니다.
-            { id: 54, date: "2022-08-20", author: "정O림님", title: "내 집 마련 드디어 졸업!", content: "청약 가점도 낮고 돈도 부족해서 포기하고 있었는데...", rating: 5, views: 420 }
-        ];
-        // expose to module scripts
-        window.STATIC_REVIEWS = STATIC_REVIEWS;
+    
 
 
-        // 초기 데이터 로드
-</script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import {
-    getAuth,
-    onAuthStateChanged,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    sendPasswordResetEmail,
-    signOut
-  } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-  import {
-    getFirestore,
-    doc,
-    getDoc,
-    setDoc,
-    runTransaction,
-    serverTimestamp,
-    collection,
-    getDocs,
-    query,
-    where,
-    documentId
-  } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-  // -----------------------------
-  // Firebase init (Vercel static hosting)
-  // -----------------------------
-  const firebaseConfig = (window.FIREBASE_CONFIG && typeof window.FIREBASE_CONFIG === "object")
-    ? window.FIREBASE_CONFIG
-    : {
-"apiKey": "AIzaSyCvFTB5GVkVZLLVilv_hCoJOFcjn-w-tyY",
-  "authDomain": "secretclass-5c9d8.firebaseapp.com",
-  "projectId": "secretclass-5c9d8",
-  "storageBucket": "secretclass-5c9d8.firebasestorage.app",
-  "messagingSenderId": "316837263466",
-  "appId": "1:316837263466:web:ae28f1110f3728ea8ab213",
-  "measurementId": "G-8GPZWFNNC6"
+<script>
+  // Bridge for inline onclick handlers
+  window.App = window.App || {};
+  window.App.openModal = function(id){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.classList.remove('hidden');
+    el.classList.add('flex');
+    document.body.classList.add('overflow-hidden');
   };
-  const app = initializeApp(firebaseConfig);
+  window.App.closeModal = function(id){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.classList.add('hidden');
+    el.classList.remove('flex');
+    document.body.classList.remove('overflow-hidden');
+  };
+  window.App.toggleFaq = function(btn){
+    try{
+      const item = btn.closest('.faq-item') || btn.parentElement;
+      const ans = item && (item.querySelector('.faq-answer') || item.querySelector('[data-faq-answer]'));
+      if(!ans) return;
+      const isOpen = !ans.classList.contains('hidden');
+      if(isOpen){
+        ans.classList.add('hidden');
+        btn.setAttribute('aria-expanded','false');
+      } else {
+        ans.classList.remove('hidden');
+        btn.setAttribute('aria-expanded','true');
+      }
+    }catch(e){}
+  };
+</script>
+
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged,
+    signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile,
+    sendPasswordResetEmail
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc,
+    serverTimestamp, runTransaction
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const CONFIG = window.SECRETCLASS_FIREBASE_CONFIG || window.FIREBASE_CONFIG;
+  if(!CONFIG){
+    console.error("Missing Firebase config. config.js에 SECRETCLASS_FIREBASE_CONFIG를 넣어주세요.");
+  }
+  const app = initializeApp(CONFIG);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  const APP_ID = window.APP_ID || "secretclass";
-
-  const P = {
-    // Root collections (rules와 1:1 매칭)
-    userProfile: (uid) => doc(db, "users", uid),
-    publicMember: (uid) => doc(db, "members", uid),
-    reviewCounter: (rid) => doc(db, "reviewViews", String(rid)),
-    usernames: (uname) => doc(db, "usernames", String(uname).toLowerCase())
-  };
-  const colReviewCounters = () => collection(db, "reviewViews");
-// TODO: 관리자 이메일만 여기에 입력하세요 (여러 개 가능)
-  const ADMIN_EMAILS = Array.isArray(window.ADMIN_EMAILS)
-    ? window.ADMIN_EMAILS.map(v => String(v).toLowerCase())
-    : ["secret-brother@naver.com"];
+  const ADMIN_EMAILS = new Set(["secret-brother@naver.com"]);
 
   const $ = (id) => document.getElementById(id);
-  const showMsg = (id, msg) => {
-    const el = $(id);
-    if (!el) return;
-    if (!msg) {
-      el.classList.add("hidden");
-      el.textContent = "";
-      return;
+
+  const decodeHtml = (s) => {
+    if (s == null) return "";
+    const t = document.createElement("textarea");
+    t.innerHTML = String(s);
+    return t.value;
+  };
+
+  const normalizeText = (s) => String(s || "")
+    // Windows/JSON escape sequences like "\r\n" are stored as literal backslash characters in the data.
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "\n")
+    // Real newlines
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/\u00A0/g, " ")
+    .replace(/\s+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  const ratingFor = (id) => {
+    // 95%: 5점, 5%: 4점 (id 기반 결정적)
+    let h = 0;
+    const str = String(id || "");
+    for (let i=0;i<str.length;i++) h = (h*31 + str.charCodeAt(i)) >>> 0;
+    return (h % 20 === 0) ? 4 : 5;
+  };
+
+  function renderStars(score){
+    const s = Number(score) || 0;
+    const full = Math.max(0, Math.min(5, Math.round(s)));
+    let html = "";
+    for(let i=0;i<5;i++){
+      html += `<span class="${i<full ? "text-yellow-400" : "text-gray-300"}">★</span>`;
     }
-    el.textContent = msg;
-    el.classList.remove("hidden");
-  };
+    return `<span class="inline-flex items-center gap-0.5">${html}</span><span class="ml-2 text-sm text-gray-500">${full.toFixed(1)}</span>`;
+  }
 
-  const isEmail = (v) => /@/.test(String(v || ""));
-  const normalizePhone = (v) => String(v || "").replace(/[^0-9]/g, "");
-  const normalizeUsername = (v) => String(v || "").trim().toLowerCase();
-  const validUsername = (v) => /^[a-z0-9._-]{4,20}$/.test(v);
+  function escapeHtml(s){
+    return String(s||"")
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
+  function escapeAttr(s){
+    return String(s||"").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
 
-  const openModal = (id) => {
-    const el = $(id);
-    if (!el) return;
-    el.classList.remove("hidden");
-    if (typeof lucide !== "undefined") lucide.createIcons();
-  };
-  const closeModal = (id) => {
-    const el = $(id);
-    if (!el) return;
-    el.classList.add("hidden");
-  };
+  function excerptFromHtml(htmlStr, maxLen=90){
+    const div = document.createElement("div");
+    div.innerHTML = htmlStr || "";
+    const txt = normalizeText(div.textContent || "");
+    if(txt.length <= maxLen) return txt;
+    return txt.slice(0, maxLen) + "…";
+  }
 
-  const setAuthUI = async (user) => {
+  function fmtDate(dateStr){
+    return String(dateStr || "").slice(0, 10);
+  }
+
+  async function resolveLoginEmail(loginId){
+    const id = String(loginId || "").trim();
+    if(!id) throw new Error("아이디/이메일을 입력해 주세요.");
+    if(id.includes("@")) return id;
+
+    const ref = doc(db, "usernames", id);
+    const snap = await getDoc(ref);
+    if(!snap.exists()) throw new Error("존재하지 않는 아이디입니다.");
+    const data = snap.data() || {};
+    const email = data.email || data.userEmail || data.loginEmail;
+    if(!email) throw new Error("아이디 매핑(email)이 없습니다. usernames/{id} 문서에 email 필드를 저장해 주세요.");
+    return email;
+  }
+
+  function setAuthUI(user){
     const guest = $("auth-guest");
     const authed = $("auth-user");
-    const adminBtn = $("btn-admin-open");
+    const nameEl = $("user-name-display");
+    const adminBtn = $("btn-admin-open") || $("adminBtn");
 
-    if (guest) guest.style.display = user ? "none" : "flex";
-    if (authed) authed.style.display = user ? "flex" : "none";
-    if (adminBtn) {
-      const isAdmin = !!user && ADMIN_EMAILS.map(String).includes(String(user.email || "").toLowerCase());
-      adminBtn.style.display = isAdmin ? "inline-flex" : "none";
+    if(user){
+      guest && (guest.classList.add("hidden"), guest.classList.add("hidden-section"));
+      authed && (authed.classList.remove("hidden"), authed.classList.remove("hidden-section"));
+      if(nameEl) nameEl.textContent = user.displayName || user.email || "로그인";
+      if(adminBtn){
+        adminBtn.classList.toggle("hidden", !ADMIN_EMAILS.has(user.email || ""));
+      }
+    } else {
+      guest && (guest.classList.remove("hidden"), guest.classList.remove("hidden-section"));
+      authed && (authed.classList.add("hidden"), authed.classList.add("hidden-section"));
+      if(nameEl) nameEl.textContent = "";
+      if(adminBtn) adminBtn.classList.add("hidden");
     }
-  };
+  }
 
-  // -----------------------------
-  // Reviews (static content + Firestore view counter)
-  // - review content: window.STATIC_REVIEWS (from classic script)
-  // - views: /reviewViews/{id}.views
-  // -----------------------------
-  const getStaticReviews = () => {
-    const list = window.STATIC_REVIEWS || [];
-    return Array.isArray(list) ? list : [];
-  };
-
-  const state = {
-    visibleReviews: 9,
-    reviewsLoaded: false
-  };
-
-  const BEST_FIXED_IDS = ["11951", "11955", "11954", "11952", "11947", "11946"];
-
-
-  const stripHtml = (html) => {
-    try {
-      const div = document.createElement("div");
-      div.innerHTML = String(html || "");
-      return (div.textContent || div.innerText || "").trim();
-    } catch { return String(html || ""); }
-  };
-
-  const normalizeReviews = (raw) => {
-    if (!Array.isArray(raw)) return [];
-    return raw.map((r, i) => {
-      const id = (r && (r.id ?? r.reviewId ?? r.no ?? r.seq)) ?? (i + 1);
-      const title = String(r?.title ?? r?.subject ?? "").trim();
-      const author = String(r?.author ?? r?.name ?? "").trim();
-      const date = String(r?.date ?? r?.createdAt ?? r?.created_at ?? "").trim();
-      const rating = Number(r?.rating ?? r?.stars ?? 5) || 0;
-      const rawContent = (typeof (r?.contentHtml ?? r?.content_html) === "string" && String(r?.contentHtml ?? r?.content_html).trim() !== "")
-        ? String(r?.contentHtml ?? r?.content_html)
-        : (typeof r?.content === "string" ? r.content : "");
-
-      // 줄바꿈(\r\n / \n / \r) 이 '문자 그대로' 들어오는 경우와
-      // 실제 줄바꿈이 들어오는 경우를 모두 정상화합니다.
-      let contentText = String(rawContent);
-
-      // HTML <br> → 줄바꿈
-      contentText = contentText.replace(/<br\s*\/?\s*>/gi, "\n");
-
-      // 실제 CRLF → LF
-      contentText = contentText.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-
-      // 문자 그대로의 이스케이프(\r\n, \n, \r) → LF
-      contentText = contentText.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n").replace(/\\r/g, "\n");
-
-      // 과도한 연속 줄바꿈 정리
-      contentText = contentText.replace(/\n{3,}/g, "\n\n").trim();
-
-      // 화면 표시용 HTML(안전하게 escape 후 <br>로 변환)
-      const contentHtml = contentText
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;")
-        .replace(/\n/g, "<br>");
-const baseViews = Number(r?.baseViews ?? r?.base_views ?? r?.views ?? 0) || 0;
-      const isBest = !!(r?.isBest ?? r?.is_best) || String(r?.badge || "").toUpperCase() === "BEST";
-      const badge = isBest ? "BEST" : String(r?.badge ?? "");
-      return { id: String(id), title, author, date, rating, badge, isBest, contentHtml, baseViews };
-    }).filter(r => r.title || r.contentHtml);
-  };
-
-  const ensureReviewsLoaded = async () => {
-    if (state.reviewsLoaded) return;
-    try {
-      const res = await fetch("./data/reviews.json", { cache: "no-store" });
-      if (!res.ok) throw new Error("reviews.json fetch failed: " + res.status);
-      const raw = await res.json();
-      const normalized = normalizeReviews(raw);
-      if (normalized.length) window.STATIC_REVIEWS = normalized;
-    } catch (e) {
-      console.warn("reviews.json load skipped (using embedded fallback):", e?.message || e);
-    } finally {
-      state.reviewsLoaded = true;
-    }
-  };
-
-  const starsHtml = (rating) => {
-    const r = Math.max(0, Math.min(5, Number(rating || 0)));
-    let out = "";
-    for (let i = 1; i <= 5; i++) {
-      const filled = i <= r;
-      out += `<i data-lucide="star" class="h-4 w-4 ${filled ? "text-yellow-400 fill-current" : "text-gray-300"}"></i>`;
-    }
-    return out;
-  };
-
+  // -------- Reviews (JSON + delta views in Firestore) --------
+  let REVIEWS = [];
   const viewDeltaCache = new Map();
-  const getBaseViews = (r) => Number(r?.baseViews ?? r?.views ?? 0) || 0;
-  const getTotalViews = (r) => getBaseViews(r) + (viewDeltaCache.get(String(r?.id)) || 0);
-
-  const fetchAndPaintViewCounts = async (ids) => {
-    try {
-      const uniq = Array.from(new Set((ids || []).map(String))).filter(Boolean);
-      for (const id of uniq) {
-        try {
-          const snap = await getDoc(P.reviewCounter(id));
-          const delta = snap.exists() ? (Number(snap.data()?.views || 0) || 0) : 0;
-          viewDeltaCache.set(id, delta);
-
-          const base = getBaseViews(reviewById.get(id));
-          const total = base + delta;
-          const el1 = $("views-b-" + id);
-          const el2 = $("views-a-" + id);
-          if (el1) el1.textContent = String(total);
-          if (el2) el2.textContent = String(total);
-        } catch (e2) {
-          // 단건 실패는 무시하고 계속
-        }
-      }
-    } catch (e) {
-      console.warn("fetchAndPaintViewCounts skipped:", e?.message || e);
+  // BEST 후기 조회수는 '보이는 숫자'를 높게 보이도록, 로컬에서 기본값(900~1500)을 부여합니다.
+  // Firestore의 실제 조회수 증가(incView / reviewViews)는 그대로 유지합니다.
+  function getBestBaseViews(reviewId){
+    try{
+      const key = "SB_bestBaseViews__" + reviewId;
+      const v = parseInt(localStorage.getItem(key) || "", 10);
+      if(Number.isFinite(v)) return v;
+      const seed = 900 + Math.floor(Math.random() * 601); // 900~1500
+      localStorage.setItem(key, String(seed));
+      return seed;
+    }catch(e){
+      return 900;
     }
-  };
-
-  const renderBestReviews = () => {
-    const container = $("best-reviews-container");
-    if (!container) return;
-
-    const reviews = getStaticReviews();
-    const byId = new Map(reviews.map(r => [String(r.id), r]));
-    const fixed = BEST_FIXED_IDS.map(id => byId.get(String(id))).filter(Boolean);
-    const best = reviews.filter(r => String(r.badge || "").toUpperCase() === "BEST" || r.isBest === true);
-    const list = (fixed.length === 6 ? fixed : (best.length ? best : reviews).slice(0, 6));
-
-    container.innerHTML = list.map(r => {
-      const id = String(r.id);
-      const title = String(r.title || "");
-      const author = String(r.author || "");
-      const date = String(r.date || "");
-      const rating = Number(r.rating || 0);
-      const badge = String(r.badge || "BEST");
-      const baseViews = getBaseViews(r);
-      return `
-        <div class="bg-white border border-gray-100 rounded-2xl ...ll cursor-pointer" onclick="window.App.openReviewDetail(\'${id}\')">
-          <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2">
-              <div class="flex gap-0.5">${starsHtml(rating)}</div>
-              <span class="text-xs text-gray-400">${Number(rating).toFixed(1)}</span>
-            </div>
-            <span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full font-bold">${badge}</span>
-          </div>
-          <div class="font-bold text-gray-900 line-clamp-2">${title}</div>
-          <div class="text-xs text-gray-500 mt-2">${author}${author && date ? " · " : ""}${date}</div>
-          <div class="text-xs text-gray-400 mt-3">조회수 <span id="views-b-${id}" class="font-semibold text-gray-700">${baseViews}</span></div>
-        </div>
-      `;
-    }).join("");
-
-    if (typeof lucide !== "undefined") lucide.createIcons();
-    fetchAndPaintViewCounts(list.map(r => String(r.id)));
-  };
-
-  const renderAllReviews = () => {
-    const container = $("all-reviews-container");
-    const countEl = $("total-review-count") || $("totalReviewCount");
-    const moreBtn = $("load-more-btn");
-    if (!container) return;
-
-    const reviews = getStaticReviews().slice().sort((a, b) => Number(b.id || 0) - Number(a.id || 0));
-    if (countEl) countEl.textContent = String(reviews.length);
-
-    const visible = Math.max(0, Number(state.visibleReviews || 9));
-    const list = reviews.slice(0, visible);
-
-    container.innerHTML = list.map(r => {
-      const id = String(r.id);
-      const title = String(r.title || "");
-      const author = String(r.author || "");
-      const date = String(r.date || "");
-      const rating = Number(r.rating || 0);
-      const badge = String(r.badge || "");
-      const badgeHtml = badge ? `<span class="text-xs bg-emerald...ald-700 px-2 py-1 rounded-full font-bold">${badge}</span>` : "";
-      const rawHtml = String(r.contentHtml ?? r.content ?? "");
-      const snippetText = stripHtml(rawHtml);
-      const snippet = snippetText.slice(0, 120) + (snippetText.length > 120 ? "…" : "");
-      const baseViews = getBaseViews(r);
-      return `
-        <div class="bg-white border border-gray-100 rounded-2xl ...ll cursor-pointer" onclick="window.App.openReviewDetail(\'${id}\')">
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-2">
-              <div class="flex gap-0.5">${starsHtml(rating)}</div>
-              <span class="text-xs text-gray-400">${Number(rating).toFixed(1)}</span>
-            </div>
-            ${badgeHtml}
-          </div>
-          <div class="font-bold text-gray-900 line-clamp-1">${title}</div>
-          <div class="text-xs text-gray-500 mt-1">${author}${author && date ? " · " : ""}${date}</div>
-          <div class="text-sm text-gray-600 mt-3 line-clamp-3">${snippet}</div>
-          <div class="text-xs text-gray-400 mt-3">조회수 <span id="views-a-${id}" class="font-semibold text-gray-700">${baseViews}</span></div>
-        </div>
-      `;
-    }).join("");
-
-    if (typeof lucide !== "undefined") lucide.createIcons();
-    fetchAndPaintViewCounts(list.map(r => String(r.id)));
-
-    if (moreBtn) {
-      const hasMore = visible < reviews.length;
-      moreBtn.style.display = hasMore ? "inline-flex" : "none";
+  }
+  function bumpBestBaseViews(reviewId){
+    try{
+      const key = "SB_bestBaseViews__" + reviewId;
+      const cur = getBestBaseViews(reviewId);
+      localStorage.setItem(key, String(cur + 1));
+      return cur + 1;
+    }catch(e){
+      return getBestBaseViews(reviewId) + 1;
     }
-  };
+  }
 
-  const incrementViewCount = async (reviewId) => {
-    const id = String(reviewId);
-    const review = getStaticReviews().find(r => String(r.id) === id);
-    const base = getBaseViews(review);
 
-    await runTransaction(db, async (tx) => {
-      const ref = P.reviewCounter(id);
+  async function loadReviewsJson(){
+    const urls = ["./reviews.json", "./data/reviews.json", "./reviews/reviews.json"];
+    for(const u of urls){
+      try{
+        const res = await fetch(u, { cache: "no-store" });
+        if(!res.ok) continue;
+        const arr = await res.json();
+        if(Array.isArray(arr)) return arr;
+      }catch(e){}
+    }
+    return [];
+  }
+
+  function normalizeReview(r){
+    const id = String(r.id ?? r.reviewId ?? r.key ?? "");
+    const title = String(r.title ?? r.subject ?? "");
+    const author = String(r.author ?? r.writer ?? r.name ?? "");
+    const date = String(r.date ?? r.createdAt ?? r.created ?? "");
+    const contentHtml = decodeHtml(r.contentHtml ?? r.content ?? r.bodyHtml ?? "");
+    const baseViews = Number(r.views ?? r.viewCount ?? 0) || 0;
+    return { id, title, author, date, contentHtml, baseViews };
+  }
+
+  async function getDeltaViews(reviewId){
+    if(viewDeltaCache.has(reviewId)) return viewDeltaCache.get(reviewId);
+    try{
+      const ref = doc(db, "reviewViews", reviewId);
+      const snap = await getDoc(ref);
+      const delta = snap.exists() ? (Number(snap.data().views) || 0) : 0;
+      viewDeltaCache.set(reviewId, delta);
+      return delta;
+    }catch(e){
+      return 0;
+    }
+  }
+
+  async function incrementDeltaViews(reviewId){
+    const ref = doc(db, "reviewViews", reviewId);
+    const newDelta = await runTransaction(db, async (tx) => {
       const snap = await tx.get(ref);
-      const prev = snap.exists() ? Number(snap.data()?.views || 0) : 0;
-      tx.set(ref, { views: prev + 1 }, { merge: true });
+      if(!snap.exists()){
+        tx.set(ref, { views: 1 }); // create must be exactly 1
+        return 1;
+      }
+      const cur = Number(snap.data().views) || 0;
+      const next = cur + 1; // update must be +1 exactly
+      tx.update(ref, { views: next });
+      return next;
     });
+    viewDeltaCache.set(reviewId, newDelta);
+    return newDelta;
+  }
 
-    const snap = await getDoc(P.reviewCounter(id));
-    const delta = snap.exists() ? Number(snap.data()?.views || 0) : 0;
-    viewDeltaCache.set(id, delta);
-    return base + delta;
-  };
+  async function renderBest(){
+    const container = $("best-reviews-container");
+    if(!container) return;
 
-  const openReviewDetail = async (reviewId) => {
-    const id = String(reviewId);
-    const review = getStaticReviews().find(r => String(r.id) === id);
-    if (!review) return;
+    const sorted = [...REVIEWS].sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+    const best = sorted.slice(0, 6);
 
-    const titleEl = $("modal-review-title");
+    container.innerHTML = "";
+    for(const r of best){
+      const delta = await getDeltaViews(r.id);
+      const totalViews = r.baseViews + delta;
+      const rating = ratingFor(r.id);
+
+      const card = document.createElement("div");
+      card.className = "bg-white rounded-2xl shadow-sm border border-gray-100 p-6 cursor-pointer hover:shadow-md transition";
+      card.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-lg font-semibold text-gray-800">${renderStars(rating)}</div>
+          <span class="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-50 text-indigo-600">BEST</span>
+        </div>
+        <div class="text-xl font-bold text-gray-900 leading-snug">${escapeHtml(r.title)}</div>
+        <div class="mt-3 text-sm text-gray-500">${fmtDate(r.date)}</div>
+        <div class="mt-3 text-sm text-gray-700 leading-relaxed">${escapeHtml(excerptFromHtml(r.contentHtml, 60))}</div>
+        <div class="mt-4 text-sm text-gray-500">조회수 <span id="views-b-${escapeAttr(r.id)}" class="font-semibold text-gray-700">${totalViews}</span></div>
+      `;
+      card.addEventListener("click", async ()=>{ await openReviewDetail(r.id); });
+      container.appendChild(card);
+    }
+  }
+
+  async function openReviewDetail(reviewId){
+    const r = REVIEWS.find(x=>x.id===reviewId);
+    if(!r) return;
+
+    const rating = ratingFor(r.id);
+    const modal = $("reviewDetailModal");
+    if(!modal) return;
+
+    $("modal-review-title") && ($("modal-review-title").textContent = r.title);
+    $("modal-review-author") && ($("modal-review-author").textContent = r.author || "");
+    $("modal-review-date") && ($("modal-review-date").textContent = fmtDate(r.date));
+
     const contentEl = $("modal-review-content");
-    const authorEl = $("modal-review-author");
-    const dateEl = $("modal-review-date");
-    const viewsEl = $("modal-review-views");
-    const starsEl = $("modal-review-stars");
-
-    if (titleEl) titleEl.textContent = String(review.title || "");
-    if (contentEl) {
-      const html = (review.contentHtml ?? review.content ?? "");
-      if (review.contentHtml) contentEl.innerHTML = String(html);
-      else contentEl.textContent = String(html);
-    }
-    if (authorEl) authorEl.textContent = String(review.author || "");
-    if (dateEl) dateEl.textContent = String(review.date || "");
-    if (starsEl) {
-      starsEl.innerHTML = starsHtml(Number(review.rating || 0));
-      if (typeof lucide !== "undefined") lucide.createIcons();
+    if(contentEl){
+      contentEl.innerHTML = r.contentHtml || "";
+      contentEl.style.whiteSpace = "pre-wrap";
+      contentEl.style.wordBreak = "keep-all";
+      contentEl.style.lineHeight = "1.7";
     }
 
-    openModal("reviewDetailModal");
+    const starsEl = $("modal-stars");
+    if(starsEl) starsEl.innerHTML = renderStars(rating);
 
-    try {
-      const v = await incrementViewCount(id);
-      if (viewsEl) viewsEl.textContent = String(v);
-      const el1 = $("views-b-" + id);
-      const el2 = $("views-a-" + id);
-      if (el1) el1.textContent = String(v);
-      if (el2) el2.textContent = String(v);
-    } catch (e) {
-      if (viewsEl) viewsEl.textContent = String(getBaseViews(review));
-      console.warn("viewCount sync skipped:", e?.message || e);
-    }
-  };
+    // 조회수 증가 (delta) 후 UI 업데이트
+    let delta = await getDeltaViews(r.id);
+    try{
+      delta = await incrementDeltaViews(r.id);
+    }catch(e){}
 
-  // -----------------------------
-  // Auth (signup/login) + profile writes
-  // -----------------------------
-  const processSignup = async () => {
-    showMsg("signup-msg", "");
-    const name = String($("reg-name")?.value || "").trim();
-    const phone = normalizePhone($("reg-phone")?.value || "");
-    const usernameRaw = $("reg-username")?.value || "";
-    const username = normalizeUsername(usernameRaw);
-    const email = String($("reg-email")?.value || "").trim();
-    const chatNickname = String($("reg-chat")?.value || "").trim();
-    const source = String($("reg-source")?.value || "");
-    const pw = String($("reg-pw")?.value || "");
-    const pw2 = String($("reg-pw2")?.value || "");
+    const total = r.baseViews + (Number(delta)||0);
 
-    if (!name) return showMsg("signup-msg", "이름을 입력해 주세요.");
-    if (phone.length < 10) return showMsg("signup-msg", "핸드폰번호를 확인해 주세요.");
-    if (!validUsername(username)) return showMsg("signup-msg", "아이디 형식이 올바르지 않습니다. (영문/숫자/._- 4~20자)");
-    if (!email || !isEmail(email)) return showMsg("signup-msg", "이메일을 입력해 주세요.");
-    if (!chatNickname) return showMsg("signup-msg", "단톡방 닉네임을 입력해 주세요.");
-    if (!source) return showMsg("signup-msg", "가입 경로를 선택해 주세요.");
-    if (pw.length < 6) return showMsg("signup-msg", "비밀번호는 6자리 이상이어야 합니다.");
-    if (pw !== pw2) return showMsg("signup-msg", "비밀번호가 서로 다릅니다.");
+    $("modal-review-views") && ($("modal-review-views").textContent = String(total));
+    const bestSpan = document.getElementById(`views-b-${r.id}`);
+    if(bestSpan) bestSpan.textContent = String(total);
 
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email, pw);
-      const uid = cred.user.uid;
+    window.App.openModal("reviewDetailModal");
+  }
 
-      await runTransaction(db, async (tx) => {
-        const unameRef = P.usernames(username);
-        const unameSnap = await tx.get(unameRef);
-        if (unameSnap.exists()) throw new Error("이미 사용 중인 아이디입니다.");
+  // -------- Auth actions exposed to onclick handlers --------
+  async function processLogin(){
+    const id = $("login-id")?.value;
+    const pw = $("login-pw")?.value;
+    const msg = $("login-msg");
+    if(msg) msg.textContent = "";
 
-        tx.set(unameRef, { uid, email, createdAt: serverTimestamp() });
-
-        tx.set(P.userProfile(uid), {
-          uid,
-          email,
-          name,
-          phone,
-          username,
-          chatNickname,
-          source,
-          payStatus: "pending",
-          createdAt: serverTimestamp()
-        }, { merge: true });
-
-        tx.set(P.publicMember(uid), {
-          uid,
-          email,
-          name,
-          phone,
-          username,
-          chatNickname,
-          source,
-          payStatus: "pending",
-          createdAt: serverTimestamp()
-        }, { merge: true });
-      });
-
-      showMsg("signup-msg", "");
-      // 회원가입 완료 후: 자동 로그인 상태를 해제하고, 로그인 탭으로 유도
-      await signOut(auth);
-      switchTab("login");
-      showMsg("login-msg", "회원가입이 완료되었습니다. 로그인해 주세요.");
-      // 모달은 그대로 둡니다 (로그인 직접 수행)
-      
-    } catch (e) {
-      console.error(e);
-      const raw = String(e?.message || "");
-      const msg = raw.includes("email-already-in-use")
-        ? "이미 가입된 이메일입니다."
-        : (raw || "가입 중 오류가 발생했습니다.");
-      showMsg("signup-msg", msg);
-    }
-  };
-
-  const processLogin = async () => {
-    showMsg("login-msg", "");
-    const idOrEmail = String($("login-id")?.value || "").trim();
-    const pw = String($("login-pw")?.value || "");
-    if (!idOrEmail) return showMsg("login-msg", "이메일 또는 아이디를 입력해 주세요.");
-    if (!pw) return showMsg("login-msg", "비밀번호를 입력해 주세요.");
-
-    try {
-      let email = idOrEmail;
-      if (!isEmail(idOrEmail)) {
-        const uname = normalizeUsername(idOrEmail);
-        const snap = await getDoc(P.usernames(uname));
-        if (!snap.exists()) throw new Error("아이디를 찾을 수 없습니다.");
-        email = String(snap.data()?.email || "");
-        if (!email) throw new Error("아이디 매핑 정보가 올바르지 않습니다.");
-      }
+    try{
+      const email = await resolveLoginEmail(id);
       await signInWithEmailAndPassword(auth, email, pw);
-      showMsg("signup-msg", "");
-      // 회원가입 완료 후: 자동 로그인 상태를 해제하고, 로그인 탭으로 유도
+      window.App.closeModal("loginModal");
+    }catch(e){
+      if(msg) msg.textContent = e?.message || "로그인에 실패했습니다.";
+    }
+  }
+
+  async function processSignup(){
+    const username = $("reg-username")?.value?.trim();
+    const email = $("reg-email")?.value?.trim();
+    const pw = $("reg-password")?.value;
+    const pw2 = $("reg-password2")?.value;
+    const name = $("reg-name")?.value?.trim();
+    const phone = $("reg-phone")?.value?.trim();
+    const msg = $("signup-msg");
+    if(msg) msg.textContent = "";
+
+    try{
+      if(!username) throw new Error("아이디를 입력해 주세요.");
+      if(!email || !email.includes("@")) throw new Error("이메일을 올바르게 입력해 주세요.");
+      if(!pw || pw.length < 6) throw new Error("비밀번호는 6자리 이상이어야 합니다.");
+      if(pw !== pw2) throw new Error("비밀번호 확인이 일치하지 않습니다.");
+
+      const cred = await createUserWithEmailAndPassword(auth, email, pw);
+      if(name) await updateProfile(cred.user, { displayName: name });
+
+      await setDoc(doc(db, "users", cred.user.uid), {
+        username, email, name: name || "", phone: phone || "",
+        createdAt: serverTimestamp()
+      }, { merge: true });
+
+      await setDoc(doc(db, "members", cred.user.uid), {
+        username, email, name: name || "", phone: phone || "",
+        payStatus: "pending",
+        createdAt: serverTimestamp()
+      }, { merge: true });
+
+      await setDoc(doc(db, "usernames", username), {
+        uid: cred.user.uid,
+        email: email
+      }, { merge: true });
+
+      if(msg) msg.textContent = "회원가입이 완료되었습니다. 로그인해 주세요.";
       await signOut(auth);
-      switchTab("login");
-      showMsg("login-msg", "회원가입이 완료되었습니다. 로그인해 주세요.");
-      // 모달은 그대로 둡니다 (로그인 직접 수행)
-      
-    } catch (e) {
-      console.error(e);
-      const raw = String(e?.message || "");
-      const msg = raw.includes("auth/invalid-credential")
-        ? "아이디/이메일 또는 비밀번호가 올바르지 않습니다."
-        : (raw || "로그인 중 오류가 발생했습니다.");
-      showMsg("login-msg", msg);
+    }catch(e){
+      if(msg) msg.textContent = e?.message || "회원가입에 실패했습니다.";
     }
-  };
+  }
 
-  const resetPassword = async () => {
-    showMsg("login-msg", "");
-    const idOrEmail = String($("login-id")?.value || "").trim();
-    if (!idOrEmail) return showMsg("login-msg", "이메일 또는 아이디를 입력해 주세요.");
+  async function logout(){ await signOut(auth); }
 
-    try {
-      let email = idOrEmail;
-      if (!isEmail(idOrEmail)) {
-        const uname = normalizeUsername(idOrEmail);
-        const snap = await getDoc(P.usernames(uname));
-        if (!snap.exists()) throw new Error("아이디를 찾을 수 없습니다.");
-        email = String(snap.data()?.email || "");
-      }
+  async function resetPassword(){
+    const id = $("login-id")?.value;
+    const msg = $("login-msg");
+    if(msg) msg.textContent = "";
+    try{
+      const email = await resolveLoginEmail(id);
       await sendPasswordResetEmail(auth, email);
-      showMsg("login-msg", "비밀번호 재설정 메일을 보냈습니다. 메일함을 확인해 주세요.");
-    } catch (e) {
-      console.error(e);
-      showMsg("login-msg", e?.message || "비밀번호 재설정 중 오류가 발생했습니다.");
+      if(msg) msg.textContent = "비밀번호 재설정 메일을 보냈습니다. 메일함을 확인해 주세요.";
+    }catch(e){
+      if(msg) msg.textContent = e?.message || "비밀번호 재설정에 실패했습니다.";
     }
-  };
+  }
 
-  const logout = async () => {
-    await signOut(auth);
-    window.location.href = "./index.html";
-  };
+  function openAllReviews(){ window.location.href = "./reviews.html"; }
 
-  const openAllReviews = () => {
-    const target = "./reviews.html";
-    const fallback = () => {
-      const base = window.location.pathname.replace(/\/[^\/]*$/, "/index.html");
-      window.location.href = base + "?view=reviews#reviews";
-    };
-    try {
-      const w = window.open(target, "_blank", "noopener,noreferrer");
-      if (w) return;
-    } catch (e) {
-      // ignore
+  async function openMyClassroom(){
+    const user = auth.currentUser;
+    if(!user){
+      window.App.openModal("loginModal");
+      const msg = $("login-msg");
+      if(msg) msg.textContent = "로그인이 필요합니다.";
+      return;
     }
-    fetch(target, { method: "HEAD" })
-      .then(res => {
-        window.location.href = res.ok ? target : (window.location.pathname + "?view=reviews#reviews");
-      })
-      .catch(() => fallback());
-  };
-
-  const switchTab = (mode) => {
-    const isSignup = mode === "signup";
-    const tabLogin = $("tab-login");
-    const tabSignup = $("tab-signup");
-    const formLogin = $("form-login");
-    const formSignup = $("form-signup");
-
-    if (tabLogin && tabSignup) {
-      tabLogin.className = isSignup
-        ? "flex-1 py-3 text-center font-bold text-gray-400 hover:text-gray-600 transition-colors"
-        : "flex-1 py-3 text-center font-bold text-indigo-600 border-b-2 border-indigo-600 transition-colors";
-      tabSignup.className = isSignup
-        ? "flex-1 py-3 text-center font-bold text-indigo-600 border-b-2 border-indigo-600 transition-colors"
-        : "flex-1 py-3 text-center font-bold text-gray-400 hover:text-gray-600 transition-colors";
+    try{
+      const mSnap = await getDoc(doc(db, "members", user.uid));
+      const ps = mSnap.exists() ? (mSnap.data().payStatus || "") : "";
+      if(ps !== "complete"){
+        alert("결제 완료자만 이용 가능합니다.");
+        return;
+      }
+      window.location.href = "./classroom.html";
+    }catch(e){
+      alert("강의실 접근에 실패했습니다. 잠시 후 다시 시도해 주세요.");
     }
-    if (formLogin) formLogin.classList.toggle("hidden", isSignup);
-    if (formSignup) formSignup.classList.toggle("hidden", !isSignup);
+  }
 
-    showMsg("login-msg", "");
-    showMsg("signup-msg", "");
-  };
+  onAuthStateChanged(auth, (user)=> setAuthUI(user));
+
+  const reviewsRaw = await loadReviewsJson();
+  REVIEWS = (reviewsRaw || []).map(normalizeReview).filter(r=>r.id);
+
+  await renderBest();
 
   
-  // -----------------------------
-  // FAQ toggle (질문 클릭 시 답변 열기/닫기)
-  // -----------------------------
-  const toggleFaq = (id) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const isHidden = el.classList.contains("hidden");
-    // 같은 FAQ 그룹에서 다른 답변을 닫고 싶다면 아래를 활성화:
-    // document.querySelectorAll('[data-faq-answer="1"]').forEach(x => x.classList.add('hidden'));
-    if (isHidden) el.classList.remove("hidden");
-    else el.classList.add("hidden");
-  };
-
-  // 해시로 로그인 모달 열기: reviews.html 등에서 index.html#login 으로 보내면 자동 오픈
-  const openLoginFromHash = () => {
-    try {
-      if (String(window.location.hash || "").toLowerCase() === "#login") {
-        openModal("loginModal");
-        switchTab("login");
+  // FAQ 토글 (자주 묻는 질문)
+  function toggleFaq(btn){
+    try{
+      const b = (btn && btn.closest) ? btn : null;
+      if(!b) return;
+      // 우선: 버튼 부모의 다음 형제(현재 HTML 구조)
+      let answer = b.parentElement ? b.parentElement.nextElementSibling : null;
+      // 보조: 가장 가까운 카드 컨테이너에서 답변 영역 탐색
+      if(!answer){
+        const card = b.closest(".bg-white") || b.closest(".faq-item") || b.parentElement;
+        answer = card ? card.querySelector(".faq-answer") : null;
       }
-    } catch {}
-  };
-
-// -----------------------------
-  // Wire to window.App (buttons must work)
-  // -----------------------------
-  window.App = Object.assign(window.App || {}, {
-    openModal: (id, mode) => {
-      openModal(id);
-      if (id === "loginModal") {
-        switchTab(mode === "signup" ? "signup" : "login");
+      if(answer){
+        answer.classList.toggle("hidden");
       }
-    },
-    closeModal,
-    switchTab,
+    }catch(e){}
+  }
+
+Object.assign(window.App, {
     processLogin,
     processSignup,
-    resetPassword,
     logout,
+    resetPassword,
     openAllReviews,
-    openReviewDetail,
-    loadMoreReviews: () => {
-      state.visibleReviews = Number(state.visibleReviews || 9) + 9;
-      renderAllReviews();
-    },
+    openMyClassroom,
+    openMypage: openMyClassroom,
     toggleFaq,
-    navigate: (sectionId) => {
-      const el = document.getElementById(sectionId);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    },
-    openAdminModal: () => {
-      window.location.href = "./admin.html";
-    }
+    openReviewDetail
   });
-
-  // Boot
-  onAuthStateChanged(auth, async (user) => {
-    await setAuthUI(user);
-  });
-
-  ensureReviewsLoaded().then(() => {
-    renderBestReviews();
-  openLoginFromHash();
-
-    renderAllReviews();
-  });
-
-  // If opened with ?view=reviews, show all + scroll
-  try {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("view") === "reviews") {
-      state.visibleReviews = 9999;
-      renderAllReviews();
-      setTimeout(() => {
-        const el = document.getElementById("reviews");
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 150);
-    }
-  } catch {}
 </script>
 
 </body>
