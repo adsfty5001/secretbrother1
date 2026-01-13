@@ -692,6 +692,13 @@
   };
 
   const normalizeText = (s) => String(s || "")
+    // Windows/JSON escape sequences like "\r\n" are stored as literal backslash characters in the data.
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "\n")
+    // Real newlines
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
     .replace(/\u00A0/g, " ")
     .replace(/\s+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
@@ -754,18 +761,18 @@
     const guest = $("auth-guest");
     const authed = $("auth-user");
     const nameEl = $("user-name-display");
-    const adminBtn = $("adminBtn");
+    const adminBtn = $("btn-admin-open") || $("adminBtn");
 
     if(user){
-      guest && guest.classList.add("hidden");
-      authed && authed.classList.remove("hidden");
+      guest && (guest.classList.add("hidden"), guest.classList.add("hidden-section"));
+      authed && (authed.classList.remove("hidden"), authed.classList.remove("hidden-section"));
       if(nameEl) nameEl.textContent = user.displayName || user.email || "로그인";
       if(adminBtn){
         adminBtn.classList.toggle("hidden", !ADMIN_EMAILS.has(user.email || ""));
       }
     } else {
-      guest && guest.classList.remove("hidden");
-      authed && authed.classList.add("hidden");
+      guest && (guest.classList.remove("hidden"), guest.classList.remove("hidden-section"));
+      authed && (authed.classList.add("hidden"), authed.classList.add("hidden-section"));
       if(nameEl) nameEl.textContent = "";
       if(adminBtn) adminBtn.classList.add("hidden");
     }
@@ -774,6 +781,31 @@
   // -------- Reviews (JSON + delta views in Firestore) --------
   let REVIEWS = [];
   const viewDeltaCache = new Map();
+  // BEST 후기 조회수는 '보이는 숫자'를 높게 보이도록, 로컬에서 기본값(900~1500)을 부여합니다.
+  // Firestore의 실제 조회수 증가(incView / reviewViews)는 그대로 유지합니다.
+  function getBestBaseViews(reviewId){
+    try{
+      const key = "SB_bestBaseViews__" + reviewId;
+      const v = parseInt(localStorage.getItem(key) || "", 10);
+      if(Number.isFinite(v)) return v;
+      const seed = 900 + Math.floor(Math.random() * 601); // 900~1500
+      localStorage.setItem(key, String(seed));
+      return seed;
+    }catch(e){
+      return 900;
+    }
+  }
+  function bumpBestBaseViews(reviewId){
+    try{
+      const key = "SB_bestBaseViews__" + reviewId;
+      const cur = getBestBaseViews(reviewId);
+      localStorage.setItem(key, String(cur + 1));
+      return cur + 1;
+    }catch(e){
+      return getBestBaseViews(reviewId) + 1;
+    }
+  }
+
 
   async function loadReviewsJson(){
     const urls = ["./reviews.json", "./data/reviews.json", "./reviews/reviews.json"];
@@ -999,13 +1031,34 @@
 
   await renderBest();
 
-  Object.assign(window.App, {
+  
+  // FAQ 토글 (자주 묻는 질문)
+  function toggleFaq(btn){
+    try{
+      const b = (btn && btn.closest) ? btn : null;
+      if(!b) return;
+      // 우선: 버튼 부모의 다음 형제(현재 HTML 구조)
+      let answer = b.parentElement ? b.parentElement.nextElementSibling : null;
+      // 보조: 가장 가까운 카드 컨테이너에서 답변 영역 탐색
+      if(!answer){
+        const card = b.closest(".bg-white") || b.closest(".faq-item") || b.parentElement;
+        answer = card ? card.querySelector(".faq-answer") : null;
+      }
+      if(answer){
+        answer.classList.toggle("hidden");
+      }
+    }catch(e){}
+  }
+
+Object.assign(window.App, {
     processLogin,
     processSignup,
     logout,
     resetPassword,
     openAllReviews,
     openMyClassroom,
+    openMypage: openMyClassroom,
+    toggleFaq,
     openReviewDetail
   });
 </script>
