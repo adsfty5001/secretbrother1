@@ -8,8 +8,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="./styles.css" rel="stylesheet"/>
 <!-- Firebase config (둘 중 존재하는 경로를 사용) -->
-<script src="./config.js"></script>
-<script src="./config.js"></script>
+  <script src="./config.js"></script>
 <style>
     .card-hover { transition: transform .15s ease, box-shadow .15s ease; }
     .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.06); }
@@ -84,29 +83,15 @@
   // -----------------------------
   // Firebase init
   // -----------------------------
-  const firebaseConfig =
-    (window.SECRETCLASS_FIREBASE_CONFIG && typeof window.SECRETCLASS_FIREBASE_CONFIG === "object")
-      ? window.SECRETCLASS_FIREBASE_CONFIG
-      : (window.FIREBASE_CONFIG && typeof window.FIREBASE_CONFIG === "object")
-        ? window.FIREBASE_CONFIG
-        : (window.firebaseConfig && typeof window.firebaseConfig === "object")
-          ? window.firebaseConfig
-          : null;
+  const firebaseConfig = (window.FIREBASE_CONFIG && typeof window.FIREBASE_CONFIG === "object")
+    ? window.FIREBASE_CONFIG
+    : { apiKey: "", authDomain: "", projectId: "", appId: "" };
 
-  let app = null;
-  let auth = null;
-  let db = null;
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-  try {
-    if (!firebaseConfig) throw new Error("Firebase config missing. (config.js에 SECRETCLASS_FIREBASE_CONFIG 또는 FIREBASE_CONFIG 설정 필요)");
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-  } catch (e) {
-    console.warn(e);
-    // Firebase 없이도 reviews.json은 표시되도록 계속 진행합니다.
-  }
-// Root paths (rules와 1:1)
+  // Root paths (rules와 1:1)
   const P = {
     member: (uid) => doc(db, "members", uid),
     reviewCounter: (rid) => doc(db, "reviewViews", String(rid)),
@@ -296,7 +281,7 @@
       elList.appendChild(card);
 
       // view count fetch & paint
-      getDeltaViews(id).then(() => {
+      getStoredViews(id).then(() => {
         const el = $("v-" + cssId(id));
         if (el) el.textContent = String(totalViewsSync(r).toLocaleString());
         // views 정렬이면 캐시가 늘어나므로 한 번 더 렌더(가볍게)
