@@ -9,7 +9,7 @@
 <link href="./styles.css" rel="stylesheet"/>
 <!-- Firebase config (둘 중 존재하는 경로를 사용) -->
 <script src="./config.js"></script>
-<script src="./config.js"></script>
+
 <style>
     .card-hover { transition: transform .15s ease, box-shadow .15s ease; }
     .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.06); }
@@ -34,8 +34,8 @@
 </div>
 </header>
 <main class="max-w-6xl mx-auto px-4 py-8">
-<div id="totalCount" class="text-gray-600 mb-4"></div>
-    <div id="statusMsg">불러오는 중…</div>
+<div class="text-gray-600 mb-4" id="totalCount"></div>
+<div id="statusMsg">불러오는 중…</div>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="list"></div>
 <div class="mt-8 flex items-center justify-between">
 <button class="px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50" id="prevBtn">이전</button>
@@ -64,8 +64,6 @@
 </div>
 </div>
 </div>
-
-
 <div class="hidden fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4" id="writeModal">
 <div class="bg-white w-full max-w-lg rounded-2xl p-6 shadow-2xl relative">
 <button class="absolute right-4 top-4 text-gray-400 hover:text-black" id="writeClose">✕</button>
@@ -90,7 +88,6 @@
 </div>
 </div>
 </div>
-
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
@@ -99,7 +96,7 @@
     serverTimestamp, query, orderBy, runTransaction
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const CONFIG = window.SECRETCLASS_FIREBASE_CONFIG || window.FIREBASE_CONFIG;
+  const CONFIG = window.SECRETCLASS_CONFIG || window.SECRETCLASS_FIREBASE_CONFIG || window.FIREBASE_CONFIG || window.firebaseConfig;
   const app = initializeApp(CONFIG);
   const auth = getAuth(app);
   const db = getFirestore(app);
@@ -123,7 +120,7 @@
     .replace(/\u00A0/g, " ")
     .replace(/\s+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
-    .trim();;
+    .trim();
 
   const ratingFor = (id) => {
     let h = 0;
@@ -502,6 +499,5 @@
 
   await bootstrap();
 </script>
-
 </body>
 </html>
