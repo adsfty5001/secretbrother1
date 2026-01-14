@@ -594,6 +594,9 @@
 <script>
   // Bridge for inline onclick handlers (kept lightweight; real logic lives in module script)
   window.App = window.App || {};
+window.App.__firebaseReady = !!db;
+window.App.__firebaseConfigReady = !!(getConfig());
+
 
   const MODAL_IDS = ["loginModal","depositModal","reviewDetailModal","writeReviewModal","mypageModal","adminModal","imageModal","videoModal"];
 
@@ -688,7 +691,7 @@ max-width:55vw;display:none;white-space:pre-wrap;"></div>
 })();
 </script>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword,
   createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, updateProfile
@@ -698,16 +701,47 @@ import {
   collection, getDocs, query, orderBy, serverTimestamp, runTransaction, limit
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const CONFIG =
+const getConfig = () =>
   window.SECRETCLASS_CONFIG ||
   window.SECRETCLASS_FIREBASE_CONFIG ||
   window.FIREBASE_CONFIG ||
   window.firebaseConfig ||
   null;
 
-const app = CONFIG ? initializeApp(CONFIG) : null;
-const auth = app ? getAuth(app) : null;
-const db = app ? getFirestore(app) : null;
+// 일부 환경(캐시/배포/모듈 로드 순서)에서 config.js가 모듈보다 늦게 로드되는 경우가 있어
+// CONFIG가 비어있으면 짧게 폴링하여 기다립니다.
+async function waitForConfig(timeoutMs = 3000){
+  const start = Date.now();
+  while(Date.now() - start < timeoutMs){
+    const cfg = getConfig();
+    if(cfg && typeof cfg === "object" && cfg.apiKey && cfg.projectId) return cfg;
+    await new Promise(r => setTimeout(r, 50));
+  }
+  return getConfig();
+}
+
+let app = null;
+let auth = null;
+let db = null;
+
+try{
+  // 이미 초기화된 앱이 있으면 재사용
+  if(getApps().length){
+    app = getApp();
+  }else{
+    const cfg = await waitForConfig(3500);
+    if(cfg && typeof cfg === "object"){
+      app = initializeApp(cfg);
+    }
+  }
+  auth = app ? getAuth(app) : null;
+  db = app ? getFirestore(app) : null;
+}catch(e){
+  // 초기화 실패해도 UI 전체가 죽지 않게 전역에 남김
+  window.App = window.App || {};
+  window.App.__firebaseInitError = String(e && (e.message || e)) || "unknown";
+}
+
 
 window.App = window.App || {};
 window.App.__BUILD_ID__ = "20260114-020931";
