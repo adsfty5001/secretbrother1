@@ -9,7 +9,6 @@
 <link href="./styles.css" rel="stylesheet"/>
 <!-- Firebase config (둘 중 존재하는 경로를 사용) -->
 <script src="./config.js"></script>
-
 <style>
     .card-hover { transition: transform .15s ease, box-shadow .15s ease; }
     .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.06); }
@@ -21,7 +20,7 @@
 <div class="flex items-center gap-3">
 <a class="text-gray-700 font-semibold hover:underline" href="./index.html">← 메인으로</a>
 <span class="text-gray-300">|</span>
-<h1 class="text-lg font-bold text-gray-900">전체 수강생 후기</h1>
+<h1 class="text-lg font-bold text-gray-900">전체 수강생 후기</h1><p id="reviewCount">지금 이 순간에도 새로운 후기가 올라오고 있습니다. (0개)</p>
 </div>
 <div class="flex items-center gap-2">
 <input class="w-64 max-w-[60vw] px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-200" id="searchInput" placeholder="후기 검색 (제목/작성자/내용)" type="text"/>
@@ -512,5 +511,32 @@ function excerptFromHtml(htmlStr, maxLen=140){
 
   await bootstrap();
 </script>
-</body>
+<script type="module">import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const CONFIG =
+  window.SECRETCLASS_CONFIG ||
+  window.SECRETCLASS_FIREBASE_CONFIG ||
+  window.FIREBASE_CONFIG ||
+  window.firebaseConfig ||
+  (typeof firebaseConfig !== "undefined" ? firebaseConfig : null) ||
+  null;
+
+const app = CONFIG ? initializeApp(CONFIG) : null;
+const db = app ? getFirestore(app) : null;
+
+function setCount(n){
+  const el = document.getElementById("reviewCount");
+  if(!el) return;
+  el.textContent = "지금 이 순간에도 새로운 후기가 올라오고 있습니다. (" + String(n) + "개)";
+}
+async function init(){
+  try{
+    if(!db) return;
+    const qy = query(collection(db,"reviews"), orderBy("createdAt","desc"), limit(500));
+    const snap = await getDocs(qy);
+    setCount(snap.size);
+  }catch(e){}
+}
+document.addEventListener("DOMContentLoaded", init);</script></body>
 </html>
