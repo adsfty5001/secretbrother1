@@ -12,10 +12,7 @@
 <!-- Lucide Icons (HTTPS) -->
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
-        
-        /* [Fallback] Tailwind CDN 로딩 실패 시에도 hidden 클래스 동작 보장 */
-        .hidden{display:none !important;}
-/* 폰트 설정 (HTTPS) */
+        /* 폰트 설정 (HTTPS) */
         @font-face {
             font-family: 'Jalnan';
             src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonnu-fonts_two@1.0/Jalnan.woff') format('woff');
@@ -654,41 +651,7 @@
     .replace(/\u00A0/g, " ")
     .replace(/\s+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
-    
-  // -------- BEST Authors (fixed) --------
-  const BEST_AUTHORS = ["김아름","이수정","이서연","변미소","이민석","김기용"];
-  const BEST_BASE_VIEWS_BY_AUTHOR = {
-    "김아름": 1240,
-    "이수정": 980,
-    "이서연": 850,
-    "변미소": 1100,
-    "이민석": 760,
-    "김기용": 640
-  };
-  const BEST_DISPLAY_NAME_BY_AUTHOR = {
-    "김아름": "김아름",
-    "이수정": "이수정",
-    "이서연": "이서연",
-    "변미소": "변미소",
-    "이민석": "이민석",
-    "김기용": "김기용"
-  };
-
-
-  const normalizeAuthorName = (s) => {
-    const raw = String(s || "").trim();
-    // remove all spaces and a trailing honorific like "님"
-    return raw.replace(/\s+/g, "").replace(/님$/g, "");
-  };
-
-  const authorDisplayForReview = (review) => {
-    const raw = String((review && (review.author ?? review.nickname ?? review.displayName ?? review.userName ?? review.user_name ?? review.username ?? review.writer ?? review.name)) || "").trim();
-    if(raw) return raw;
-    const key = String((review && (review.authorNorm || normalizeAuthorName(raw))) || "").trim();
-    if(key && BEST_DISPLAY_NAME_BY_AUTHOR && BEST_DISPLAY_NAME_BY_AUTHOR[key]) return BEST_DISPLAY_NAME_BY_AUTHOR[key];
-    return key || "";
-  };
-
+    .trim();
 
   const ratingFor = (id) => {
     // 95%: 5점, 5%: 4점 (id 기반 결정적)
@@ -800,23 +763,30 @@
         const res = await fetch(u, { cache: "no-store" });
         if(!res.ok) continue;
         const arr = await res.json();
-        if(Array.isArray(arr)) return arr.map(normalizeReview).filter(x=>x && x.id);
+        if(Array.isArray(arr)) return arr;
       }catch(e){}
     }
     return [];
   }
 
-  function normalizeReview(r){
+  
+const BEST_AUTHORS = ["김아름","이수정","이서연","변미소","이민석","김기용"];
+const BEST_VIEWS_BASE = { "김아름":1240, "이수정":980, "이서연":850, "변미소":1100, "이민석":760, "김기용":640 };
+
+function normAuthorName(v){
+  return String(v||"").replace(/\s+/g,"").replace(/님$/,"");
+}
+function normalizeReview(r){
     const id = String(r.id ?? r.reviewId ?? r.key ?? "");
     const title = String(r.title ?? r.subject ?? "");
-    const authorRaw = (r.author ?? r.nickname ?? r.displayName ?? r.userName ?? r.user_name ?? r.username ?? r.writer ?? r.name ?? "");
-    const author = String(authorRaw);
+    const author = String(r.author ?? r.nickname ?? r.displayName ?? r.writer ?? r.userName ?? r.username ?? r.user_name ?? r.name ?? "");
     const date = String(r.date ?? r.createdAt ?? r.createdDate ?? r.created_date ?? r.created ?? "");
     const contentHtml = decodeHtml(r.contentHtml ?? r.content ?? r.bodyHtml ?? "");
     const baseViews = Number(r.viewsBase ?? r.views ?? r.viewCount ?? 0) || 0;
     const isBest = Boolean(r.isBest) || String(r.badge ?? "").toUpperCase() === "BEST" || Boolean(r.best);
-    const authorNorm = normalizeAuthorName(author);
-    return { id, title, author, authorNorm, date, contentHtml, baseViews, isBest };
+    const authorNorm = normAuthorName(author);
+    const baseViews2 = baseViews || (BEST_VIEWS_BASE[authorNorm] || 0);
+    return { id, title, author, authorNorm, date, contentHtml, baseViews: baseViews2, isBest };
   }
 
   async function getDeltaViews(reviewId){
@@ -849,56 +819,19 @@
     return newDelta;
   }
 
-  
   async function renderBest(){
     const container = $("best-reviews-container");
     if(!container) return;
 
-    // 1) Fixed BEST 6 authors (priority)
-    const byNormAuthor = new Map();
-    for(const r of REVIEWS){
-      const key = r.authorNorm || normalizeAuthorName(r.author);
-      if(!key) continue;
-      // keep the newest one if duplicates exist
-      const prev = byNormAuthor.get(key);
-      if(!prev || String(r.date||"").localeCompare(String(prev.date||"")) > 0){
-        byNormAuthor.set(key, r);
-      }
-    }
-
-    const picked = [];
-    for(const name of BEST_AUTHORS){
-      const key = normalizeAuthorName(name);
-      const found = byNormAuthor.get(key);
-      if(found) picked.push(found);
-    }
-
-    // 2) Fallback fill (if some fixed authors are missing in JSON)
-    if(picked.length < 6){
-      const sorted = [...REVIEWS].sort((a,b)=> (String(b.date||"")).localeCompare(String(a.date||"")));
-      for(const r of sorted){
-        if(picked.length >= 6) break;
-        if(picked.some(x => x.id === r.id)) continue;
-        picked.push(r);
-      }
-    }
-
-    const best = picked.slice(0, 6);
+    const sorted = [...REVIEWS].sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+    const byBestAuthor = sorted.filter(r => BEST_AUTHORS.includes(r.authorNorm));
+    const best = (byBestAuthor.length ? byBestAuthor : sorted).slice(0, 6);
 
     container.innerHTML = "";
     for(const r of best){
       const delta = await getDeltaViews(r.id);
-
-      // baseViews: prefer JSON (viewsBase), otherwise use fixed BEST base views by author (only when missing/0)
-      const authorKey = (r.authorNorm || normalizeAuthorName(r.author));
-      const fixedBase = BEST_BASE_VIEWS_BY_AUTHOR[authorKey];
-      const baseForDisplay = (Number(r.baseViews) || 0) > 0 ? Number(r.baseViews) : (Number(fixedBase) || 0);
-
-      const totalViews = baseForDisplay + delta;
+      const totalViews = r.baseViews + delta;
       const rating = ratingFor(r.id);
-
-      const excerpt = excerptFromHtml(r.contentHtml, 60);
-      const excerptSafe = excerpt ? escapeHtml(excerpt) : "이미지 후기";
 
       const card = document.createElement("div");
       card.className = "bg-white rounded-2xl shadow-sm border border-gray-100 p-6 cursor-pointer hover:shadow-md transition";
@@ -908,9 +841,9 @@
           <span class="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-50 text-indigo-600">BEST</span>
         </div>
         <div class="text-xl font-bold text-gray-900 leading-snug">${escapeHtml(r.title)}</div>
-        ${(authorDisplayForReview(r) ? `<div class="mt-2 text-sm text-gray-700"><span class="text-gray-500">작성자</span> <span class="font-semibold">${escapeHtml(authorDisplayForReview(r))}</span></div>` : ``)}
-        <div class="mt-2 text-sm text-gray-500">${fmtDate(r.date)}</div>
-        <div class="mt-3 text-sm text-gray-700 leading-relaxed">${excerptSafe}</div>
+        ${r.author ? `<div class="mt-2 text-sm text-gray-500">작성자 ${escapeHtml(r.author)}</div>` : ``}
+        <div class="mt-3 text-sm text-gray-500">${fmtDate(r.date)}</div>
+        <div class="mt-3 text-sm text-gray-700 leading-relaxed">${escapeHtml(excerptFromHtml(r.contentHtml, 60))}</div>
         <div class="mt-4 text-sm text-gray-500">조회수 <span id="views-b-${escapeAttr(r.id)}" class="font-semibold text-gray-700">${totalViews}</span></div>
       `;
       card.addEventListener("click", async ()=>{ await openReviewDetail(r.id); });
@@ -927,37 +860,12 @@
     if(!modal) return;
 
     $("modal-review-title") && ($("modal-review-title").textContent = r.title);
-    $("modal-review-author") && ($("modal-review-author").textContent = authorDisplayForReview(r) || "");
+    $("modal-review-author") && ($("modal-review-author").textContent = r.author || "");
     $("modal-review-date") && ($("modal-review-date").textContent = fmtDate(r.date));
 
     const contentEl = $("modal-review-content");
     if(contentEl){
-      const raw = String(r.contentHtml || "").trim();
-      // If the review is an image-only review (or content is a direct image URL), render it safely.
-      const looksLikeImgUrl = /^https?:\/\/[^\s]+\.(png|jpg|jpeg|webp|gif)(\?.*)?$/i.test(raw);
-      if(!raw && (r.imageUrl || r.image || r.imgUrl || r.img)){
-        const src = String(r.imageUrl || r.image || r.imgUrl || r.img);
-        contentEl.innerHTML = `<img src="${escapeAttr(src)}" alt="후기 이미지" style="max-width:100%;height:auto;border-radius:12px;" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'text-sm text-gray-500',textContent:'이미지를 불러올 수 없습니다. (경로 확인 필요)'}))">`;
-      } else if(looksLikeImgUrl){
-        contentEl.innerHTML = `<img src="${escapeAttr(raw)}" alt="후기 이미지" style="max-width:100%;height:auto;border-radius:12px;" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'text-sm text-gray-500',textContent:'이미지를 불러올 수 없습니다. (경로 확인 필요)'}))">`;
-      } else {
-        // Normalize common escaped newlines but keep existing HTML tags (<p>, <br>, <img> ...) as-is.
-        contentEl.innerHTML = raw;
-        // If HTML contains image tags, make relative src absolute (best-effort).
-        const imgs = contentEl.querySelectorAll ? contentEl.querySelectorAll("img") : [];
-        imgs.forEach(img=>{
-          const src = img.getAttribute("src") || "";
-          if(src && !/^https?:\/\//i.test(src) && !src.startsWith("data:")){
-            try{ img.src = new URL(src, window.location.href).toString(); }catch(e){}
-          }
-          img.onerror = () => {
-            const div = document.createElement("div");
-            div.className = "text-sm text-gray-500";
-            div.textContent = "이미지를 불러올 수 없습니다. (경로 확인 필요)";
-            img.replaceWith(div);
-          };
-        });
-      }
+      contentEl.innerHTML = r.contentHtml || "";
       contentEl.style.whiteSpace = "pre-wrap";
       contentEl.style.wordBreak = "keep-all";
       contentEl.style.lineHeight = "1.7";
@@ -972,10 +880,7 @@
       delta = await incrementDeltaViews(r.id);
     }catch(e){}
 
-    const authorKey = (r.authorNorm || normalizeAuthorName(r.author));
-    const fixedBase = BEST_BASE_VIEWS_BY_AUTHOR[authorKey];
-    const baseForDisplay = (Number(r.baseViews) || 0) > 0 ? Number(r.baseViews) : (Number(fixedBase) || 0);
-    const total = baseForDisplay + (Number(delta)||0);
+    const total = r.baseViews + (Number(delta)||0);
 
     $("modal-review-views") && ($("modal-review-views").textContent = String(total));
     const bestSpan = document.getElementById(`views-b-${r.id}`);
