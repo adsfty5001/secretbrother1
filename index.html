@@ -682,10 +682,11 @@
   };
 
   const authorDisplayForReview = (review) => {
-    const raw = String((review && review.author) || "").trim();
+    const raw = String((review && (review.author ?? review.nickname ?? review.displayName ?? review.writer ?? review.name)) || "").trim();
     if(raw) return raw;
-    const key = (review && (review.authorNorm || normalizeAuthorName(review.author))) || "";
-    return (BEST_DISPLAY_NAME_BY_AUTHOR && BEST_DISPLAY_NAME_BY_AUTHOR[key]) ? BEST_DISPLAY_NAME_BY_AUTHOR[key] : "";
+    const key = String((review && (review.authorNorm || normalizeAuthorName(raw))) || "").trim();
+    if(key && BEST_DISPLAY_NAME_BY_AUTHOR && BEST_DISPLAY_NAME_BY_AUTHOR[key]) return BEST_DISPLAY_NAME_BY_AUTHOR[key];
+    return key || "";
   };
 
 
@@ -799,7 +800,7 @@
         const res = await fetch(u, { cache: "no-store" });
         if(!res.ok) continue;
         const arr = await res.json();
-        if(Array.isArray(arr)) return arr;
+        if(Array.isArray(arr)) return arr.map(normalizeReview).filter(x=>x && x.id);
       }catch(e){}
     }
     return [];
@@ -907,7 +908,7 @@
           <span class="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-50 text-indigo-600">BEST</span>
         </div>
         <div class="text-xl font-bold text-gray-900 leading-snug">${escapeHtml(r.title)}</div>
-        <div class="mt-2 text-sm text-gray-700"><span class="text-gray-500">작성자</span> <span class="font-semibold">${escapeHtml(authorDisplayForReview(r) || "")}</span></div>
+        ${(authorDisplayForReview(r) ? `<div class="mt-2 text-sm text-gray-700"><span class="text-gray-500">작성자</span> <span class="font-semibold">${escapeHtml(authorDisplayForReview(r))}</span></div>` : ``)}
         <div class="mt-2 text-sm text-gray-500">${fmtDate(r.date)}</div>
         <div class="mt-3 text-sm text-gray-700 leading-relaxed">${excerptSafe}</div>
         <div class="mt-4 text-sm text-gray-500">조회수 <span id="views-b-${escapeAttr(r.id)}" class="font-semibold text-gray-700">${totalViews}</span></div>
