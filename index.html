@@ -682,7 +682,7 @@
   };
 
   const authorDisplayForReview = (review) => {
-    const raw = String((review && (review.author ?? review.nickname ?? review.displayName ?? review.writer ?? review.name)) || "").trim();
+    const raw = String((review && (review.author ?? review.nickname ?? review.displayName ?? review.userName ?? review.user_name ?? review.username ?? review.writer ?? review.name)) || "").trim();
     if(raw) return raw;
     const key = String((review && (review.authorNorm || normalizeAuthorName(raw))) || "").trim();
     if(key && BEST_DISPLAY_NAME_BY_AUTHOR && BEST_DISPLAY_NAME_BY_AUTHOR[key]) return BEST_DISPLAY_NAME_BY_AUTHOR[key];
@@ -809,7 +809,7 @@
   function normalizeReview(r){
     const id = String(r.id ?? r.reviewId ?? r.key ?? "");
     const title = String(r.title ?? r.subject ?? "");
-    const authorRaw = (r.author ?? r.nickname ?? r.displayName ?? r.writer ?? r.name ?? "");
+    const authorRaw = (r.author ?? r.nickname ?? r.displayName ?? r.userName ?? r.user_name ?? r.username ?? r.writer ?? r.name ?? "");
     const author = String(authorRaw);
     const date = String(r.date ?? r.createdAt ?? r.createdDate ?? r.created_date ?? r.created ?? "");
     const contentHtml = decodeHtml(r.contentHtml ?? r.content ?? r.bodyHtml ?? "");
