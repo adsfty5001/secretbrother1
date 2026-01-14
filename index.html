@@ -727,6 +727,9 @@
     "secret-brother@naver.com"
   ]);
 
+  let CURRENT_USER = null;
+
+
   // ---------- DOM helpers ----------
   const $ = (id)=> document.getElementById(id);
 
@@ -1043,33 +1046,77 @@ function excerptFromHtml(htmlStr, maxLen=140){
 
   const viewDeltaCache = new Map();
 
-  // BEST 후기 조회수는 '보이는 숫자'를 높게 보이도록, 로컬에서 기본값(900~1500)을 부여합니다.
-  // Firestore의 실제 조회수 증가(incView / reviewViews)는 그대로 유지합니다.
-  function getBestBaseViews(reviewId){
+  // -------- BEST configuration (고정 BEST 6) --------
+  const BEST_AUTHORS = ["김아름","이수정","이서연","변미소","이민석","김기용"];
+  const BEST_VIEW_TARGETS = new Map([
+    ["김아름", 1240],
+    ["이수정", 980],
+    ["이서연", 850],
+    ["변미소", 1100],
+    ["이민석", 760],
+    ["김기용", 640],
+  ]);
+
+  function normalizeAuthorName(name){
+    return String(name || "").replace(/\s+/g,"").replace(/님$/,"");
+  }
+  function formatAuthorLabel(name){
+    const n = normalizeAuthorName(name);
+    return n ? (n.endsWith("님") ? n : `${n}님`) : "";
+  }
+
+  function legacyRandomBase(reviewId){
+    // Fallback only (예전 랜덤 베이스).
     try{
       const key = "SB_bestBaseViews__" + reviewId;
       const v = parseInt(localStorage.getItem(key) || "", 10);
-      if(Number.isFinite(v) && v >= 900 && v <= 1500) return v;
-      const seeded = 900 + Math.floor(Math.random()*601); // 900~1500
-      localStorage.setItem(key, String(seeded));
-      return seeded;
+      if(Number.isFinite(v)) return v;
+      const seed = 900 + Math.floor(Math.random() * 601); // 900~1500
+      localStorage.setItem(key, String(seed));
+      return seed;
     }catch(e){
-      return 900 + Math.floor(Math.random()*601);
+      return 900;
     }
   }
 
-  function ratingFor(reviewId){
-    // if rating provided, use it; otherwise 5.0 default for BEST cards
-    const r = REVIEWS.find(x=>x.id===reviewId);
-    const v = Number(r?.rating ?? 0);
-    return v > 0 ? v : 5;
+  function getLocalViewsBase(reviewId){
+    try{
+      const key = "SB_viewsBase__" + reviewId;
+      const v = parseInt(localStorage.getItem(key) || "", 10);
+      return Number.isFinite(v) ? v : null;
+    }catch(e){
+      return null;
+    }
+  }
+  function setLocalViewsBase(reviewId, v){
+    try{ localStorage.setItem("SB_viewsBase__" + reviewId, String(v)); }catch(e){}
   }
 
-  function renderStars(v){
-    const n = Math.max(0, Math.min(5, Math.round(Number(v)||0)));
-    return "★".repeat(n) + "☆".repeat(5-n);
-  }
+  // BEST 조회수: reviews/{id}.viewsBase(기준) + reviewViews/{id}.views(증가분) 로 표시합니다.
+  // 초기 숫자(스크린샷 값)를 "지금 화면에 보이는 값"으로 맞추기 위해 target - delta 를 viewsBase로 자동 저장(관리자 로그인 시 1회)합니다.
+  async function getBestBaseViews(review, delta){
+    let base = Number(review?.baseViews) || 0;
+    const local = review?.id ? getLocalViewsBase(review.id) : null;
+    if(local !== null) base = local;
 
+    const authorKey = normalizeAuthorName(review?.author);
+    const target = BEST_VIEW_TARGETS.get(authorKey);
+
+    if(target != null && base === 0){
+      const computed = Math.max(0, Math.round(target - (Number(delta)||0)));
+      base = computed;
+      if(review?.id) setLocalViewsBase(review.id, computed);
+      try{
+        const email = String(CURRENT_USER?.email || "").toLowerCase();
+        if(CURRENT_USER && ADMIN_EMAILS.has(email) && review?.id){
+          await setDoc(doc(db, "reviews", review.id), { viewsBase: computed }, { merge:true });
+        }
+      }catch(e){}
+    }
+
+    if(base === 0) base = legacyRandomBase(review?.id || "");
+    return base;
+  }
   async function loadReviewsJson(){
     try{
       const res = await fetch("./reviews.json", { cache: "no-store" });
@@ -1101,9 +1148,9 @@ function excerptFromHtml(htmlStr, maxLen=140){
           id: d.id,
           title: String(data.title ?? ""),
           author: String(data.author ?? data.writer ?? data.name ?? ""),
-          date: tsToDateStr(data.createdAt),
+          author: String(data.author ?? data.nickname ?? data.displayName ?? data.writer ?? data.name ?? ""),
           contentHtml: decodeHtml(data.contentHtml ?? data.content ?? ""),
-          baseViews: 0,
+          baseViews: Number(data.viewsBase ?? data.baseViews ?? data.views ?? data.viewCount ?? 0) || 0,
           source: "firestore",
           rating: Number(data.rating ?? 0) || null
         };
@@ -1118,7 +1165,7 @@ function excerptFromHtml(htmlStr, maxLen=140){
     const title = String(r.title ?? "");
     const author = String(r.author ?? r.writer ?? r.name ?? r.userName ?? r.username ?? r.nickname ?? r.displayName ?? "");
     const date = fmtDate(r.date ?? r.createdAt ?? "");
-    const contentHtml = decodeHtml(r.contentHtml ?? r.content ?? "");
+    const baseViews = Number(r.viewsBase ?? r.baseViews ?? r.views ?? r.viewCount ?? 0) || 0;
     const baseViews = Number(r.baseViews ?? r.views ?? 0) || 0;
     const rating = Number(r.rating ?? 0) || null;
 
@@ -1162,28 +1209,49 @@ function excerptFromHtml(htmlStr, maxLen=140){
     const container = $("best-reviews-container");
     if(!container) return;
 
+    // BEST 6: 작성자(닉네임) 기준으로 고정 지정
     const sorted = [...REVIEWS].sort((a,b)=> (b.date||"").localeCompare(a.date||""));
-    const best = sorted.slice(0, 6);
+    const best = [];
+    for(const author of BEST_AUTHORS){
+      const key = normalizeAuthorName(author);
+      const found = sorted.find(r => normalizeAuthorName(r.author) === key);
+      if(found) best.push(found);
+    }
 
     container.innerHTML = "";
     for(const r of best){
       const delta = await getDeltaViews(r.id, true);
-      const totalViews = r.baseViews + delta;
+      const base = await getBestBaseViews(r, delta);
+      const totalViews = base + delta;
       const rating = ratingFor(r.id);
+
+      const authorLabel = formatAuthorLabel(r.author) || "";
+      const dateLabel = String(r.date || "");
+      const title = escapeHtml(r.title || "후기");
+      const excerpt = escapeHtml(excerptFromHtml(r.contentHtml, 170));
 
       const card = document.createElement("div");
       card.className = "bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition cursor-pointer";
       card.innerHTML = `
         <div class="flex items-center justify-between">
-          <div class="text-lg font-bold text-gray-900">${escapeHtml(r.title || "후기")}</div>
-          <div class="text-sm text-yellow-500">${escapeHtml(renderStars(rating))}</div>
+          <div class="text-yellow-400">${renderStars(rating)}</div>
+          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600">BEST</span>
         </div>
-        <div class="mt-3 text-gray-700 leading-relaxed line-clamp-4">${escapeHtml(excerptFromHtml(r.contentHtml, 170))}</div>
+        <div class="mt-3 text-xl font-bold text-gray-900 line-clamp-1">${title}</div>
+        <div class="mt-2 text-gray-700 leading-relaxed line-clamp-4">${excerpt}</div>
         <div class="mt-4 flex items-center justify-between text-sm text-gray-500">
-          <div>${escapeHtml(r.author || "")}</div>
-          <div>조회수 <span id="views-${r.id}" class="font-semibold text-gray-800">${totalViews}</span></div>
+          <div class="flex items-center gap-2">
+            <span class="font-semibold text-gray-800">${escapeHtml(authorLabel)}</span>
+            <span class="text-gray-300">|</span>
+            <span>${escapeHtml(dateLabel)}</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="opacity-70">👁</span>
+            <span id="views-${r.id}" class="font-semibold text-gray-800">${Number(totalViews||0).toLocaleString()}</span>
+          </div>
         </div>
       `;
+
       card.addEventListener("click", ()=> openReviewDetail(r.id));
       container.appendChild(card);
     }
@@ -1216,17 +1284,16 @@ function excerptFromHtml(htmlStr, maxLen=140){
     }
 
     // Base views (BEST) + delta views (Firestore)
-    let base = Number(r.baseViews) || 0;
-    if(base === 0) base = getBestBaseViews(reviewId);
-
     let delta = await getDeltaViews(reviewId);
+    const base = await getBestBaseViews(r, delta);
+
     try{ delta = await incrementDeltaViews(reviewId); }catch(e){}
     const total = base + (Number(delta)||0);
 
-    viewsEl && (viewsEl.textContent = String(total));
+    viewsEl && (viewsEl.textContent = total.toLocaleString());
 
     const span = document.getElementById(`views-${reviewId}`);
-    if(span) span.textContent = String(total);
+    if(span) span.textContent = total.toLocaleString();
 
     window.App.openModal("reviewDetailModal");
   }
@@ -1462,6 +1529,7 @@ function excerptFromHtml(htmlStr, maxLen=140){
     if(auth){
       onAuthStateChanged(auth, async (user)=>{
         window.App.state.user = user;
+        CURRENT_USER = user;
         setAuthUI(user);
         await refreshPayStatus();
 
