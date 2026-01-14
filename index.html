@@ -732,9 +732,24 @@
     .replace(/\u00A0/g, " ")
     .replace(/\s+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
+    .replace(/￦r￦n/g, "\n")
+    .replace(/￦n/g, "\n")
+    .replace(/￦r/g, "\n")
     .trim();
 
-  function excerptFromHtml(htmlStr, maxLen=140){
+  
+  function htmlToPlainText(htmlStr){
+    let s = decodeHtml(htmlStr || "");
+    // Convert common HTML formatting to plain text paragraphs (display-only)
+    s = s.replace(/<br\s*\/?\s*>/gi, "\n");
+    s = s.replace(/<\/p\s*>/gi, "\n\n");
+    s = s.replace(/<p[^>]*>/gi, "");
+    // Strip any remaining tags
+    s = s.replace(/<[^>]+>/g, "");
+    return normalizeText(s);
+  }
+
+function excerptFromHtml(htmlStr, maxLen=140){
     const tmp = document.createElement("div");
     tmp.innerHTML = decodeHtml(String(htmlStr ?? ""));
     const text = normalizeText(tmp.textContent || "");
@@ -1094,9 +1109,9 @@
     return { id, title, author, date, contentHtml, baseViews, rating, source: r.source || "json" };
   }
 
-  async function getDeltaViews(reviewId){
+  async function getDeltaViews(reviewId, force=false){
     if(!db) return 0;
-    if(viewDeltaCache.has(reviewId)) return viewDeltaCache.get(reviewId);
+    if(!force && viewDeltaCache.has(reviewId)) return viewDeltaCache.get(reviewId);
     try{
       const ref = doc(db, "reviewViews", reviewId);
       const snap = await getDoc(ref);
@@ -1135,7 +1150,7 @@
 
     container.innerHTML = "";
     for(const r of best){
-      const delta = await getDeltaViews(r.id);
+      const delta = await getDeltaViews(r.id, true);
       const totalViews = r.baseViews + delta;
       const rating = ratingFor(r.id);
 
@@ -1157,6 +1172,13 @@
     }
   }
 
+  // Refresh BEST view counts when returning to the tab (prevents stale cache)
+  document.addEventListener("visibilitychange", ()=>{
+    if(document.hidden) return;
+    try{ viewDeltaCache.clear(); }catch(e){}
+    try{ renderBest(); }catch(e){}
+  });
+
   async function openReviewDetail(reviewId){
     const r = REVIEWS.find(x=>x.id===reviewId);
     if(!r) return;
@@ -1169,7 +1191,7 @@
 
     if(contentEl){
       // Display-only cleanup (do not alter stored data)
-      const cleaned = normalizeText(decodeHtml(r.contentHtml || ""));
+      const cleaned = htmlToPlainText(r.contentHtml || "");
       contentEl.textContent = cleaned;
       contentEl.style.whiteSpace = "pre-wrap";
       contentEl.style.wordBreak = "keep-all";
@@ -1209,7 +1231,7 @@
     pageCursor += slice.length;
 
     for(const r of slice){
-      const delta = await getDeltaViews(r.id);
+      const delta = await getDeltaViews(r.id, true);
       const total = (Number(r.baseViews)||0) + delta;
       const card = document.createElement("div");
       card.className = "bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition cursor-pointer";

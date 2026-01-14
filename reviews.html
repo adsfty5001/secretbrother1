@@ -120,6 +120,9 @@
     .replace(/\u00A0/g, " ")
     .replace(/\s+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
+    .replace(/￦r￦n/g, "\n")
+    .replace(/￦n/g, "\n")
+    .replace(/￦r/g, "\n")
     .trim();
 
   const ratingFor = (id) => {
@@ -143,7 +146,19 @@
     return String(dateStr || "").slice(0,10);
   }
 
-  function excerptFromHtml(htmlStr, maxLen=140){
+  
+  function htmlToPlainText(htmlStr){
+    let s = decodeHtml(htmlStr || "");
+    // Convert common HTML formatting to plain text paragraphs (display-only)
+    s = s.replace(/<br\s*\/?\s*>/gi, "\n");
+    s = s.replace(/<\/p\s*>/gi, "\n\n");
+    s = s.replace(/<p[^>]*>/gi, "");
+    // Strip any remaining tags
+    s = s.replace(/<[^>]+>/g, "");
+    return normalizeText(s);
+  }
+
+function excerptFromHtml(htmlStr, maxLen=140){
     const div = document.createElement("div");
     div.innerHTML = htmlStr || "";
     const txt = normalizeText(div.textContent || "");
@@ -362,9 +377,7 @@
     const content = $("modalContent");
     if(content){
       const raw = (r.contentHtml ?? "");
-      const cleaned = raw
-        .replace(/\\r\\n/g,"\n").replace(/\\n/g,"\n").replace(/\\r/g,"\n")
-        .replace(/\r\n/g,"\n").replace(/\r/g,"\n");
+      const cleaned = htmlToPlainText(raw);
       content.textContent = cleaned;
       content.style.whiteSpace = "pre-wrap";
       content.style.wordBreak = "keep-all";
