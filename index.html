@@ -2,6 +2,86 @@
 
 <html lang="ko">
 <head>
+
+    <script>
+      // === Secretclass bootstrap (runs BEFORE any inline onclick fires) ===
+      (function(){
+        window.App = window.App || {};
+        window.App.__BUILD_ID__ = window.App.__BUILD_ID__ || "20260114-boot-v6";
+        window.App.__firebaseReady = (typeof window.App.__firebaseReady === "boolean") ? window.App.__firebaseReady : false;
+        window.App.__firebaseInitError = window.App.__firebaseInitError || null;
+        window.App.__lastBestError = window.App.__lastBestError || null;
+        window.App.__debugBestAuthors = window.App.__debugBestAuthors || null;
+
+        // Minimal toast (safe)
+        if(typeof window.App.toast !== "function"){
+          window.App.toast = function(msg){
+            try{
+              var box = document.getElementById("toastErrorBox");
+              if(!box){ return; }
+              box.textContent = msg;
+              box.classList.remove("hidden");
+              setTimeout(function(){ box.classList.add("hidden"); }, 5000);
+            }catch(e){}
+          };
+        }
+
+        // Safe modal helpers (work even if later app code fails)
+        if(typeof window.App.closeAllModals !== "function"){
+          window.App.closeAllModals = function(){
+            try{
+              var ids = ["loginModal","depositModal","reviewModal","reviewWriteModal","adminModal","imageModal","videoModal"];
+              ids.forEach(function(id){
+                var el = document.getElementById(id);
+                if(!el) return;
+                el.classList.add("hidden");
+                el.classList.remove("flex");
+              });
+              document.body.classList.remove("overflow-hidden");
+            }catch(e){}
+          };
+        }
+        if(typeof window.App.openModal !== "function"){
+          window.App.openModal = function(id, tab){
+            try{
+              window.App.closeAllModals();
+              var el = document.getElementById(id);
+              if(!el) return;
+              el.classList.remove("hidden");
+              el.classList.add("flex");
+              document.body.classList.add("overflow-hidden");
+              if(id==="loginModal" && tab && typeof window.App.switchTab === "function"){
+                try{ window.App.switchTab(tab); }catch(e){}
+              }
+            }catch(e){}
+          };
+        }
+        if(typeof window.App.closeModal !== "function"){
+          window.App.closeModal = function(id){
+            try{
+              var el = document.getElementById(id);
+              if(!el) return;
+              el.classList.add("hidden");
+              el.classList.remove("flex");
+              document.body.classList.remove("overflow-hidden");
+            }catch(e){}
+          };
+        }
+        if(typeof window.App.openAllReviews !== "function"){
+          window.App.openAllReviews = function(){
+            try{ window.location.href = "./reviews.html"; }catch(e){}
+          };
+        }
+
+        // Error capture
+        window.addEventListener("error", function(ev){
+          try{
+            window.App.__lastUnhandledError = String(ev && (ev.message || ev.error || ev)) || "unknown";
+          }catch(e){}
+        });
+      })();
+    </script>
+
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <!-- 중요: 모든 HTTP 요청을 HTTPS로 자동 업그레이드하여 혼합 콘텐츠 차단 방지 -->
@@ -946,6 +1026,12 @@ function cleanTextForDisplay(raw){
 }
 
 const BEST_AUTHORS = ["김아름","이수정","이서연","변미소","이민석","김기용"];
+  function normalizeAuthorName(name){
+    return String(name||"").replace(/\s+/g,"").replace(/님$/,"");
+  }
+  const BEST_AUTHORS_CANON = BEST_AUTHORS.map(normalizeAuthorName);
+  const BEST_AUTHORS_SET = new Set(BEST_AUTHORS_CANON);
+
 const BEST_TARGET = {
   "김아름": 1240,
   "이수정": 980,
@@ -1000,23 +1086,28 @@ async function renderBest(){
     const container = document.getElementById("best-reviews-container") || document.querySelector("#bestReviewsGrid, #bestGrid, .best-grid");
     if(!container) return;
     if(!db){
+      window.App.__lastBestError = "db is null";
       container.innerHTML = "<div style='padding:20px;color:#666'>BEST 후기를 불러오지 못했습니다.(Firebase 설정 확인)</div>";
       return;
     }
-    const qy = query(collection(db,"reviews"), orderBy("createdAt","desc"), limit(200));
+    const qy = query(collection(db,"reviews"), limit(1000));
     const snap = await getDocs(qy);
     const byAuthor = new Map();
     snap.forEach((docSnap)=>{
       const d = docSnap.data() || {};
-      const a = String(extractAuthor(d)).trim();
-      if(BEST_AUTHORS.includes(a) && !byAuthor.has(a)){
-        byAuthor.set(a, { id: docSnap.id, data: d });
+      const aRaw = String(extractAuthor(d)).trim();
+      const aKey = normalizeAuthorName(aRaw);
+      if(BEST_AUTHORS_SET.has(aKey) && !byAuthor.has(aKey)){
+        byAuthor.set(aKey, { id: docSnap.id, data: d, authorRaw: aRaw });
       }
     });
+    try{ window.App.__debugBestAuthors = Array.from(byAuthor.keys()); }catch(e){
+    try{ window.App.__lastBestError = String(e && (e.message || e)); }catch(_e){}
+}
 
     container.innerHTML = "";
-    for(const a of BEST_AUTHORS){
-      const item = byAuthor.get(a);
+    for(let i=0;i<BEST_AUTHORS.length;i++){ const a = BEST_AUTHORS[i]; const aKey = BEST_AUTHORS_CANON[i];
+      const item = byAuthor.get(aKey);
       if(!item) continue;
       const reviewId = item.id;
       const d = item.data || {};
