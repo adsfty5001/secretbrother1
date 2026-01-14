@@ -12,7 +12,24 @@
     <!-- Lucide Icons (HTTPS) -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <style>
+    
+    <!-- Firebase config (GitHub Pages: must be in repo root) -->
+    <script src="./config.js"></script>
+    <script>
+      // Bridge: expose global firebaseConfig (declared in config.js) to module scripts
+      (function(){
+        try{
+          if(typeof firebaseConfig !== "undefined"){
+            window.SECRETCLASS_CONFIG = window.SECRETCLASS_CONFIG || firebaseConfig;
+            window.SECRETCLASS_FIREBASE_CONFIG = window.SECRETCLASS_FIREBASE_CONFIG || firebaseConfig;
+            window.FIREBASE_CONFIG = window.FIREBASE_CONFIG || firebaseConfig;
+            window.firebaseConfig = window.firebaseConfig || firebaseConfig;
+          }
+        }catch(e){}
+      })();
+    </script>
+
+<style>
         /* 폰트 설정 (HTTPS) */
         @font-face {
             font-family: 'Jalnan';
@@ -926,7 +943,7 @@ function excerptFromHtml(htmlStr, maxLen=140){
   async function processLogin(){
     const msg = $("login-msg");
     if(msg) msg.textContent = "";
-    if(!auth) { msg && (msg.textContent = "Firebase 초기화 실패(config.js 확인)"); return; }
+    if(!auth) { if(msg){ msg.textContent = "Firebase 초기화 실패(config.js 확인)"; msg.classList.remove("hidden"); } return; }
 
     const loginId = $("login-id")?.value || "";
     const pw = $("login-pw")?.value || "";
@@ -938,14 +955,14 @@ function excerptFromHtml(htmlStr, maxLen=140){
       // close modal safely
       window.App.closeAllModals?.();
     }catch(e){
-      if(msg) msg.textContent = e?.message || "로그인에 실패했습니다.";
+      if(msg){ msg.textContent = e?.message || "로그인에 실패했습니다."; msg.classList.remove("hidden"); }
     }
   }
 
   async function processSignup(){
     const msg = $("signup-msg");
     if(msg) msg.textContent = "";
-    if(!auth || !db) { msg && (msg.textContent = "Firebase 초기화 실패(config.js 확인)"); return; }
+    if(!auth || !db) { if(msg){ msg.textContent = "Firebase 초기화 실패(config.js 확인)"; msg.classList.remove("hidden"); } return; }
 
     // IDs in this file are reg-pw / reg-pw2 (not reg-password)
     const username = String($("reg-username")?.value || "").trim();
@@ -983,14 +1000,14 @@ function excerptFromHtml(htmlStr, maxLen=140){
       // switch back to login tab
       switchTab("login");
     }catch(e){
-      if(msg) msg.textContent = e?.message || "회원가입에 실패했습니다.";
+      if(msg){ msg.textContent = e?.message || "회원가입에 실패했습니다."; msg.classList.remove("hidden"); }
     }
   }
 
   async function resetPassword(){
     const msg = $("login-msg");
     if(msg) msg.textContent = "";
-    if(!auth) { msg && (msg.textContent = "Firebase 초기화 실패(config.js 확인)"); return; }
+    if(!auth) { if(msg){ msg.textContent = "Firebase 초기화 실패(config.js 확인)"; msg.classList.remove("hidden"); } return; }
 
     const loginId = $("login-id")?.value || "";
     try{
@@ -1397,12 +1414,29 @@ function excerptFromHtml(htmlStr, maxLen=140){
     alert("관리자 기능은 admin.html에서 처리됩니다.");
   }
 
-  // FAQ (fallback) - if you have module-local handlers, keep them minimal.
-  function toggleFaq(id){
-    const ans = document.getElementById(id);
+    // FAQ toggle: supports onclick="toggleFaq(this)" and older onclick="toggleFaq('answerId')"
+  function toggleFaq(target){
+    let ans = null;
+    let btn = null;
+
+    if(typeof target === "string"){
+      ans = document.getElementById(target);
+    }else if(target && target.nodeType === 1){
+      btn = target;
+      ans = btn.nextElementSibling;
+    }
+
     if(!ans) return;
+
     ans.classList.toggle("hidden");
+
+    // rotate chevron icon if present
+    if(btn){
+      const icon = btn.querySelector('[data-lucide="chevron-down"]');
+      if(icon) icon.classList.toggle("rotate-180");
+    }
   }
+
 
   // ---------- Bootstrap ----------
   async function bootstrapReviews(){
