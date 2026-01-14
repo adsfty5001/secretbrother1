@@ -841,7 +841,7 @@ function normalizeReview(r){
           <span class="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-50 text-indigo-600">BEST</span>
         </div>
         <div class="text-xl font-bold text-gray-900 leading-snug">${escapeHtml(r.title)}</div>
-        ${r.author ? `<div class="mt-2 text-sm text-gray-500">작성자 ${escapeHtml(r.author)}</div>` : ``}
+        ${(() => { const a = (r.author && String(r.author).trim()) ? r.author : (r.authorNorm || ""); return a ? `<div class="mt-2 text-sm text-gray-500">작성자 ${escapeHtml(a)}</div>` : ``; })()}
         <div class="mt-3 text-sm text-gray-500">${fmtDate(r.date)}</div>
         <div class="mt-3 text-sm text-gray-700 leading-relaxed">${escapeHtml(excerptFromHtml(r.contentHtml, 60))}</div>
         <div class="mt-4 text-sm text-gray-500">조회수 <span id="views-b-${escapeAttr(r.id)}" class="font-semibold text-gray-700">${totalViews}</span></div>
