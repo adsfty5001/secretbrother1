@@ -12,6 +12,10 @@
 <style>
     .card-hover { transition: transform .15s ease, box-shadow .15s ease; }
     .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.06); }
+    /* Fallback: Tailwind CDN may fail to load; keep modal/FAQ toggles working */
+    .hidden{ display:none !important; }
+    #modalContent{ white-space: pre-wrap; word-break: keep-all; overflow-wrap: break-word; }
+    #list{ word-break: keep-all; }
   </style>
 </head>
 <body class="bg-white">
@@ -110,19 +114,32 @@
   const escapeHtml = (s) => String(s||"")
     .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
     .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-  const normalizeText = (s) => String(s || "")
-    .replace(/\\r\\n/g, "\n")
-    .replace(/\\n/g, "\n")
-    .replace(/\\r/g, "\n")
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n")
-    .replace(/\u00A0/g, " ")
-    .replace(/\s+\n/g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .replace(/￦r￦n/g, "\n")
-    .replace(/￦n/g, "\n")
-    .replace(/￦r/g, "\n")
-    .trim();
+
+  const fixHangulSpacing = (s) => {
+    const str = String(s ?? "");
+    const m = str.match(/[가-힣]\s+[가-힣]/g);
+    // Heuristic: only fix when spacing between Hangul syllables is excessively frequent (e.g., "부 동 산 ...")
+    if(!m || m.length < 10) return str;
+    return str.replace(/([가-힣])\s+([가-힣])/g, "$1$2");
+  };
+
+  const normalizeText = (s) => {
+    const result = String(s || "")
+      .replace(/\\r\\n/g, "\n")
+      .replace(/\\n/g, "\n")
+      .replace(/\\r/g, "\n")
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+      .replace(/\u00A0/g, " ")
+      .replace(/\s+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .replace(/￦r￦n/g, "\n")
+      .replace(/￦n/g, "\n")
+      .replace(/￦r/g, "\n")
+      .trim();
+    return fixHangulSpacing(result);
+  };
+
 
   const ratingFor = (id) => {
     let h = 0;
@@ -501,7 +518,13 @@ function excerptFromHtml(htmlStr, maxLen=140){
 
     const totalCountEl = $("#totalCount");
     if(totalCountEl) totalCountEl.textContent = `총 ${ALL.length}개 후기`;
-    if(statusMsg) statusMsg.textContent = "";
+
+    // Header count: keep in sync with the actual merged list count (JSON + Firestore)
+    const headerCountEl = $("#reviewCount");
+    if(headerCountEl) headerCountEl.textContent = `지금 이 순간에도 새로운 후기가 올라오고 있습니다. (${ALL.length}개)`;
+
+    const sm = $("statusMsg");
+    if(sm) sm.textContent = "";
 
     applyFilter();
     await renderPage();
@@ -511,32 +534,5 @@ function excerptFromHtml(htmlStr, maxLen=140){
 
   await bootstrap();
 </script>
-<script type="module">import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const CONFIG =
-  window.SECRETCLASS_CONFIG ||
-  window.SECRETCLASS_FIREBASE_CONFIG ||
-  window.FIREBASE_CONFIG ||
-  window.firebaseConfig ||
-  (typeof firebaseConfig !== "undefined" ? firebaseConfig : null) ||
-  null;
-
-const app = CONFIG ? initializeApp(CONFIG) : null;
-const db = app ? getFirestore(app) : null;
-
-function setCount(n){
-  const el = document.getElementById("reviewCount");
-  if(!el) return;
-  el.textContent = "지금 이 순간에도 새로운 후기가 올라오고 있습니다. (" + String(n) + "개)";
-}
-async function init(){
-  try{
-    if(!db) return;
-    const qy = query(collection(db,"reviews"), orderBy("createdAt","desc"), limit(500));
-    const snap = await getDocs(qy);
-    setCount(snap.size);
-  }catch(e){}
-}
-document.addEventListener("DOMContentLoaded", init);</script></body>
+</body>
 </html>
