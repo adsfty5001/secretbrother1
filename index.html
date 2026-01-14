@@ -954,7 +954,7 @@ function formatInt(n){
 
 async function renderBest(){
   try{
-    const container = document.querySelector("#bestReviewsGrid, #bestGrid, .best-grid");
+    const container = document.getElementById("best-reviews-container") || document.querySelector("#bestReviewsGrid, #bestGrid, .best-grid");
     if(!container) return;
     if(!db){
       container.innerHTML = "<div style='padding:20px;color:#666'>BEST 후기를 불러오지 못했습니다.(Firebase 설정 확인)</div>";
@@ -1040,7 +1040,7 @@ async function renderBest(){
     }
   }catch(e){
     try{
-      const container = document.querySelector("#bestReviewsGrid, #bestGrid, .best-grid");
+      const container = document.getElementById("best-reviews-container") || document.querySelector("#bestReviewsGrid, #bestGrid, .best-grid");
       if(container) container.innerHTML = "<div style='padding:20px;color:#666'>BEST 로딩 중 오류가 발생했습니다.</div>";
     }catch(_){}
   }
