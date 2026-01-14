@@ -594,6 +594,10 @@
 <script>
   // Bridge for inline onclick handlers (kept lightweight; real logic lives in module script)
   window.App = window.App || {};
+window.App.__firebaseReady = (typeof window.App.__firebaseReady === "boolean") ? window.App.__firebaseReady : false;
+window.App.__firebaseInitError = window.App.__firebaseInitError || null;
+window.App.openAllReviews = window.App.openAllReviews || function(){ window.location.href = "./reviews.html"; };
+
 window.App.__firebaseReady = !!db;
 window.App.__firebaseConfigReady = !!(getConfig());
 
@@ -647,11 +651,16 @@ window.App.__firebaseConfigReady = !!(getConfig());
 
   // Safe stubs (prevent "onclick is not a function" hard failures)
   const stub = (name)=> window.App[name] = window.App[name] || function(){ console.warn(`[App] ${name} not ready yet`); };
-  ["navigate","scrollToSection","toggleMobileMenu","switchTab","checkPayment","confirmDeposit","copyToClipboard",
-   "checkWritePermission","loadMoreReviews","submitReview","openAdminModal","updateUserStatus","openMypage",
-   "openAllReviews","openMyClassroom","openReviewDetail","logout","processLogin","processSignup","resetPassword","toggleFaq"].forEach(stub);
-
-  // Escape key closes any open modal
+  [
+    "navigate","scrollToSection","toggleMobileMenu","switchTab",
+    "checkPayment","confirmDeposit","copyToClipboard",
+    "checkWritePermission","loadMoreReviews","submitReview",
+    "openAdminModal","updateUserStatus","openMypage",
+    "openAllReviews","openMyClassroom","openReviewDetail",
+    "processLogin","processSignup","resetPassword",
+    "toggleFaq","closeAllModals"
+  ].forEach(stub);
+// Escape key closes any open modal
   document.addEventListener("keydown", (e)=>{
     if(e.key === "Escape") window.App.closeAllModals();
   });
