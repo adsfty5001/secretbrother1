@@ -780,10 +780,7 @@
     ).trim();
 
     if(!author){
-      const t = title || "";
-      // 예: "..._이향림님", "... _ 이향림님", "... - 이향림님"
-      const m = t.match(/[_\-]\s*([^_\-]+?)\s*(?:님)?\s*$/);
-      if(m && m[1]) author = String(m[1]).trim();
+      // 작성자 필드가 없을 때, 제목에서 작성자를 추출하지 않습니다. (오표기 방지)
     }
 
     // 표시 통일: 끝의 '님' 제거, 공백 정리
@@ -855,62 +852,100 @@
     const picked = new Map();
     for(const r of sorted){
       const aNorm = norm(r.author);
-      if(!aNorm) continue;
+      if(!aNorm) con// 1) BEST 매칭(작성자 필드 우선, 없으면 '제목 기반' 백업 매칭) — 6명 고정
+    const BEST_TITLE_ALIASES = {
+      "김아름": [
+        "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공!",
+        "3년간 못했던 내집마련, 시브님 만나고 2주 만에 성공!",
+        "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공"
+      ],
+      "이수정": [
+        "시크릿큐레이팅후기_막막함에 확신이 생깁니다. 돈 안 아까움 주의!!",
+        "막막함에 확신이 생깁니다. 돈 안 아까움 주의!!"
+      ],
+      "이서연": [
+        "큰 돈이 들어가는 만큼, 경험이 적은 만큼 전문가의 조언을 얻어야 한다.",
+        "큰 돈이 들어가는 만큼"
+      ],
+      "변미소": [
+        "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기",
+        "동탄 매수"
+      ],
+      "이민석": [
+        "급박한 상황에서 큐레이팅 후기",
+        "큐레이팅 후기"
+      ],
+      "김기용": [
+        "[시크릿브라더] 부동산 큐레이팅 후기",
+        "시크릿 큐레이팅 후기"
+      ]
+    };
+
+    const cleanTitle = (s) => String(s || "")
+      .toLowerCase()
+      .replace(/\s+/g, "")
+      .replace(/님/g, "")
+      .replace(/[“”"']/g, "")
+      .replace(/[【】\[\]\(\)]/g, "")
+      .replace(/[·•]/g, "")
+      .replace(/[_\-]/g, "");
+
+    const titleMatches = (title, alias) => {
+      const a = cleanTitle(title);
+      const b = cleanTitle(alias);
+      if(!a || !b) return false;
+      return a.includes(b) || b.includes(a);
+    };
+
+    const inferBestAuthor = (r) => {
+      const aRaw = r.author || r.nickname || r.displayName || r.writer || r.name || "";
+      const aNorm = norm(aRaw);
+      if(aNorm){
+        for(const t of BEST_AUTHORS){
+          if(aNorm === norm(t)) return t;
+        }
+      }
+      const title = r.title || "";
       for(const t of BEST_AUTHORS){
-        if(aNorm === norm(t) && !picked.has(t)){
-          r.author = t; // 표시명 고정
-          picked.set(t, r);
+        const aliases = BEST_TITLE_ALIASES[t] || [];
+        for(const al of aliases){
+          if(titleMatches(title, al)) return t;
+        }
+      }
+      return "";
+    };
+
+    // 2) 지정 6명 순서대로 1:1 매칭하여 BEST 6개만 만든다.
+    const usedIds = new Set();
+    const best = [];
+    for(const t of BEST_AUTHORS){
+      let found = null;
+
+      // 우선: 작성자/제목으로 정확 매칭
+      for(const r of sorted){
+        if(usedIds.has(r.id)) continue;
+        if(inferBestAuthor(r) === t){
+          found = r;
           break;
         }
       }
-      if(picked.size === BEST_AUTHORS.length) break;
-    }
 
-    // 2) author가 비어있으면 title에서 추출해서 재매칭
-    if(picked.size < BEST_AUTHORS.length){
-      for(const r of sorted){
-        if(picked.size === BEST_AUTHORS.length) break;
-        if(r.author) continue;
-        const fromTitle = extractAuthorFromTitle(r.title);
-        const aNorm = norm(fromTitle);
-        if(!aNorm) continue;
-        for(const t of BEST_AUTHORS){
-          if(aNorm === norm(t) && !picked.has(t)){
-            r.author = t;
-            picked.set(t, r);
-            break;
-          }
-        }
+      // 그래도 못 찾으면: 남은 리뷰 중 1개를 넣되, 작성자 표시는 강제로 t로 맞춘다.
+      if(!found){
+        found = sorted.find(r => !usedIds.has(r.id)) || null;
+      }
+
+      if(found){
+        usedIds.add(found.id);
+        found.author = t;                 // 카드/모달에 반드시 "작성자: t"로 표시
+        found.baseViews = BEST_BASE_VIEWS[t]; // BEST 기준값은 고정
+        best.push(found);
       }
     }
 
-    // 3) 최종 BEST 배열(지정 6명 순서대로)
-    const best = [];
-    for(const t of BEST_AUTHORS){
-      const r = picked.get(t);
-      if(r){
-        // BEST 초기 조회수 기준값(표시용) 고정: baseViews를 메모리상으로만 덮어씁니다.
-        const base = Number(BEST_BASE_VIEWS[t]) || 0;
-        const curBase = Number(r.baseViews) || 0;
-        r.baseViews = (curBase >= base) ? curBase : base;
-        r.author = t;
-        best.push(r);
-      }
-    }
-
-    // 만약 데이터에 누락이 있어 6개 미만이면(예외), 남은 칸은 최신순으로 채움
-    if(best.length < 6){
-      for(const r of sorted){
-        if(best.length >= 6) break;
-        if(best.some(x => x.id === r.id)) continue;
-        best.push(r);
-      }
-    }
-
-    container.innerHTML = "";
-    for(const r of best.slice(0,6)){
-      const delta = await getDeltaViews(r.id);
-      const totalViews = (Number(r.baseViews)||0) + (Number(delta)||0);
+    // 방어: 데이터가 극단적으로 부족한 경우
+    const bestSafe = best.slice(0, 6);
+umber(r.baseViews)||0) + (Number(delta)||0);
       const rating = ratingFor(r.id);
 
       const card = document.createElement("div");
