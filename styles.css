@@ -1,6 +1,7 @@
-/* Secretclass minimal overrides (safe defaults) */
-.review-card * { word-break: keep-all; overflow-wrap: anywhere; }
-.review-snippet { white-space: normal; overflow-wrap: anywhere; word-break: keep-all; }
-.author-line { color:#6b7280; font-size: 14px; margin-top: 10px; }
-.count-pill { font-weight:600; }
-.hidden { display:none !important; }
+/* Minimal site styles (Tailwind handles most). */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

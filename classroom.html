@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>강의실 | Secretclass</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b">
+    <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="font-extrabold">강의실</div>
+      <div class="flex items-center gap-2">
+        <button id="btn-home" class="px-3 py-2 rounded-lg border text-sm font-semibold">홈</button>
+        <button id="btn-logout" class="px-3 py-2 rounded-lg bg-gray-900 text-white text-sm font-semibold">로그아웃</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-4 py-8 space-y-4">
+    <div class="bg-white border rounded-2xl p-5">
+      <div class="text-sm text-gray-500">이메일</div>
+      <div id="user-email" class="font-semibold mt-1">-</div>
+
+      <div class="text-sm text-gray-500 mt-4">이름</div>
+      <div id="user-name" class="font-semibold mt-1">-</div>
+
+      <div class="text-sm text-gray-500 mt-4">결제 상태</div>
+      <div id="pay-status" class="font-semibold mt-1">none</div>
+    </div>
+
+    <div id="gate" class="bg-white border rounded-2xl p-5">
+      <h2 class="text-lg font-extrabold">아직 수강 권한이 없습니다</h2>
+      <p class="text-sm text-gray-600 mt-2">입금 후 아래 버튼으로 “입금 확인 요청”을 보내주세요. 관리자가 승인하면 강의가 열립니다.</p>
+      <button id="btn-request" class="mt-4 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold">입금 확인 요청</button>
+    </div>
+
+    <div id="content" class="hidden bg-white border rounded-2xl p-5">
+      <h2 class="text-lg font-extrabold">PREMIUM 강의 콘텐츠</h2>
+      <p class="text-sm text-gray-600 mt-2">여기에 강의 링크/자료를 붙여넣으면 됩니다.</p>
+      <ul class="list-disc pl-5 mt-3 text-sm text-gray-700 space-y-1">
+        <li>강의 1: (링크)</li>
+        <li>강의 2: (링크)</li>
+        <li>자료: (링크)</li>
+      </ul>
+    </div>
+  </main>
+
+  <script src="./config.js"></script>
+  <script type="module" src="./classroom.js"></script>
+</body>
+</html>

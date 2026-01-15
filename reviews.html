@@ -2,223 +2,49 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>전체 수강생 후기</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>전체 후기 | Secretclass</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="./styles.css" />
-  <script src="./config.js"></script>
 </head>
-<body class="bg-white text-slate-900">
-  <header class="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-    <div class="flex items-center gap-4">
-      <a href="./index.html" class="px-3 py-2 rounded-xl border hover:bg-slate-50">← 메인으로</a>
-      <div>
-        <div class="text-xs tracking-[.3em] text-indigo-500 font-semibold">REVIEWS</div>
-        <h1 class="text-2xl font-extrabold mt-1">전체 수강생 후기</h1>
-        <p class="text-slate-500 mt-1">지금 이 순간에도 새로운 후기가 올라오고 있습니다. (<span id="total-count">0</span>개)</p>
-      </div>
-    </div>
-    <div class="flex items-center gap-2">
-      <input id="q" class="px-4 py-2 rounded-xl border w-72" placeholder="검색 (제목/작성자/내용)" />
-      <select id="sort" class="px-3 py-2 rounded-xl border">
-        <option value="new">최신순</option>
-        <option value="old">오래된순</option>
-      </select>
+<body class="bg-gray-50 text-gray-900">
+  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <a href="./index.html" class="font-extrabold tracking-tight text-lg">Secretclass</a>
+      <a href="./index.html" class="text-sm text-gray-600 hover:underline">메인으로</a>
     </div>
   </header>
 
-  <main class="max-w-6xl mx-auto px-6 pb-16">
-    <section id="grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></section>
+  <main class="max-w-6xl mx-auto px-4 py-10">
+    <div class="flex items-end justify-between gap-3">
+      <div>
+        <h1 class="text-2xl font-extrabold">전체 후기</h1>
+        <p class="text-sm text-gray-500 mt-1">카드를 클릭하면 상세 모달이 열리고, 조회수가 누적됩니다.</p>
+      </div>
+    </div>
+
+    <div id="reviews-grid" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="text-sm text-gray-500">불러오는 중…</div>
+    </div>
   </main>
 
-  <div id="review-modal" class="fixed inset-0 hidden items-center justify-center bg-black/60 p-4">
-    <div class="w-full max-w-3xl bg-white rounded-3xl shadow-xl overflow-hidden">
-      <div class="px-6 py-4 border-b flex items-center justify-between">
-        <div class="font-bold text-lg">후기 상세</div>
-        <button id="btn-close-review" class="px-3 py-1 rounded-lg border hover:bg-slate-50">닫기</button>
-      </div>
-      <div class="px-6 py-5 space-y-3">
-        <div class="flex items-center justify-between gap-4">
-          <h3 id="modal-title" class="text-xl font-extrabold"></h3>
-          <div class="text-sm text-slate-500"><span id="modal-rating"></span></div>
+  <!-- Review Modal -->
+  <div id="reviewModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden">
+      <div class="p-4 border-b flex items-start justify-between gap-3">
+        <div>
+          <div id="reviewModalTitle" class="font-extrabold text-lg">제목</div>
+          <div class="mt-1 text-xs text-gray-500">
+            <span id="reviewModalDate">-</span> · 조회수 <span id="reviewModalViews">0</span>
+          </div>
         </div>
-        <div class="author-line">작성자: <span id="modal-author" class="font-semibold text-slate-700"></span></div>
-        <div class="text-sm text-slate-500">작성일: <span id="modal-date"></span> · 조회수 <span id="modal-views" class="font-semibold"></span></div>
-        <div id="modal-content" class="prose max-w-none"></div>
+        <button id="review-close" class="p-2 rounded hover:bg-gray-100" aria-label="닫기">✕</button>
       </div>
+      <div id="reviewModalContent" class="p-5 text-sm leading-7 whitespace-pre-wrap"></div>
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    const $ = (id) => document.getElementById(id);
-
-    const firebaseConfig = (window.FIREBASE_CONFIG || window.SECRETCLASS_FIREBASE_CONFIG);
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    function escapeHtml(s) {
-      return String(s ?? "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#39;");
-    }
-
-    function renderStars(n) {
-      const full = Math.max(0, Math.min(5, Math.round(n)));
-      return "★".repeat(full) + "☆".repeat(5-full);
-    }
-
-    function normalizeContentToHtml(raw) {
-      const s = String(raw ?? "");
-      const looksHtml = /<\s*(p|br|div|span|a|strong|em|ul|ol|li|h\d)\b/i.test(s);
-      if (looksHtml) return s;
-      return escapeHtml(s).replace(/\n/g, "<br>");
-    }
-
-    function extractAuthorFromTitle(title) {
-      const t = String(title || "");
-      // 패턴1: "월부 강의 후기 _ 이향님"
-      let m = t.match(/후기\s*[_-]\s*([^\s]+)님/);
-      if (m) return m[1];
-      // 패턴2: "정규반 3기 김ㅇ훈"
-      m = t.match(/\b\d+기\s+(.+?)\s*(후기)?$/);
-      if (m) return m[1].trim();
-      // 패턴3: "OOO님 후기"
-      m = t.match(/(.+?)님\s*후기$/);
-      if (m) return m[1].trim();
-      return "";
-    }
-
-    function makeStableId(title, date, rating) {
-      const base = `${title||""}|${date||""}|${rating||""}`;
-      let h = 0;
-      for (let i=0;i<base.length;i++) h = (h*31 + base.charCodeAt(i)) >>> 0;
-      return ("r"+h.toString(16)).padEnd(10,"0");
-    }
-
-    function extractFields(r) {
-      const title = r.title || r.reviewTitle || r.name || "";
-      const date = r.date || r.createdAt || r.createdDate || r.writtenAt || "";
-      const rating = Number(r.rating || r.stars || r.score || 5);
-      const content = r.content || r.body || r.text || r.review || "";
-      const id = String(r.id || r.reviewId || r.slug || "") || makeStableId(title, date, rating);
-      const author = r.author || r.nickname || r.displayName || r.writer || r.name || extractAuthorFromTitle(title) || "익명";
-      const baseViews = Number(r.viewsBase ?? r.views ?? 0);
-      return { id, title, date, rating, content, author, baseViews };
-    }
-
-    async function getDeltaViews(id) {
-      const ref = doc(db, "reviewViews", id);
-      const snap = await getDoc(ref);
-      return snap.exists() ? (snap.data().views || 0) : 0;
-    }
-
-    async function bumpDeltaViews(id) {
-      const ref = doc(db, "reviewViews", id);
-      await setDoc(ref, { views: increment(1), updatedAt: serverTimestamp() }, { merge:true });
-    }
-
-    function openModal(el) { el.classList.remove("hidden"); el.classList.add("flex"); }
-    function closeModal(el) { el.classList.add("hidden"); el.classList.remove("flex"); }
-    $("btn-close-review").addEventListener("click", () => closeModal($("review-modal")));
-
-    let ALL = [];
-    let BY_ID = new Map();
-
-    function makeCard(r, views) {
-      const div = document.createElement("div");
-      div.className = "review-card rounded-3xl border border-slate-100 shadow-sm p-6 hover:shadow-md transition cursor-pointer bg-white";
-      const snippet = String(r.content || "").replace(/\s+/g, " ").trim().slice(0, 120);
-      div.innerHTML = `
-        <div class="flex items-center justify-between mb-3">
-          <div class="text-amber-500 font-semibold">${escapeHtml(renderStars(r.rating))} <span class="text-slate-500 ml-1">${Number(r.rating).toFixed(1)}</span></div>
-        </div>
-        <div class="text-xl font-extrabold leading-snug">${escapeHtml(r.title)}</div>
-        <div class="author-line">작성자: <span class="font-semibold text-slate-700">${escapeHtml(r.author)}</span></div>
-        <div class="text-sm text-slate-500 mt-2">${escapeHtml(r.date || "")}</div>
-        <div class="review-snippet text-slate-700 mt-3">${escapeHtml(snippet)}</div>
-        <div class="text-slate-500 mt-4">조회수 <span class="count-pill text-slate-800" data-views-for="${r.id}">${views}</span></div>
-      `;
-      div.addEventListener("click", () => openReview(r.id));
-      return div;
-    }
-
-    async function openReview(id) {
-      const r = BY_ID.get(id);
-      if(!r) return;
-      $("modal-title").textContent = r.title;
-      $("modal-author").textContent = r.author;
-      $("modal-date").textContent = r.date || "";
-      $("modal-rating").textContent = `${renderStars(r.rating)} ${Number(r.rating).toFixed(1)}`;
-      $("modal-content").innerHTML = normalizeContentToHtml(r.content);
-      openModal($("review-modal"));
-
-      try {
-        const delta = await getDeltaViews(id);
-        $("modal-views").textContent = String(r.baseViews + delta);
-        await bumpDeltaViews(id);
-        const next = r.baseViews + delta + 1;
-        $("modal-views").textContent = String(next);
-        const el = document.querySelector(`[data-views-for="${id}"]`);
-        if(el) el.textContent = String(next);
-      } catch (e) {
-        console.warn(e);
-      }
-    }
-
-    function applyFilterAndRender() {
-      const q = ($("q").value || "").trim().toLowerCase();
-      const sort = $("sort").value;
-
-      let list = ALL.slice();
-      if (q) {
-        list = list.filter(r =>
-          (r.title||"").toLowerCase().includes(q) ||
-          (r.author||"").toLowerCase().includes(q) ||
-          (r.content||"").toLowerCase().includes(q)
-        );
-      }
-
-      // date sort (YYYY-MM-DD expected)
-      list.sort((a,b) => {
-        const da = (a.date||"").replace(/[^0-9]/g,"");
-        const db = (b.date||"").replace(/[^0-9]/g,"");
-        return sort === "new" ? (db.localeCompare(da)) : (da.localeCompare(db));
-      });
-
-      const grid = $("grid");
-      grid.innerHTML = "";
-
-      // Render with views (base + delta)
-      Promise.all(list.map(async r => {
-        const delta = await getDeltaViews(r.id).catch(() => 0);
-        return { r, views: r.baseViews + delta };
-      })).then(rows => {
-        for (const row of rows) grid.appendChild(makeCard(row.r, row.views));
-      });
-    }
-
-    async function boot() {
-      const res = await fetch("./data/reviews.json", { cache: "no-store" });
-      const json = await res.json();
-      const list = Array.isArray(json) ? json : (json.reviews || []);
-      ALL = list.map(extractFields);
-      BY_ID = new Map(ALL.map(r => [r.id, r]));
-      $("total-count").textContent = String(ALL.length);
-      applyFilterAndRender();
-    }
-
-    $("q").addEventListener("input", () => applyFilterAndRender());
-    $("sort").addEventListener("change", () => applyFilterAndRender());
-    boot().catch(err => {
-      console.error(err);
-      document.body.insertAdjacentHTML("beforeend", `<div class="max-w-6xl mx-auto px-6 text-rose-600">리뷰 로드 실패: data/reviews.json 경로/형식 확인</div>`);
-    });
-  </script>
+  <script src="./config.js"></script>
+  <script type="module" src="./reviews_page.js"></script>
 </body>
 </html>
