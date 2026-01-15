@@ -769,29 +769,48 @@
     return [];
   }
 
-  function normalizeReview(r){
+  
+const BEST_AUTHORS = ["김아름","이수정","이서연","변미소","이민석","김기용"];
+const BEST_VIEWS_BASE = { "김아름":1240, "이수정":980, "이서연":850, "변미소":1100, "이민석":760, "김기용":640 };
+
+function normAuthorName(v){
+  return String(v||"").replace(/\s+/g,"").replace(/님$/,"");
+}
+
+function pickAuthor(obj){
+  try{
+    if(!obj) return "";
+    // direct flat fields
+    const direct =
+      obj.author ?? obj.nickname ?? obj.displayName ?? obj.displayNam ?? obj.writer ??
+      obj.userName ?? obj.username ?? obj.user_name ?? obj.name;
+    if(direct) return String(direct);
+
+    // nested common patterns
+    const u = obj.user || obj.profile || obj.member || obj.owner || obj.writerInfo;
+    if(u){
+      const v = u.author ?? u.nickname ?? u.displayName ?? u.name ?? u.userName ?? u.username;
+      if(v) return String(v);
+    }
+    const m = obj.meta || obj.metadata;
+    if(m){
+      const v = m.author ?? m.nickname ?? m.displayName ?? m.name;
+      if(v) return String(v);
+    }
+  }catch(e){}
+  return "";
+}
+function normalizeReview(r){
     const id = String(r.id ?? r.reviewId ?? r.key ?? "");
     const title = String(r.title ?? r.subject ?? "");
-
-    // 작성자 필드는 데이터마다 키가 다릅니다. (원본 데이터는 수정하지 않고, 표시용으로만 최대한 복원합니다.)
-    let author = String(
-      r.author ?? r.nickname ?? r.displayName ?? r.writer ?? r.name ??
-      r.userName ?? r.username ?? r.user_name ?? r.writerName ?? r.nick ?? r.by ?? ""
-    ).trim();
-
-    if(!author){
-      // 작성자 필드가 없을 때, 제목에서 작성자를 추출하지 않습니다. (오표기 방지)
-    }
-
-    // 표시 통일: 끝의 '님' 제거, 공백 정리
-    author = String(author || "").replace(/\s+/g, " ").trim();
-    author = author.replace(/님\s*$/g, "").trim();
-
+    const author = String(pickAuthor(r) || "");
     const date = String(r.date ?? r.createdAt ?? r.createdDate ?? r.created_date ?? r.created ?? "");
     const contentHtml = decodeHtml(r.contentHtml ?? r.content ?? r.bodyHtml ?? "");
     const baseViews = Number(r.viewsBase ?? r.views ?? r.viewCount ?? 0) || 0;
     const isBest = Boolean(r.isBest) || String(r.badge ?? "").toUpperCase() === "BEST" || Boolean(r.best);
-    return { id, title, author, date, contentHtml, baseViews, isBest };
+    const authorNorm = normAuthorName(author);
+    const baseViews2 = baseViews || (BEST_VIEWS_BASE[authorNorm] || 0);
+    return { id, title, author, authorNorm, date, contentHtml, baseViews: baseViews2, isBest };
   }
 
   async function getDeltaViews(reviewId){
@@ -828,140 +847,71 @@
     const container = $("best-reviews-container");
     if(!container) return;
 
-    // 고정 BEST 6명 (반드시 이 순서로 6개만 노출)
-    const BEST_AUTHORS = ["김아름", "이수정", "이서연", "변미소", "이민석", "김기용"];
-    const BEST_BASE_VIEWS = {
-      "김아름": 1240,
-      "이수정": 980,
-      "이서연": 850,
-      "변미소": 1100,
-      "이민석": 760,
-      "김기용": 640
-    };
-
-    const norm = (s) => String(s || "").replace(/\s+/g, "").replace(/님/g, "").toLowerCase();
-    const extractAuthorFromTitle = (t) => {
-      const s = String(t || "");
-      const m = s.match(/[_\-]\s*([^_\-]+?)\s*(?:님)?\s*$/);
-      return (m && m[1]) ? String(m[1]).trim().replace(/님\s*$/g, "").trim() : "";
-    };
-
     const sorted = [...REVIEWS].sort((a,b)=> (b.date||"").localeCompare(a.date||""));
 
-    // 1) author 필드로 1차 매칭
-    const picked = new Map();
-    for(const r of sorted){
-      const aNorm = norm(r.author);
-      if(!aNorm) con// 1) BEST 매칭(작성자 필드 우선, 없으면 '제목 기반' 백업 매칭) — 6명 고정
-    const BEST_TITLE_ALIASES = {
-      "김아름": [
-        "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공!",
-        "3년간 못했던 내집마련, 시브님 만나고 2주 만에 성공!",
-        "3년간 못했던 내집마련, 시브님 만나고 2주만에 성공"
-      ],
-      "이수정": [
-        "시크릿큐레이팅후기_막막함에 확신이 생깁니다. 돈 안 아까움 주의!!",
-        "막막함에 확신이 생깁니다. 돈 안 아까움 주의!!"
-      ],
-      "이서연": [
-        "큰 돈이 들어가는 만큼, 경험이 적은 만큼 전문가의 조언을 얻어야 한다.",
-        "큰 돈이 들어가는 만큼"
-      ],
-      "변미소": [
-        "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기",
-        "동탄 매수"
-      ],
-      "이민석": [
-        "급박한 상황에서 큐레이팅 후기",
-        "큐레이팅 후기"
-      ],
-      "김기용": [
-        "[시크릿브라더] 부동산 큐레이팅 후기",
-        "시크릿 큐레이팅 후기"
-      ]
-    };
-
-    const cleanTitle = (s) => String(s || "")
-      .toLowerCase()
-      .replace(/\s+/g, "")
-      .replace(/님/g, "")
-      .replace(/[“”"']/g, "")
-      .replace(/[【】\[\]\(\)]/g, "")
-      .replace(/[·•]/g, "")
-      .replace(/[_\-]/g, "");
-
-    const titleMatches = (title, alias) => {
-      const a = cleanTitle(title);
-      const b = cleanTitle(alias);
-      if(!a || !b) return false;
-      return a.includes(b) || b.includes(a);
-    };
-
-    const inferBestAuthor = (r) => {
-      const aRaw = r.author || r.nickname || r.displayName || r.writer || r.name || "";
-      const aNorm = norm(aRaw);
-      if(aNorm){
-        for(const t of BEST_AUTHORS){
-          if(aNorm === norm(t)) return t;
-        }
-      }
-      const title = r.title || "";
-      for(const t of BEST_AUTHORS){
-        const aliases = BEST_TITLE_ALIASES[t] || [];
-        for(const al of aliases){
-          if(titleMatches(title, al)) return t;
-        }
-      }
-      return "";
-    };
-
-    // 2) 지정 6명 순서대로 1:1 매칭하여 BEST 6개만 만든다.
+    // BEST 6명 고정: 각 작성자별 가장 최신 후기 1개 선택 (author가 비어있으면 title 매칭까지)
+    const picked = [];
     const usedIds = new Set();
-    const best = [];
-    for(const t of BEST_AUTHORS){
-      let found = null;
+    for(const nm of BEST_AUTHORS){
+      const nmNoSpace = String(nm||"").replace(/\s+/g,"");
+      const found = sorted.find(r => {
+        const a = String(r.authorNorm||"").replace(/\s+/g,"");
+        if(a && a === nmNoSpace) return true;
+        const t = String(r.title||"").replace(/\s+/g,"");
+        return t.includes(nmNoSpace);
+      });
 
-      // 우선: 작성자/제목으로 정확 매칭
-      for(const r of sorted){
-        if(usedIds.has(r.id)) continue;
-        if(inferBestAuthor(r) === t){
-          found = r;
-          break;
-        }
-      }
-
-      // 그래도 못 찾으면: 남은 리뷰 중 1개를 넣되, 작성자 표시는 강제로 t로 맞춘다.
-      if(!found){
-        found = sorted.find(r => !usedIds.has(r.id)) || null;
-      }
-
-      if(found){
+      if(found && !usedIds.has(found.id)){
+        picked.push({ r: found, fixedAuthor: nm, isPlaceholder:false });
         usedIds.add(found.id);
-        found.author = t;                 // 카드/모달에 반드시 "작성자: t"로 표시
-        found.baseViews = BEST_BASE_VIEWS[t]; // BEST 기준값은 고정
-        best.push(found);
+      }else{
+        // 못 찾으면 '틀린 후기'를 보여주지 않고, 빈 카드(placeholder)로 유지
+        const phId = "best-missing-" + nmNoSpace;
+        picked.push({
+          r: {
+            id: phId,
+            title: nm + " 후기",
+            author: nm,
+            authorNorm: nmNoSpace,
+            date: "",
+            contentHtml: "베스트 후기를 찾지 못했습니다. (reviews.json의 작성자 필드가 비어있거나 키가 다를 가능성이 큽니다.)",
+            baseViews: Number(BEST_VIEWS_BASE[nmNoSpace] || 0) || 0,
+            isBest: true
+          },
+          fixedAuthor: nm,
+          isPlaceholder:true
+        });
       }
     }
 
-    // 방어: 데이터가 극단적으로 부족한 경우
-    const bestSafe = best.slice(0, 6);
-umber(r.baseViews)||0) + (Number(delta)||0);
+    container.innerHTML = "";
+    for(const item of picked){
+      const r = item.r;
+      const delta = item.isPlaceholder ? 0 : await getDeltaViews(r.id);
+      const totalViews = (Number(r.baseViews)||0) + (Number(delta)||0);
       const rating = ratingFor(r.id);
 
+      const authorDisplay = String(item.fixedAuthor || "").trim()
+        || (String(r.author||"").trim())
+        || (String(r.authorNorm||"").trim())
+        || "미상";
+
       const card = document.createElement("div");
-      card.className = "bg-white rounded-2xl shadow-sm border border-gray-100 p-6 cursor-pointer hover:shadow-md transition";
+      card.className = "bg-white rounded-2xl shadow-sm border border-gray-100 p-6 " + (item.isPlaceholder ? "opacity-70" : "cursor-pointer hover:shadow-md transition");
       card.innerHTML = `
         <div class="flex items-center justify-between mb-3">
           <div class="text-lg font-semibold text-gray-800">${renderStars(rating)}</div>
           <span class="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-50 text-indigo-600">BEST</span>
         </div>
         <div class="text-xl font-bold text-gray-900 leading-snug">${escapeHtml(r.title)}</div>
-        <div class="mt-2 text-sm text-gray-600">작성자 : <span class="font-semibold text-gray-800">${escapeHtml(r.author || "")}</span></div>
-        <div class="mt-3 text-sm text-gray-500">${fmtDate(r.date)}</div>
+        <div class="mt-2 text-sm text-gray-500">작성자 : ${escapeHtml(authorDisplay)}</div>
+        ${r.date ? `<div class="mt-3 text-sm text-gray-500">${fmtDate(r.date)}</div>` : ``}
         <div class="mt-3 text-sm text-gray-700 leading-relaxed">${escapeHtml(excerptFromHtml(r.contentHtml, 60))}</div>
-        <div class="mt-4 text-sm text-gray-500">조회수 <span id="views-b-${escapeAttr(r.id)}" class="font-semibold text-gray-700">${totalViews}</span></div>
+        <div class="mt-4 text-sm text-gray-500">조회수 <span id="views-${escapeHtml(r.id)}" class="font-semibold text-gray-700">${totalViews}</span></div>
       `;
-      card.addEventListener("click", async ()=>{ await openReviewDetail(r.id); });
+      if(!item.isPlaceholder){
+        card.addEventListener("click", async ()=>{ await openReviewDetail(r.id); });
+      }
       container.appendChild(card);
     }
   }
