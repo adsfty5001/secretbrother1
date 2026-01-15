@@ -1,56 +1,56 @@
-import { addDoc, onSnapshot, orderBy, query, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getPublicReviewsColl, getReviewCounterDoc } from "./paths.js";
+import { getDoc, getDocs, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getReviewCounterDoc, getReviewCountersColl } from "./paths.js";
 import { stripHtml, fmtNum, fmtDate, escHtml } from "./ui.js";
 
-export async function loadBaseReviews() {
+function normalizeHtmlForDisplay(html) {
+  let s = String(html ?? "");
+  // Common escaped newlines
+  s = s.replace(/\\r\\n|\\n\\r|\\n|\\r/g, "<br>");
+  // Normalize <p> blocks to line breaks (display-only)
+  s = s.replace(/<\/?p>/gi, "");
+  // Keep <br> as is
+  return s;
+}
+
+export async function loadBaseReviews(db) {
   const res = await fetch("./data/reviews.json", { cache: "no-store" });
   const data = await res.json();
-  return (Array.isArray(data) ? data : []).map((r) => ({
-    id: String(r.id ?? ""),
-    title: String(r.title ?? ""),
-    contentHtml: String(r.contentHtml ?? ""),
-    createdDate: String(r.createdDate ?? ""),
-    baseViews: Number(r.views ?? 0) || 0,
-    deltaViews: 0,
-    isBest: Boolean(r.isBest),
-    source: "base",
-  })).filter(r => r.id && r.title);
-}
+  const base = (Array.isArray(data) ? data : []).map((r) => {
+    const id = String(r.id ?? "");
+    const title = String(r.title ?? "");
+    const contentHtml = normalizeHtmlForDisplay(r.contentHtml ?? "");
+    const createdDate = String(r.createdDate ?? r.date ?? "");
+    const baseViews = Number(r.views ?? 0) || 0;
+    const isBest = Boolean(r.isBest);
+    const plainText = stripHtml(contentHtml);
+    return {
+      id, title, contentHtml, createdDate,
+      baseViews,
+      deltaViews: 0,
+      isBest,
+      source: "base",
+      author: "",
+      rating: 5,
+      plainText,
+    };
+  });
 
-export function watchUserReviews(db, onChange) {
-  // Optional: user-submitted reviews stored in Firestore
-  const q = query(getPublicReviewsColl(db), orderBy("createdAt", "desc"));
-  return onSnapshot(q, (snap) => {
-    const items = [];
-    snap.forEach((d) => {
-      const x = d.data() || {};
-      items.push({
-        id: d.id,
-        title: String(x.title ?? ""),
-        contentHtml: String(x.contentHtml ?? ""),
-        createdDate: x.createdDate ? String(x.createdDate) : (x.createdAt?.toDate?.()?.toISOString?.() ?? ""),
-        baseViews: Number(x.views ?? 0) || 0,
-        deltaViews: 0,
-        isBest: Boolean(x.isBest),
-        source: "db",
-        author: String(x.author ?? ""),
+  // Hydrate delta views from Firestore if db provided
+  if (db) {
+    try {
+      const snap = await getDocs(getReviewCountersColl(db));
+      const map = new Map();
+      snap.forEach((d) => {
+        const v = d.data() || {};
+        map.set(String(d.id), Number(v.deltaViews || 0) || 0);
       });
-    });
-    onChange?.(items);
-  });
-}
+      base.forEach((r) => { r.deltaViews = map.get(String(r.id)) || 0; });
+    } catch (e) {
+      console.warn("deltaViews hydrate failed", e);
+    }
+  }
 
-export async function submitUserReview({ db, title, contentHtml, author }) {
-  const coll = getPublicReviewsColl(db);
-  await addDoc(coll, {
-    title,
-    contentHtml,
-    author: author || "",
-    createdAt: serverTimestamp(),
-    createdDate: new Date().toISOString().slice(0,10),
-    views: 0,
-    isBest: false,
-  });
+  return base;
 }
 
 export function totalViews(review) {
@@ -58,41 +58,68 @@ export function totalViews(review) {
 }
 
 export async function incrementBaseReviewView(db, review) {
-  // Store only deltaViews in Firestore to avoid tampering with historical base views.
   const ref = getReviewCounterDoc(db, review.id);
-  const nextDelta = await runTransaction(db, async (tx) => {
+  const next = await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
-    const cur = snap.exists() ? Number(snap.data().deltaViews || 0) : 0;
-    const next = cur + 1;
-    if (snap.exists()) tx.update(ref, { deltaViews: next });
-    else tx.set(ref, { deltaViews: 1 });
-    return next;
+    const curr = snap.exists() ? (Number(snap.data()?.deltaViews || 0) || 0) : 0;
+    const updated = curr + 1;
+    if (snap.exists()) {
+      tx.update(ref, { deltaViews: updated });
+    } else {
+      tx.set(ref, { deltaViews: updated, createdAt: serverTimestamp() });
+    }
+    return updated;
   });
-  review.deltaViews = nextDelta;
+
+  // Update object in memory
+  review.deltaViews = Number(next) || 0;
   return totalViews(review);
 }
 
+function starIcons(rating=5) {
+  const n = Math.max(0, Math.min(5, Number(rating) || 0));
+  let s = "";
+  for (let i=0;i<5;i++) {
+    s += `<i class="w-4 h-4 ${i < n ? "text-yellow-400" : "text-gray-200"}" data-lucide="star"></i>`;
+  }
+  return s;
+}
+
 export function reviewCardHtml(review) {
-  const title = escHtml(review.title);
-  const excerpt = escHtml(stripHtml(review.contentHtml)).slice(0, 220);
-  const badge = review.isBest ? `<span class="bg-red-100 text-red-700 text-[10px] font-semibold px-2 py-1 rounded">BEST</span>` : "";
-  const metaDate = escHtml(fmtDate(review.createdDate));
+  const badge = review.isBest
+    ? `<span class="bg-indigo-50 text-indigo-700 text-xs font-semibold px-2 py-1 rounded">BEST</span>`
+    : ``;
+
+  const title = escHtml(review.title || "");
+  const excerpt = escHtml((review.plainText || "").slice(0, 110));
+  const date = escHtml(fmtDate(review.createdDate || ""));
   const views = fmtNum(totalViews(review));
 
   return `
-    <button class="text-left w-full bg-white border rounded-2xl p-5 hover:shadow-lg transition shadow-sm h-full flex flex-col justify-between"
-            data-review-id="${escHtml(review.id)}" type="button">
+    <div data-review-id="${escHtml(review.id)}" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-md cursor-pointer flex flex-col justify-between h-full group">
       <div>
-        <div class="flex items-start justify-between gap-3">
-          <div class="font-semibold text-gray-900 leading-snug line-clamp-2">${title}</div>
+        <div class="flex justify-between items-start mb-3">
+          <div class="flex gap-1 items-center">${starIcons(review.rating)}</div>
           ${badge}
         </div>
-        <div class="mt-3 text-sm text-gray-600 line-clamp-3">${excerpt}</div>
+        <h3 class="font-bold text-lg mb-2 text-gray-900 line-clamp-3 group-hover:text-indigo-600 transition-colors">${title}</h3>
+        <p class="text-sm text-gray-500 mb-4 leading-relaxed break-keep">${excerpt}${(review.plainText||"").length>110?"…":""}</p>
       </div>
-      <div class="mt-4 pt-3 border-t text-xs text-gray-500 flex items-center justify-between">
-        <span>${metaDate}</span>
-        <span>조회수 ${views}</span>
+      <div class="pt-4 border-t border-gray-50 flex justify-between items-center text-xs text-gray-400">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-gray-700">${escHtml(review.author || "수강생")}</span>
+          <span class="w-px h-3 bg-gray-300"></span>
+          <span>${date}</span>
+        </div>
+        <div class="flex items-center gap-1"><i class="w-4 h-4" data-lucide="eye"></i> <span>${views}</span></div>
       </div>
-    </button>
+    </div>
   `;
+}
+
+// Optional: user-submitted reviews watcher (not used in current index.js, kept for compatibility)
+export function watchUserReviews(db, cb) {
+  // Not used in this build.
+  cb?.([]);
+  return () => {};
 }

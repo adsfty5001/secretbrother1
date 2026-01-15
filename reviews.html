@@ -2,49 +2,56 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>전체 후기 | Secretclass</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>전체 후기</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="./styles.css" />
 </head>
-<body class="bg-gray-50 text-gray-900">
-  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-      <a href="./index.html" class="font-extrabold tracking-tight text-lg">Secretclass</a>
-      <a href="./index.html" class="text-sm text-gray-600 hover:underline">메인으로</a>
+<body class="bg-gray-50">
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="./index.html" class="font-bold text-gray-900">Secretclass</a>
+      <a href="./index.html" class="text-sm text-indigo-600 hover:text-indigo-800">메인으로</a>
     </div>
   </header>
 
   <main class="max-w-6xl mx-auto px-4 py-10">
-    <div class="flex items-end justify-between gap-3">
-      <div>
-        <h1 class="text-2xl font-extrabold">전체 후기</h1>
-        <p class="text-sm text-gray-500 mt-1">카드를 클릭하면 상세 모달이 열리고, 조회수가 누적됩니다.</p>
-      </div>
-    </div>
-
-    <div id="reviews-grid" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div class="text-sm text-gray-500">불러오는 중…</div>
-    </div>
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">실시간 전체 후기</h1>
+    <div id="reviews-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
   </main>
 
   <!-- Review Modal -->
-  <div id="reviewModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-    <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden">
-      <div class="p-4 border-b flex items-start justify-between gap-3">
+  <div id="reviewModal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/50">
+    <div class="bg-white w-full max-w-2xl max-h-[80vh] rounded-2xl shadow-xl flex flex-col overflow-hidden" role="dialog" aria-modal="true">
+      <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
         <div>
-          <div id="reviewModalTitle" class="font-extrabold text-lg">제목</div>
-          <div class="mt-1 text-xs text-gray-500">
-            <span id="reviewModalDate">-</span> · 조회수 <span id="reviewModalViews">0</span>
+          <h3 id="reviewModalTitle" class="font-bold text-gray-900 text-lg"></h3>
+          <div class="text-xs text-gray-500 mt-1">
+            <span id="reviewModalDate"></span>
+            <span class="mx-2">·</span>
+            <span class="inline-flex items-center gap-1"><i class="w-4 h-4" data-lucide="eye"></i><span id="reviewModalViews"></span></span>
           </div>
         </div>
-        <button id="review-close" class="p-2 rounded hover:bg-gray-100" aria-label="닫기">✕</button>
+        <button id="review-close" class="text-gray-400 hover:text-gray-600"><i data-lucide="x"></i></button>
       </div>
-      <div id="reviewModalContent" class="p-5 text-sm leading-7 whitespace-pre-wrap"></div>
+      <div id="reviewModalContent" class="p-8 overflow-y-auto flex-grow text-base leading-relaxed"></div>
+      <div class="p-4 bg-gray-50 border-t border-gray-100 text-center">
+        <button class="w-full bg-gray-900 text-white py-3 rounded-xl font-semibold" id="review-close-2">닫기</button>
+      </div>
     </div>
   </div>
 
   <script src="./config.js"></script>
   <script type="module" src="./reviews_page.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      try { if (window.lucide) window.lucide.createIcons(); } catch(e) {}
+      // second close button delegates
+      document.getElementById("review-close-2")?.addEventListener("click", ()=> {
+        document.getElementById("review-close")?.click();
+      });
+    });
+  </script>
 </body>
 </html>
