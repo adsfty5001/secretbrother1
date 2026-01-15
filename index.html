@@ -772,37 +772,13 @@
   function normalizeReview(r){
     const id = String(r.id ?? r.reviewId ?? r.key ?? "");
     const title = String(r.title ?? r.subject ?? "");
-    const author = String(r.author ?? r.nickname ?? r.displayName ?? r.userName ?? r.username ?? r.user_name ?? r.writer ?? r.name ?? "");
+    const author = String(r.author ?? r.writer ?? r.name ?? "");
     const date = String(r.date ?? r.createdAt ?? r.createdDate ?? r.created_date ?? r.created ?? "");
     const contentHtml = decodeHtml(r.contentHtml ?? r.content ?? r.bodyHtml ?? "");
     const baseViews = Number(r.viewsBase ?? r.views ?? r.viewCount ?? 0) || 0;
     const isBest = Boolean(r.isBest) || String(r.badge ?? "").toUpperCase() === "BEST" || Boolean(r.best);
     return { id, title, author, date, contentHtml, baseViews, isBest };
   }
-
-
-// --- Author helpers (BEST 고정/표시용) ---
-function extractAuthorFromTitle(title){
-  try{
-    const t = String(title||"").trim();
-    // patterns: ".... _ 홍길동님" or "...._홍길동" or "... - 홍길동님"
-    const m = t.match(/[_-]\s*([^_\-]{2,20}?)(?:님)?\s*$/);
-    return (m && m[1]) ? String(m[1]).trim() : "";
-  }catch(e){ return ""; }
-}
-function normalizeAuthorName(name){
-  return String(name||"").replace(/\s+/g,"").replace(/님$/,"").trim();
-}
-function getDisplayAuthor(r){
-  const a = String((r && r.author) || "").trim();
-  if(a) return a;
-  const fromTitle = extractAuthorFromTitle((r && r.title) || "");
-  if(fromTitle) return fromTitle;
-  // 마지막 폴백: nickname/displayName/userName 등(정규화 전 raw에서 들어온 케이스)
-  const raw = r || {};
-  const alt = String(raw.nickname ?? raw.displayName ?? raw.userName ?? raw.username ?? raw.user_name ?? raw.writer ?? raw.name ?? "").trim();
-  return alt || "";
-}
 
   async function getDeltaViews(reviewId){
     if(viewDeltaCache.has(reviewId)) return viewDeltaCache.get(reviewId);
@@ -834,58 +810,91 @@ function getDisplayAuthor(r){
     return newDelta;
   }
 
+  
+  // === BEST 후기 고정(6개) + 작성자/기본조회수 오버라이드 ===
+  const BEST_LOCKED = {
+  "11955": {
+    "author": "이수정",
+    "viewsBase": 980
+  },
+  "11954": {
+    "author": "이서연",
+    "viewsBase": 850
+  },
+  "11953": {
+    "author": "이민석",
+    "viewsBase": 760
+  },
+  "11952": {
+    "author": "변미소",
+    "viewsBase": 1100
+  },
+  "11951": {
+    "author": "김아름",
+    "viewsBase": 1240
+  },
+  "11948": {
+    "author": "김기용",
+    "viewsBase": 640
+  }
+};
+  const BEST_LOCKED_ORDER = ["11955", "11954", "11953", "11952", "11951", "11948"];
+
   async function renderBest(){
-    const container = $("best-reviews-container");
+    const container = $("bestGrid");
     if(!container) return;
-
-    const sorted = [...REVIEWS].sort((a,b)=> (b.date||"").localeCompare(a.date||""));
-// BEST는 작성자 6명 고정 (요청 사항)
-const BEST_AUTHORS = ["김아름","이수정","이서연","변미소","이민석","김기용"];
-const picked = [];
-const pickedIds = new Set();
-for(const nm of BEST_AUTHORS){
-  const key = normalizeAuthorName(nm);
-  const found = sorted.find(r => { const cand = normalizeAuthorName(getDisplayAuthor(r)); return cand === key || (cand && cand.includes(key)); });
-  if(found && !pickedIds.has(found.id)){
-    picked.push(found);
-    pickedIds.add(found.id);
-  }
-}
-// 혹시 누락이 있으면(데이터에 없을 때) 나머지는 최신순으로 채움
-if(picked.length < 6){
-  for(const r of sorted){
-    if(picked.length >= 6) break;
-    if(pickedIds.has(r.id)) continue;
-    picked.push(r);
-    pickedIds.add(r.id);
-  }
-}
-const best = picked.slice(0,6);
-
-
     container.innerHTML = "";
-    for(const r of best){
-      const delta = await getDeltaViews(r.id);
-      const totalViews = r.baseViews + delta;
-      const rating = ratingFor(r.id);
 
+    // 고정된 6개만 렌더링 (데이터에 isBest가 있어도 무시)
+    const lockedReviews = BEST_LOCKED_ORDER
+      .map(id => REVIEWS.find(r => String(r.id) === String(id)))
+      .filter(Boolean)
+      .map(r => {
+        const o = BEST_LOCKED[String(r.id)] || null;
+        if(o){
+          // 작성자/기본조회수는 "표시" 용도로만 고정합니다.
+          r.author = o.author;
+          r.baseViews = o.viewsBase;
+        }
+        r.isBest = true;
+        return r;
+      });
+
+    for(const r of lockedReviews){
       const card = document.createElement("div");
-      card.className = "bg-white rounded-2xl shadow-sm border border-gray-100 p-6 cursor-pointer hover:shadow-md transition";
+      card.className = "review-card best-card";
+      card.setAttribute("data-review-id", String(r.id));
+
+      // delta 조회수는 Firestore 누적값을 사용(기존 로직 유지)
+      const delta = await getDeltaViews(String(r.id));
+      const totalViews = (Number(r.baseViews)||0) + (Number(delta)||0);
+
+      const authorText = (r.author && String(r.author).trim()) ? String(r.author).trim() : "";
+
       card.innerHTML = `
-        <div class="flex items-center justify-between mb-3">
-          <div class="text-lg font-semibold text-gray-800">${renderStars(rating)}</div>
-          <span class="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-50 text-indigo-600">BEST</span>
+        <div class="rating-row">
+          <div class="stars">${stars(r.rating ?? 5)}</div>
+          <div class="rating-num">${Number(r.rating ?? 5).toFixed(1)}</div>
+          <span class="best-pill">BEST</span>
         </div>
-        <div class="text-xl font-bold text-gray-900 leading-snug">${escapeHtml(r.title)}</div>
-        <div class="mt-2 text-sm text-gray-700"><span class="text-gray-500">작성자 :</span> <span class="font-semibold text-gray-900">${escapeHtml(getDisplayAuthor(r) || "")}</span></div>
-        <div class="mt-2 text-sm text-gray-500">${fmtDate(r.date)}</div>
-        <div class="mt-3 text-sm text-gray-700 leading-relaxed">${escapeHtml(excerptFromHtml(r.contentHtml, 60))}</div>
-        <div class="mt-4 text-sm text-gray-500">조회수 <span id="views-b-${escapeAttr(r.id)}" class="font-semibold text-gray-700">${totalViews}</span></div>
+
+        <h3 class="title">${escapeHtml(r.title || "")}</h3>
+
+        <div class="meta">
+          <div class="meta-line">작성자: <b>${escapeHtml(authorText)}</b></div>
+          <div class="meta-line">${escapeHtml(r.date || "")}</div>
+        </div>
+
+        <p class="excerpt">${escapeHtml(excerptFromHtml(r.contentHtml || r.content || ""))}</p>
+
+        <div class="views">조회수 <b>${formatNumber(totalViews)}</b></div>
       `;
+
       card.addEventListener("click", async ()=>{ await openReviewDetail(r.id); });
       container.appendChild(card);
     }
   }
+
 
   async function openReviewDetail(reviewId){
     const r = REVIEWS.find(x=>x.id===reviewId);
@@ -896,7 +905,7 @@ const best = picked.slice(0,6);
     if(!modal) return;
 
     $("modal-review-title") && ($("modal-review-title").textContent = r.title);
-    $("modal-review-author") && ($("modal-review-author").textContent = getDisplayAuthor(r) || "");
+    $("modal-review-author") && ($("modal-review-author").textContent = r.author || "");
     $("modal-review-date") && ($("modal-review-date").textContent = fmtDate(r.date));
 
     const contentEl = $("modal-review-content");
