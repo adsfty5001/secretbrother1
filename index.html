@@ -769,24 +769,15 @@
     return [];
   }
 
-  
-const BEST_AUTHORS = ["김아름","이수정","이서연","변미소","이민석","김기용"];
-const BEST_VIEWS_BASE = { "김아름":1240, "이수정":980, "이서연":850, "변미소":1100, "이민석":760, "김기용":640 };
-
-function normAuthorName(v){
-  return String(v||"").replace(/\s+/g,"").replace(/님$/,"");
-}
-function normalizeReview(r){
+  function normalizeReview(r){
     const id = String(r.id ?? r.reviewId ?? r.key ?? "");
     const title = String(r.title ?? r.subject ?? "");
-    const author = String(r.author ?? r.nickname ?? r.displayName ?? r.writer ?? r.userName ?? r.username ?? r.user_name ?? r.name ?? "");
-    const date = String(r.date ?? r.createdAt ?? r.createdDate ?? r.created_date ?? r.created ?? "");
+    const author = String(r.author ?? r.nickname ?? r.displayName ?? r.writer ?? r.name ?? r.userName ?? r.username ?? r.writerName ?? r.reviewer ?? r.memberName ?? "").trim();
+const date = String(r.date ?? r.createdAt ?? r.createdDate ?? r.created_date ?? r.created ?? "");
     const contentHtml = decodeHtml(r.contentHtml ?? r.content ?? r.bodyHtml ?? "");
     const baseViews = Number(r.viewsBase ?? r.views ?? r.viewCount ?? 0) || 0;
     const isBest = Boolean(r.isBest) || String(r.badge ?? "").toUpperCase() === "BEST" || Boolean(r.best);
-    const authorNorm = normAuthorName(author);
-    const baseViews2 = baseViews || (BEST_VIEWS_BASE[authorNorm] || 0);
-    return { id, title, author, authorNorm, date, contentHtml, baseViews: baseViews2, isBest };
+    return { id, title, author, date, contentHtml, baseViews, isBest };
   }
 
   async function getDeltaViews(reviewId){
@@ -824,8 +815,8 @@ function normalizeReview(r){
     if(!container) return;
 
     const sorted = [...REVIEWS].sort((a,b)=> (b.date||"").localeCompare(a.date||""));
-    const byBestAuthor = sorted.filter(r => BEST_AUTHORS.includes(r.authorNorm));
-    const best = (byBestAuthor.length ? byBestAuthor : sorted).slice(0, 6);
+    const bestMarked = sorted.filter(r => r.isBest);
+    const best = (bestMarked.length ? bestMarked : sorted).slice(0, 6);
 
     container.innerHTML = "";
     for(const r of best){
@@ -841,7 +832,7 @@ function normalizeReview(r){
           <span class="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-50 text-indigo-600">BEST</span>
         </div>
         <div class="text-xl font-bold text-gray-900 leading-snug">${escapeHtml(r.title)}</div>
-        ${(() => { const a = (r.author && String(r.author).trim()) ? r.author : (r.authorNorm || ""); return a ? `<div class="mt-2 text-sm text-gray-500">작성자 ${escapeHtml(a)}</div>` : ``; })()}
+        <div class="mt-2 text-sm text-gray-600">작성자 : <span class="font-semibold text-gray-800">${escapeHtml(r.author || "")}</span></div>
         <div class="mt-3 text-sm text-gray-500">${fmtDate(r.date)}</div>
         <div class="mt-3 text-sm text-gray-700 leading-relaxed">${escapeHtml(excerptFromHtml(r.contentHtml, 60))}</div>
         <div class="mt-4 text-sm text-gray-500">조회수 <span id="views-b-${escapeAttr(r.id)}" class="font-semibold text-gray-700">${totalViews}</span></div>
