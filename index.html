@@ -71,9 +71,6 @@
         /* HTML 엔티티 디코딩용 */
         .decoded-content p { margin-bottom: 1em; }
     </style>
-    <!-- PortOne(아임포트) JS SDK -->
-    <script src="./config.js"></script>
-  <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
 </head>
 <body class="bg-white text-gray-900 font-body flex flex-col min-h-screen">
 
@@ -957,6 +954,15 @@
   window.App.openAdminModal = () => alert("현재는 데모(정적) 모드입니다. Firebase 설정 후 관리자 기능이 활성화됩니다.");
   window.App.updateUserStatus = () => alert("현재는 데모(정적) 모드입니다. Firebase 설정이 필요합니다.");
 
+  window.App.checkPayment = (e, url) => {
+    try {
+      if (url && typeof url === 'string') {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (err) {}
+  };
+
   window.App.confirmDeposit = () => {
     alert("입금확인 요청 기능은 로그인/DB 연동 후 동작합니다.");
     window.App.openModal('loginModal', 'login');
@@ -1046,635 +1052,369 @@
   // Firebase 모듈 스크립트가 실행되면, 내부에서 Impl.renderUI()가 다시 호출되어 최신 상태로 갱신됩니다.
 </script>
 
-    <scrip
+    <script src="/config.js"></script>
+    <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+
+    <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { 
+  import {
     getAuth,
+    setPersistence,
+    browserLocalPersistence,
     onAuthStateChanged,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
-    signOut,
-    updateProfile,
-    setPersistence,
-    browserLocalPersistence,
-    signInAnonymously
+    signOut
   } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
   import {
     getFirestore,
     doc,
-    setDoc,
     getDoc,
-    collection,
-    query,
-    onSnapshot,
-    orderBy,
-    addDoc,
-    updateDoc
+    setDoc,
+    serverTimestamp,
+    runTransaction,
   } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-// module에서도 정적 후기 사용 가능하도록 연결
-  const STATIC_REVIEWS = window.STATIC_REVIEWS || [];
 
-  (async () => {
-    // *** 실제 로직 주입 ***
-    // window.App 객체에 실제 함수들을 덮어씌웁니다.
-    // [핵심 수정] __firebase_config / __app_id 가 없는 환경에서도 에러 없이 '정적 모드'로 동작하게 함
+  // ------------------------------------------------------------
+  // 0) Firebase 설정 읽기 (Vercel/GitHub Pages 모두 대응)
+  //    - config.js에서 window.SECRETCLASS_FIREBASE_CONFIG -> window.FIREBASE_CONFIG 브릿지
+  // ------------------------------------------------------------
+  const firebaseConfig =
+    window.FIREBASE_CONFIG ||
+    window.SECRETCLASS_FIREBASE_CONFIG ||
+    window.__firebase_config ||
+    window.firebaseConfig ||
+    null;
 
-    let rawCfg = null;
-    try {
-      if (typeof __firebase_config !== 'undefined') rawCfg = __firebase_config;
-      else if (window.__firebase_config) rawCfg = window.__firebase_config;
-      else if (window.firebaseConfig) rawCfg = window.firebaseConfig;
-      else if (window.FIREBASE_CONFIG) rawCfg = window.FIREBASE_CONFIG;
-      else if (window.SECRETCLASS_FIREBASE_CONFIG) rawCfg = window.SECRETCLASS_FIREBASE_CONFIG;
-    } catch (e) {
-      rawCfg = null;
+  // 안전장치: 설정이 없으면 데모 모드 경고만 띄우고 종료
+  if (!firebaseConfig) {
+    window.App = window.App || {};
+    window.App._demo = true;
+    window.App.processLogin = () => alert("현재는 데모(정적) 모드입니다. Firebase Auth 설정이 필요합니다.");
+    window.App.processSignup = () => alert("현재는 데모(정적) 모드입니다. Firebase Auth 설정이 필요합니다.");
+    window.App.logout = () => alert("현재는 데모(정적) 모드입니다. Firebase Auth 설정이 필요합니다.");
+    window.App.checkPayment = () => alert("현재는 데모(정적) 모드입니다. Firebase Auth 설정이 필요합니다.");
+    console.warn("[Secretclass] Firebase config not found. Check /config.js deployment.");
+    throw new Error("Firebase config not found");
+  }
+
+  // ------------------------------------------------------------
+  // 1) Firebase 초기화
+  // ------------------------------------------------------------
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // 로그인 유지(새로고침해도 로그인 유지)
+  await setPersistence(auth, browserLocalPersistence);
+
+  // ------------------------------------------------------------
+  // 2) UI 핸들러(기존 디자인 그대로 사용)
+  // ------------------------------------------------------------
+  const $ = (id) => document.getElementById(id);
+
+  function show(el, yes) {
+    if (!el) return;
+    el.classList.toggle("hidden", !yes);
+  }
+
+  function openLoginModal(tab) {
+    const modal = $("loginModal");
+    if (!modal) return;
+    modal.classList.remove("hidden");
+
+    const tabLogin = $("tab-login");
+    const tabSignup = $("tab-signup");
+    const panelLogin = $("panel-login");
+    const panelSignup = $("panel-signup");
+
+    // 기존 파일에 탭/패널이 없을 수도 있어서 방어적으로 처리
+    if (tabLogin && tabSignup && panelLogin && panelSignup) {
+      const isSignup = tab === "signup";
+      tabLogin.classList.toggle("text-gray-400", isSignup);
+      tabSignup.classList.toggle("text-gray-400", !isSignup);
+      panelLogin.classList.toggle("hidden", isSignup);
+      panelSignup.classList.toggle("hidden", !isSignup);
     }
+  }
 
-    if (!rawCfg) {
-      console.warn("[SecretClass] Firebase config not found. Running in static mode (reviews/UI only).");
-      // 정적 모드는 no-module 스크립트에서 이미 UI 렌더를 완료합니다.
+  function closeLoginModal() {
+    const modal = $("loginModal");
+    if (!modal) return;
+    modal.classList.add("hidden");
+  }
+
+  // 모달 닫기 버튼(있으면 연결)
+  document.addEventListener("click", (e) => {
+    if (e.target && e.target.id === "loginModalClose") closeLoginModal();
+  });
+
+  // ------------------------------------------------------------
+  // 3) Firestore 규칙(사용자 제공)과 100% 맞춘 경로
+  //    - /users/{uid}
+  //    - /members/{uid}
+  //    - /usernames/{username}  (아이디 -> uid/email 매핑)
+  //    - /reviewViews/{reviewId} (조회수)
+  // ------------------------------------------------------------
+  async function getUsernameMapping(username) {
+    const ref = doc(db, "usernames", username);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return null;
+    return snap.data(); // { uid, email }
+  }
+
+  async function ensureMemberDoc(user, displayName) {
+    // rules: /members/{uid} create는 본인만 가능, update는 admin만
+    // 최초 가입 시에만 create
+    const ref = doc(db, "members", user.uid);
+    const snap = await getDoc(ref);
+    if (snap.exists()) return;
+
+    await setDoc(ref, {
+      uid: user.uid,
+      email: user.email || "",
+      name: displayName || "",
+      payStatus: "none",
+      createdAt: serverTimestamp(),
+    });
+  }
+
+  async function ensureUserProfile(user, displayName) {
+    const ref = doc(db, "users", user.uid);
+    const snap = await getDoc(ref);
+    if (snap.exists()) return;
+
+    await setDoc(ref, {
+      uid: user.uid,
+      email: user.email || "",
+      name: displayName || "",
+      createdAt: serverTimestamp(),
+    });
+  }
+
+  async function createUsernameMapping(user, username) {
+    // rules: create는 signedIn + uid/email 일치 + keys 제한
+    const ref = doc(db, "usernames", username);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      throw new Error("이미 사용 중인 아이디입니다.");
+    }
+    await setDoc(ref, {
+      uid: user.uid,
+      email: user.email || "",
+    });
+  }
+
+  async function getPayStatus(uid) {
+    const ref = doc(db, "members", uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return "none";
+    return snap.data().payStatus || "none";
+  }
+
+  async function incrementReviewView(reviewId) {
+    // rules: create views==1 허용, update는 +1만 허용 (로그인 불필요)
+    const ref = doc(db, "reviewViews", String(reviewId));
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists()) {
+        tx.set(ref, { views: 1 });
+      } else {
+        const cur = Number(snap.data().views || 0);
+        tx.update(ref, { views: cur + 1 });
+      }
+    });
+  }
+
+  // ------------------------------------------------------------
+  // 4) 로그인/회원가입/로그아웃 (기존 버튼 onclick 그대로 살림)
+  // ------------------------------------------------------------
+  let pendingAfterAuth = null; // 예: { type: 'pay' }
+
+  window.App = window.App || {};
+  window.App.processLogin = async () => {
+    try {
+      const raw = ($("login-email")?.value || "").trim();
+      const pw = ($("login-pw")?.value || "").trim();
+      if (!raw || !pw) return alert("이메일(또는 아이디)과 비밀번호를 입력해주세요.");
+
+      let email = raw;
+      // 아이디로 로그인(예: midnight5001)도 지원: /usernames/{id} -> email
+      if (!raw.includes("@")) {
+        const map = await getUsernameMapping(raw);
+        if (!map || !map.email) return alert("해당 아이디를 찾을 수 없습니다.");
+        email = map.email;
+      }
+
+      await signInWithEmailAndPassword(auth, email, pw);
+      closeLoginModal();
+
+      // 로그인 후 이어서 진행할 작업(결제 등)
+      if (pendingAfterAuth?.type === "pay") {
+        pendingAfterAuth = null;
+        window.App.startPayment(); // 결제 재시도
+      }
+    } catch (e) {
+      console.error(e);
+      alert("로그인 실패: " + (e?.message || e));
+    }
+  };
+
+  window.App.processSignup = async () => {
+    try {
+      const username = ($("reg-name")?.value || "").trim(); // 기존 디자인의 첫 입력칸(아이디/이름)
+      const email = ($("reg-email")?.value || "").trim();
+      const pw = ($("reg-pw")?.value || "").trim();
+
+      if (!username || !email || !pw) return alert("아이디/이메일/비밀번호를 모두 입력해주세요.");
+      if (pw.length < 6) return alert("비밀번호는 6자리 이상이어야 합니다.");
+
+      // 1) 계정 생성(생성 직후 signedIn 상태)
+      const cred = await createUserWithEmailAndPassword(auth, email, pw);
+      const user = cred.user;
+
+      // 2) users/{uid} + members/{uid} 최초 생성
+      await ensureUserProfile(user, username);
+      await ensureMemberDoc(user, username);
+
+      // 3) usernames/{username} 매핑 생성(아이디 로그인 지원)
+      await createUsernameMapping(user, username);
+
+      closeLoginModal();
+      alert("회원가입이 완료되었습니다. 이제 로그인 상태입니다.");
+
+      // 가입 직후 결제 버튼을 눌렀던 상황이면 이어서 결제
+      if (pendingAfterAuth?.type === "pay") {
+        pendingAfterAuth = null;
+        window.App.startPayment();
+      }
+    } catch (e) {
+      console.error(e);
+      alert("회원가입 실패: " + (e?.message || e));
+    }
+  };
+
+  window.App.logout = async () => {
+    try {
+      await signOut(auth);
+      alert("로그아웃 되었습니다.");
+    } catch (e) {
+      console.error(e);
+      alert("로그아웃 실패: " + (e?.message || e));
+    }
+  };
+
+  // ------------------------------------------------------------
+  // 5) 결제(PortOne KG이니시스)
+  //    - 로그인 상태에서만 진행
+  // ------------------------------------------------------------
+  const IMP_CODE = "imp07764510";
+  const PG_CODE = "html5_inicis"; // KG이니시스
+
+  window.App.startPayment = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      pendingAfterAuth = { type: "pay" };
+      alert("결제를 진행하려면 먼저 로그인 또는 회원가입을 해주세요.");
+      openLoginModal("login");
       return;
     }
 
-    let firebaseConfig = null;
-    try {
-      firebaseConfig = (typeof rawCfg === 'string') ? JSON.parse(rawCfg) : rawCfg;
-    } catch (e) {
-      console.warn("[SecretClass] Firebase config parse failed. Running in static mode.", e);
+    // 결제 직전에 payStatus 확인(이미 complete면 결제 막기 등)
+    const payStatus = await getPayStatus(user.uid);
+    if (payStatus === "complete") {
+      alert("이미 결제 완료된 계정입니다. 나의강의실을 이용해주세요.");
       return;
     }
 
-    const firebaseApp = initializeApp(firebaseConfig);
-    const auth = getAuth(firebaseApp);
-        // 로그인 상태를 브라우저에 저장해서(새로고침해도) 유지합니다.
-    try { await setPersistence(auth, browserLocalPersistence); } catch(e) { console.warn('auth persistence not set', e); }
-const db = getFirestore(firebaseApp);
+    if (!window.IMP) {
+      alert("결제 모듈을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.");
+      return;
+    }
 
-    const appId = (typeof __app_id !== 'undefined') ? __app_id : (window.__app_id || 'secret-class-v1');
+    window.IMP.init(IMP_CODE);
 
-// Helpers
-        const getPublicReviewColl = () => collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
-        const getPublicMemberColl = () => collection(db, 'artifacts', appId, 'public', 'data', 'members'); 
-        const getUserDoc = (uid) => doc(db, 'artifacts', appId, 'users', uid, 'profile', 'info');
+    // UI에서 표시된 금액과 동일하게
+    const amount = 349000;
 
-        // Core Implementation
-        const Impl = {
-            renderUI: () => {
-                const guestDiv = document.getElementById('auth-guest');
-                const userDiv = document.getElementById('auth-user');
-                const userNameSpan = document.getElementById('user-name-display');
-                const adminBtn = document.getElementById('btn-admin-open'); 
+    const merchant_uid = "sc_" + Date.now();
 
-                if(window.App.state.isLoggedIn && window.App.state.user) {
-                    if(guestDiv) guestDiv.classList.add('hidden');
-                    if(userDiv) {
-                        userDiv.classList.remove('hidden-section');
-                        userDiv.style.display = 'flex';
-                    }
-                    if(userNameSpan) userNameSpan.innerText = window.App.state.user.name;
-                    
-                    if(adminBtn) {
-                        if(window.App.state.isAdmin) adminBtn.classList.remove('hidden');
-                        else adminBtn.classList.add('hidden');
-                    }
-                } else {
-                    if(guestDiv) guestDiv.classList.remove('hidden');
-                    if(userDiv) {
-                        userDiv.classList.add('hidden-section');
-                        userDiv.style.display = 'none';
-                    }
-                }
-                
-                Impl.renderBestReviews();
-                Impl.renderAllReviews();
-            },
+    window.IMP.request_pay(
+      {
+        pg: PG_CODE,
+        pay_method: "card",
+        merchant_uid,
+        name: "1:1 맞춤형 투자 큐레이팅",
+        amount,
+        buyer_email: user.email || "",
+        buyer_name: user.email ? user.email.split("@")[0] : "Secretclass",
+      },
+      async (rsp) => {
+        // rsp.success 기준은 PortOne 응답 형태에 따라 다를 수 있어 방어 처리
+        const success = rsp?.success === true || rsp?.imp_uid;
+        if (!success) {
+          alert("결제가 취소되었거나 실패했습니다.");
+          return;
+        }
 
-            renderBestReviews: () => {
-                const container = document.getElementById('best-reviews-container');
-                if(!container) return;
-                
-                let reviews = window.App.state.reviews;
-                if(reviews.length === 0) reviews = STATIC_REVIEWS;
+        // ⚠️ 현재 Firestore rules 상, 사용자가 members.payStatus를 update 할 수 없습니다.
+        // 결제 완료를 자동 반영하려면 서버(Cloud Functions 등)에서 imp_uid 검증 후 admin 권한으로 update해야 안전합니다.
+        alert(
+          "결제 요청이 완료되었습니다.\n" +
+          "결제 확인 후 수강 권한이 열립니다.\n" +
+          "결제번호(imp_uid): " + (rsp.imp_uid || "-")
+        );
+      }
+    );
+  };
 
-                const bests = reviews.filter(r => r.badge === 'BEST').slice(0, 6);
-                container.innerHTML = bests.map(r => Impl.createReviewCard(r, true)).join('');
-                if(typeof lucide !== 'undefined') lucide.createIcons();
-            },
+  window.App.checkPayment = () => window.App.startPayment();
 
-            renderAllReviews: () => {
-                const container = document.getElementById('all-reviews-container');
-                if(!container) return;
-                
-                let reviews = window.App.state.reviews;
-                if(reviews.length === 0) reviews = STATIC_REVIEWS;
+  // ------------------------------------------------------------
+  // 6) 로그인 상태 UI 반영
+  // ------------------------------------------------------------
+  async function renderAuthState(user) {
+    show($("auth-guest"), !user);
+    show($("auth-user"), !!user);
 
-                const visible = reviews.slice(0, window.App.state.visibleReviews);
-                container.innerHTML = visible.map(r => Impl.createReviewCard(r, false)).join('');
-                
-                const loadBtn = document.getElementById('load-more-btn'); 
-                if(loadBtn) {
-                    loadBtn.style.display = (window.App.state.visibleReviews >= reviews.length) ? 'none' : 'inline-block';
-                }
-                if(typeof lucide !== 'undefined') lucide.createIcons();
-            },
+    if (user && $("user-name-display")) {
+      // users/{uid}.name 우선 표시
+      try {
+        const p = await getDoc(doc(db, "users", user.uid));
+        const name = p.exists() ? (p.data().name || "회원") : "회원";
+        $("user-name-display").innerText = name;
+      } catch {
+        $("user-name-display").innerText = "회원";
+      }
+    }
+  }
 
-            createReviewCard: (review, isBest) => {
-                let stars = '';
-                for(let i=0; i<5; i++) stars += `<i data-lucide="star" class="w-3 h-3 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}"></i>`;
-                
-                let badgeHtml = '';
-                if(review.badge === 'BEST') badgeHtml = `<span class="bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded">BEST</span>`;
-                else if(review.badge === 'NEW' || (review.date && review.date.startsWith("2025"))) badgeHtml = `<span class="bg-indigo-100 text-indigo-600 text-[10px] font-bold px-1.5 py-0.5 rounded">NEW</span>`;
+  onAuthStateChanged(auth, (user) => {
+    renderAuthState(user);
+  });
 
-                const bgClass = isBest ? 'hover:-translate-y-2 shadow-sm border-gray-100' : 'hover:-translate-y-1 shadow-sm border-gray-100';
-                
-                // Safe content handling
-                const tempDiv = document.createElement("div");
-                tempDiv.innerHTML = review.content || "";
-                const plainText = tempDiv.textContent || tempDiv.innerText || "";
+  // ------------------------------------------------------------
+  // 7) 후기 조회수 증가(기존 App 함수가 있다면 여기서 교체)
+  //    - 기존 디자인의 후기 모달/카드 클릭 흐름을 깨지 않기 위해,
+  //      openReviewDetail이 호출될 때 증가만 추가합니다.
+  // ------------------------------------------------------------
+  const prevOpenReviewDetail = window.App.openReviewDetail;
+  window.App.openReviewDetail = async (id) => {
+    try { await incrementReviewView(id); } catch (e) { console.warn(e); }
+    if (typeof prevOpenReviewDetail === "function") return prevOpenReviewDetail(id);
+  };
 
-                // Use window.App.openReviewDetail in string onclick
-                return `
-                <div onclick="window.App.openReviewDetail('${review.id}')" class="bg-white p-6 rounded-2xl border ${bgClass} hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between h-full group">
-                    <div>
-                        <div class="flex justify-between items-start mb-3">
-                            <div class="flex gap-1 items-center">${stars}</div>
-                            ${badgeHtml}
-                        </div>
-                        <h3 class="font-bold text-lg mb-2 text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors">${review.title}</h3>
-                        <p class="text-sm text-gray-500 line-clamp-custom mb-4 leading-relaxed break-keep">${plainText}</p>
-                    </div>
-                    <div class="pt-4 border-t border-gray-50 flex justify-between items-center text-xs text-gray-400">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-gray-700">${review.author}</span>
-                            <span>${review.date}</span>
-                        </div>
-                        <div class="flex items-center gap-1"><i data-lucide="eye" class="w-3 h-3"></i> ${review.views ? review.views.toLocaleString() : 0}</div>
-                    </div>
-                </div>`;
-            }
-        };
-
-        // --- Overwrite Window Functions ---
-        
-        window.App.navigate = (page) => {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`view-${page}`).classList.remove('hidden');
-            window.scrollTo(0,0);
-        };
-        
-        window.App.scrollToSection = (id) => {
-            if(document.getElementById('view-home').classList.contains('hidden')) window.App.navigate('home');
-            setTimeout(()=> document.getElementById(id)?.scrollIntoView({behavior:'smooth'}), 100);
-        };
-
-        window.App.toggleMobileMenu = () => {
-            document.getElementById('mobileMenu').classList.toggle('hidden');
-        };
-
-        window.App.openModal = (id, tab) => {
-            document.getElementById(id).classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-            if(tab) window.App.switchAuthTab(tab);
-        };
-
-        window.App.closeModal = (id) => {
-            document.getElementById(id).classList.add('hidden');
-            document.body.style.overflow = '';
-        };
-
-        window.App.switchAuthTab = (tab) => {
-            const loginForm = document.getElementById('form-login');
-            const signupForm = document.getElementById('form-signup');
-            const loginTab = document.getElementById('tab-login');
-            const signupTab = document.getElementById('tab-signup');
-            
-            if(tab === 'login') {
-                loginForm.classList.remove('hidden');
-                signupForm.classList.add('hidden');
-                loginTab.className = "flex-1 py-3 font-bold text-indigo-600 border-b-2 border-indigo-600 transition-colors";
-                signupTab.className = "flex-1 py-3 font-bold text-gray-400 hover:text-gray-600 transition-colors";
-            } else {
-                loginForm.classList.add('hidden');
-                signupForm.classList.remove('hidden');
-                signupTab.className = "flex-1 py-3 font-bold text-indigo-600 border-b-2 border-indigo-600 transition-colors";
-                loginTab.className = "flex-1 py-3 font-bold text-gray-400 hover:text-gray-600 transition-colors";
-            }
-        };
-
-        window.App.toggleFaq = (btn) => {
-            const answer = btn.nextElementSibling;
-            const icon = btn.querySelector('.lucide-chevron-down');
-            const isHidden = answer.classList.contains('hidden');
-            answer.classList.toggle('hidden');
-            icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
-        };
-
-        window.App.copyToClipboard = (text) => {
-            const el = document.createElement('textarea');
-            el.value = text;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            alert("계좌번호가 복사되었습니다.");
-        };
-
-        window.App.processLogin = async () => {
-            const email = document.getElementById('login-email').value;
-            const pw = document.getElementById('login-pw').value;
-            if(!email || !pw) return alert('이메일과 비밀번호를 입력해주세요.');
-
-            try {
-                await signInWithEmailAndPassword(auth, email, pw);
-                alert("로그인되었습니다.");
-                window.App.closeModal('loginModal');
-                                            if (typeof window.App._afterLoginAction === 'function') { const fn = window.App._afterLoginAction; window.App._afterLoginAction = null; try { fn(); } catch(e){} }
-if (typeof window.App._afterLoginAction === 'function') { const fn = window.App._afterLoginAction; window.App._afterLoginAction = null; try { fn(); } catch(e){} }
-} catch (e) {
-                console.error(e);
-                alert("로그인 실패: 이메일 또는 비밀번호를 확인해주세요.");
-            }
-        };
-
-        window.App.processSignup = async () => {
-            const name = document.getElementById('reg-name').value;
-            const email = document.getElementById('reg-email').value;
-            const pw = document.getElementById('reg-pw').value;
-
-            if(!name || !email || !pw) return alert('모든 필드를 입력해주세요.');
-            if(pw.length < 6) return alert('비밀번호는 6자리 이상이어야 합니다.');
-
-            try {
-                const cred = await createUserWithEmailAndPassword(auth, email, pw);
-                const profileData = { name, email, payStatus: 'none', joinDate: new Date().toISOString() };
-                await setDoc(getUserDoc(cred.user.uid), profileData);
-                await setDoc(doc(getPublicMemberColl(), cred.user.uid), profileData);
-
-                alert("가입이 완료되었습니다.");
-                window.App.switchAuthTab('login');
-                window.App.closeModal('loginModal');
-                                            if (typeof window.App._afterLoginAction === 'function') { const fn = window.App._afterLoginAction; window.App._afterLoginAction = null; try { fn(); } catch(e){} }
-if (typeof window.App._afterLoginAction === 'function') { const fn = window.App._afterLoginAction; window.App._afterLoginAction = null; try { fn(); } catch(e){} }
-} catch (e) {
-                console.error(e);
-                if(e.code === 'auth/email-already-in-use') alert("이미 가입된 이메일입니다.");
-                else alert("가입 중 오류가 발생했습니다: " + e.message);
-            }
-        };
-
-        window.App.logout = () => {
-            if(confirm('로그아웃 하시겠습니까?')) {
-                signOut(auth).then(() => {
-                    window.location.reload();
-                });
-            }
-        };
-
-        window.App.openAdminModal = () => {
-            if(!window.App.state.isAdmin) return alert("관리자 권한이 없습니다.");
-            window.App.openModal('adminModal');
-            
-            // Load logic here or separate
-            const listEl = document.getElementById('admin-user-list');
-            listEl.innerHTML = '<div class="text-center py-4">로딩중...</div>';
-
-            onSnapshot(getPublicMemberColl(), (snapshot) => {
-                listEl.innerHTML = '';
-                if(snapshot.empty) {
-                    listEl.innerHTML = '<div class="text-center py-4">가입한 회원이 없습니다.</div>';
-                    return;
-                }
-
-                const members = [];
-                snapshot.forEach(doc => members.push({ id: doc.id, ...doc.data() }));
-                members.sort((a,b) => (b.joinDate || '').localeCompare(a.joinDate || ''));
-
-                members.forEach(m => {
-                    const isPaid = m.payStatus === 'complete';
-                    const isPending = m.payStatus === 'pending';
-                    
-                    let statusBadge = '<span class="bg-gray-100 text-gray-500 px-2 py-1 rounded text-xs">미신청</span>';
-                    let actionBtn = '';
-
-                    if(isPaid) {
-                        statusBadge = '<span class="bg-green-100 text-green-600 px-2 py-1 rounded text-xs font-bold">수강중</span>';
-                        actionBtn = `<button onclick="window.App.updateUserStatus('${m.id}', 'none')" class="text-xs text-red-500 hover:underline">취소</button>`;
-                    } else if(isPending) {
-                        statusBadge = '<span class="bg-yellow-100 text-yellow-600 px-2 py-1 rounded text-xs font-bold animate-pulse">입금확인중</span>';
-                        actionBtn = `<button onclick="window.App.updateUserStatus('${m.id}', 'complete')" class="bg-indigo-600 text-white text-xs px-2 py-1 rounded hover:bg-indigo-700">승인하기</button>`;
-                    } else {
-                            actionBtn = `<button onclick="window.App.updateUserStatus('${m.id}', 'complete')" class="text-xs text-indigo-500 hover:underline">강제승인</button>`;
-                    }
-
-                    const el = document.createElement('div');
-                    el.className = "flex justify-between items-center p-3 bg-white border border-gray-200 rounded-lg";
-                    el.innerHTML = `
-                        <div>
-                            <div class="font-bold text-sm">${m.name} <span class="text-gray-400 font-normal text-xs">(${m.email})</span></div>
-                            <div class="mt-1">${statusBadge}</div>
-                        </div>
-                        <div>${actionBtn}</div>
-                    `;
-                    listEl.appendChild(el);
-                });
-            });
-        };
-
-        window.App.updateUserStatus = async (targetUid, newStatus) => {
-            if(!confirm('상태를 변경하시겠습니까?')) return;
-            await updateDoc(getUserDoc(targetUid), { payStatus: newStatus });
-            await updateDoc(doc(getPublicMemberColl(), targetUid), { payStatus: newStatus });
-            alert('처리되었습니다.');
-        };
-
-        window.App.checkPayment = async (e) => {
-            try {
-                if (e && typeof e.preventDefault === 'function') e.preventDefault();
-            } catch {}
-
-            // 1) 로그인 필수
-            if (!window.App.state.isLoggedIn || !window.App.state.user) {
-                window.App._afterLoginAction = () => window.App.checkPayment();
-                alert("로그인 후 신청해주세요.");
-                window.App.openModal('loginModal', 'login');
-                return;
-            }
-
-            // 2) PortOne 결제창 호출
-            // - KG 이니시스: pg = "html5_inicis"
-            // - 가맹점 식별코드: IMP.init("imp07764510")
-            if (typeof window.IMP === "undefined") {
-                alert("결제 모듈 로딩에 실패했습니다. 새로고침 후 다시 시도해주세요.");
-                return;
-            }
-
-            const IMP = window.IMP;
-            try { IMP.init("imp07764510"); } catch {}
-
-            // 주문번호(merchant_uid)는 '매번' 달라야 합니다.
-            const merchantUid = "sc_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
-
-            const buyerEmail = window.App.state.user?.email || "";
-            const buyerName = window.App.state.user?.name || window.App.state.user?.displayName || "";
-
-            const payAmount = 349000; // 현재 UI 가격(349,000원). 필요시 UI 값으로 연결 가능
-            const payName = "시크릿클래스 1:1 맞춤형 투자 큐레이팅";
-
-            IMP.request_pay(
-                {
-                    pg: "html5_inicis",
-                    pay_method: "card",
-                    merchant_uid: merchantUid,
-                    name: payName,
-                    amount: payAmount,
-                    buyer_email: buyerEmail,
-                    buyer_name: buyerName,
-                },
-                async (rsp) => {
-                    // rsp.success: 결제 성공 여부
-                    if (!rsp || !rsp.success) {
-                        // 사용자가 결제창을 닫았거나 실패한 경우
-                        alert((rsp && rsp.error_msg) ? ("결제 실패: " + rsp.error_msg) : "결제가 취소되었습니다.");
-                        return;
-                    }
-
-                    // 3) 결제 성공 후 처리(현재는 'pending'으로만 올리고, 관리자가 승인하면 complete)
-                    // ※ 프론트에서 바로 complete 처리하면 위변조 위험이 있습니다. (서버 검증이 가장 안전)
-                    try {
-                        const uid = window.App.state.user.uid;
-
-                        // 결제 로그(선택): artifacts/{appId}/users/{uid}/payments/{merchantUid}
-                        try {
-                            await setDoc(
-                                doc(db, 'artifacts', appId, 'users', uid, 'payments', merchantUid),
-                                {
-                                    merchant_uid: merchantUid,
-                                    imp_uid: rsp.imp_uid || "",
-                                    pg_provider: rsp.pg_provider || "html5_inicis",
-                                    pay_method: rsp.pay_method || "card",
-                                    amount: rsp.paid_amount || payAmount,
-                                    status: rsp.status || "paid",
-                                    paid_at: rsp.paid_at ? new Date(rsp.paid_at * 1000).toISOString() : new Date().toISOString(),
-                                    buyer_email: buyerEmail,
-                                    buyer_name: buyerName,
-                                    createdAt: new Date().toISOString(),
-                                },
-                                { merge: true }
-                            );
-                        } catch (logErr) {
-                            console.warn("payment log skipped:", logErr);
-                        }
-
-                        // payStatus = pending
-                        await updateDoc(getUserDoc(uid), { payStatus: 'pending' });
-                        await setDoc(doc(getPublicMemberColl(), uid), {
-                            name: buyerName,
-                            email: buyerEmail,
-                            payStatus: 'pending',
-                            joinDate: window.App.state.user.joinDate || new Date().toISOString()
-                        }, { merge: true });
-
-                        window.App.state.user.payStatus = 'pending';
-                        alert("결제가 완료되었습니다. 관리자 승인 후 강의실 입장이 가능합니다.");
-                        window.App.openMypage();
-                    } catch (err) {
-                        console.error(err);
-                        alert("결제는 완료되었지만, 상태 저장에 실패했습니다. 관리자에게 문의해주세요.\n" + (err?.message || ""));
-                    }
-                }
-            );
-        };
-
-        window.App.confirmDeposit = async () => {
-            if(!window.App.state.isLoggedIn) return alert("로그인 후 신청해주세요.");
-            
-            const uid = window.App.state.user.uid;
-            await updateDoc(getUserDoc(uid), { payStatus: 'pending' });
-            await setDoc(doc(getPublicMemberColl(), uid), { 
-                name: window.App.state.user.name, 
-                email: window.App.state.user.email,
-                payStatus: 'pending',
-                joinDate: window.App.state.user.joinDate || new Date().toISOString()
-            }, { merge: true });
-
-            window.App.state.user.payStatus = 'pending';
-            window.App.closeModal('depositModal');
-            alert("입금 확인 요청이 접수되었습니다. 관리자 승인 후 강의실 입장이 가능합니다.");
-            window.App.openMypage(); 
-        };
-
-        window.App.checkWritePermission = () => {
-            if(!window.App.state.isLoggedIn) {
-                alert("로그인을 하세요");
-                window.App.openModal('loginModal', 'login');
-                return;
-            }
-            const payStatus = window.App.state.user.payStatus;
-            
-            if(payStatus !== 'complete') {
-                if(payStatus === 'pending') alert("입금 확인 중입니다. 승인 후 작성 가능합니다.");
-                else alert("수강생만 작성 가능합니다. 수강신청을 먼저 진행해주세요.");
-                return;
-            }
-            window.App.openModal('writeReviewModal');
-        };
-
-        window.App.submitReview = async () => {
-            if(!window.App.state.isLoggedIn) return;
-            
-            const title = document.getElementById('w-title').value;
-            const content = document.getElementById('w-content').value;
-            const rating = parseInt(document.getElementById('w-rating').value);
-            
-            if(!title || !content) return alert("내용을 모두 입력해주세요.");
-
-            try {
-                await addDoc(getPublicReviewColl(), {
-                    title, content, rating,
-                    author: window.App.state.user.name,
-                    date: new Date().toISOString().split('T')[0],
-                    views: 0,
-                    userId: window.App.state.user.uid,
-                    badge: "NEW"
-                });
-                
-                window.App.closeModal('writeReviewModal');
-                alert("소중한 후기가 등록되었습니다!");
-                document.getElementById('w-title').value = '';
-                document.getElementById('w-content').value = '';
-            } catch(e) {
-                console.error(e);
-                alert("등록 실패: " + e.message);
-            }
-        };
-
-        window.App.loadMoreReviews = () => {
-            window.App.state.visibleReviews += 9;
-            Impl.renderAllReviews();
-        };
-
-        window.App.openReviewDetail = (id) => {
-            // Find review from state or static
-            let review = window.App.state.reviews.find(r => r.id == id);
-            if(!review) review = STATIC_REVIEWS.find(r => r.id == id);
-            
-            if(!review) return;
-
-            review.views = (review.views || 0) + 1;
-            
-            document.getElementById('modal-review-title').innerText = review.title;
-            
-            const tempTextArea = document.createElement('textarea');
-            tempTextArea.innerHTML = review.content;
-            let decodedContent = tempTextArea.value;
-            if (!decodedContent.includes('<p>') && !decodedContent.includes('<br>')) {
-                decodedContent = decodedContent.replace(/
-/g, '<br>');
-            }
-            document.getElementById('modal-review-content').innerHTML = decodedContent;
-            document.getElementById('modal-review-author').innerText = review.author;
-            document.getElementById('modal-review-date').innerText = review.date;
-            document.getElementById('modal-review-views').innerText = review.views.toLocaleString();
-            
-            let stars = '';
-            for(let i=0; i<5; i++) stars += `<i data-lucide="star" class="w-4 h-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}"></i>`;
-            document.getElementById('modal-stars').innerHTML = stars;
-
-            window.App.openModal('reviewDetailModal');
-        };
-
-        window.App.openMypage = () => {
-            window.App.openModal('mypageModal');
-            const isUser = window.App.state.isLoggedIn;
-            const payStatus = window.App.state.user ? window.App.state.user.payStatus : 'none';
-
-            document.getElementById('mp-status-guest').classList.toggle('hidden', isUser);
-            document.getElementById('mp-status-user').classList.toggle('hidden', !isUser);
-
-            if(isUser && window.App.state.user) {
-                document.getElementById('mp-name').innerText = window.App.state.user.name + "님";
-                document.getElementById('mp-email').innerText = window.App.state.user.email;
-                
-                document.getElementById('pay-none').classList.toggle('hidden', payStatus !== 'none');
-                document.getElementById('pay-pending').classList.toggle('hidden', payStatus !== 'pending');
-                document.getElementById('pay-complete').classList.toggle('hidden', payStatus !== 'complete');
-            }
-        };
-
-        // Auth & Init
-        onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                if (firebaseUser.isAnonymous) {
-                    window.App.state.isLoggedIn = false;
-                    window.App.state.user = null;
-                    window.App.state.isAdmin = false;
-                } else {
-                    const userDocRef = getUserDoc(firebaseUser.uid);
-                    try {
-                        const userSnapshot = await getDoc(userDocRef);
-                        let profile = {};
-                        if(userSnapshot.exists()) {
-                            profile = userSnapshot.data();
-                        } else {
-                            profile = { name: firebaseUser.displayName || '수강생', payStatus: 'none', email: firebaseUser.email };
-                            await setDoc(userDocRef, profile);
-                            await setDoc(doc(getPublicMemberColl(), firebaseUser.uid), profile);
-                        }
-                        window.App.state.user = { uid: firebaseUser.uid, email: firebaseUser.email, ...profile };
-                        window.App.state.isLoggedIn = true;
-                        window.App.state.isAdmin = (firebaseUser.email === 'admin@secretclass.com');
-                    } catch (e) { console.error("Profile Fetch Error", e); }
-                }
-
-                if(window.App.state.unsubscribeReviews) window.App.state.unsubscribeReviews();
-                
-                window.App.state.unsubscribeReviews = onSnapshot(getPublicReviewColl(), (snapshot) => {
-                    const dbReviews = [];
-                    snapshot.forEach(doc => {
-                        dbReviews.push({ id: doc.id, ...doc.data(), isDb: true });
-                    });
-                    dbReviews.sort((a,b) => new Date(b.date) - new Date(a.date));
-                    
-                    // Merge
-                    window.App.state.reviews = [...dbReviews, ...STATIC_REVIEWS];
-                    
-                    const totalCnt = document.getElementById('total-review-count');
-                    if(totalCnt) totalCnt.innerText = window.App.state.reviews.length;
-                    
-                    Impl.renderUI(); 
-                }, (error) => {
-                    console.warn("DB Access:", error.code); 
-                });
-
-            } else {
-                signInAnonymously(auth).catch(e => console.error("Anon Auth Fail", e));
-            }
-            Impl.renderUI();
-        });
-
-        // Initial Render
-        Impl.renderUI();
-
-    
-  })();
-
-
-  // [PATCH] 카드/간편결제 버튼 안전 바인딩
-  window.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('btn-card-pay');
+  // 결제 버튼이 id로 존재하면 안전 바인딩(먹통 방지)
+  window.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById("btn-card-pay");
     if (btn) {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (window.App && typeof window.App.checkPayment === 'function') window.App.checkPayment();
+        window.App.checkPayment();
       });
     }
   });
-;
-
-    
-  })();
 </script>
 </body>
 </html>
