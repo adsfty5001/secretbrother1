@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Secretclass</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./styles.css" />
+  <script src="./config.js"></script>
+</head>
+<body class="bg-white text-slate-900">
+  <header class="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between">
+    <div>
+      <div class="text-xs tracking-[.3em] text-indigo-500 font-semibold">SECRETCLASS</div>
+      <h1 class="text-3xl font-extrabold mt-2">수강생 리얼 후기</h1>
+      <p class="text-slate-500 mt-2">조작 없는 100% 실제 수강생들의 이야기입니다.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <button id="btn-open-auth" class="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50">로그인 / 회원가입</button>
+      <a href="./reviews.html" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700">실시간 전체 후기 보러가기</a>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 pb-16">
+    <h2 class="text-2xl font-bold mb-6">명예의 전당 (BEST)</h2>
+    <section id="best-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></section>
+  </main>
+
+  <!-- Review Modal -->
+  <div id="review-modal" class="fixed inset-0 hidden items-center justify-center bg-black/60 p-4">
+    <div class="w-full max-w-3xl bg-white rounded-3xl shadow-xl overflow-hidden">
+      <div class="px-6 py-4 border-b flex items-center justify-between">
+        <div class="font-bold text-lg">후기 상세</div>
+        <button id="btn-close-review" class="px-3 py-1 rounded-lg border hover:bg-slate-50">닫기</button>
+      </div>
+      <div class="px-6 py-5 space-y-3">
+        <div class="flex items-center justify-between gap-4">
+          <h3 id="modal-title" class="text-xl font-extrabold"></h3>
+          <div class="text-sm text-slate-500"><span id="modal-rating"></span></div>
+        </div>
+        <div class="author-line">작성자: <span id="modal-author" class="font-semibold text-slate-700"></span></div>
+        <div class="text-sm text-slate-500">작성일: <span id="modal-date"></span> · 조회수 <span id="modal-views" class="font-semibold"></span></div>
+        <div id="modal-content" class="prose max-w-none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth Modal -->
+  <div id="auth-modal" class="fixed inset-0 hidden items-center justify-center bg-black/60 p-4">
+    <div class="w-full max-w-xl bg-white rounded-3xl shadow-xl overflow-hidden">
+      <div class="px-6 py-4 border-b flex items-center justify-between">
+        <div class="font-bold text-lg">로그인 / 회원가입</div>
+        <button id="btn-close-auth" class="px-3 py-1 rounded-lg border hover:bg-slate-50">닫기</button>
+      </div>
+      <div class="px-6 py-5">
+        <div class="flex gap-2 mb-4">
+          <button id="tab-login" class="px-4 py-2 rounded-xl bg-indigo-600 text-white">로그인</button>
+          <button id="tab-signup" class="px-4 py-2 rounded-xl border">회원가입</button>
+        </div>
+
+        <div id="pane-login" class="space-y-3">
+          <input id="login-id" class="w-full px-4 py-3 rounded-xl border" placeholder="아이디 또는 이메일" />
+          <input id="login-pw" type="password" class="w-full px-4 py-3 rounded-xl border" placeholder="비밀번호" />
+          <button id="btn-login" class="w-full px-4 py-3 rounded-xl bg-indigo-600 text-white font-bold">로그인</button>
+          <div id="login-msg" class="text-sm text-rose-600"></div>
+        </div>
+
+        <div id="pane-signup" class="space-y-3 hidden">
+          <input id="reg-id" class="w-full px-4 py-3 rounded-xl border" placeholder="원하는 아이디" />
+          <input id="reg-email" type="email" class="w-full px-4 py-3 rounded-xl border" placeholder="이메일" />
+          <input id="reg-pw" type="password" class="w-full px-4 py-3 rounded-xl border" placeholder="비밀번호 (6자 이상)" />
+          <button id="btn-signup" class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white font-bold">회원가입</button>
+          <div id="signup-msg" class="text-sm text-rose-600"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth, onAuthStateChanged,
+      signInWithEmailAndPassword, createUserWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, setDoc, serverTimestamp, runTransaction, increment
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const $ = (id) => document.getElementById(id);
+
+    // ----- Firebase init (config.js 브릿지 우선) -----
+    const firebaseConfig = (window.FIREBASE_CONFIG || window.SECRETCLASS_FIREBASE_CONFIG);
+    if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey === "REPLACE_ME") {
+      console.error("Firebase config가 비어 있습니다. config.js에 실제 설정값을 넣어주세요.");
+    }
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // ----- BEST 고정(제목으로 매칭) + 작성자 강제 표시 -----
+    const BEST_LOCK = [{"title": "시크릿큐레이팅후기_막막함에 확신이 생깁니다. 돈 안 아까움 주의!!", "author": "김아름", "baseViews": 1240}, {"title": "시크릿 큐레이팅 후기_큰 돈이 들어가는 만큼, 경험이 적은 만큼 전문가의 조언을 얻어야 한다.", "author": "이수정", "baseViews": 980}, {"title": "급박한 상황에서 큐레이팅 후기", "author": "이서연", "baseViews": 850}, {"title": "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기", "author": "변미소", "baseViews": 1100}, {"title": "3년간 못했던 내집마련, 시브님 만나고 2주 만에 성공!", "author": "이민석", "baseViews": 760}, {"title": "시크릿 큐레이팅 후기", "author": "김기용", "baseViews": 640}];
+    const BEST_SET = new Map(BEST_LOCK.map(x => [normTitle(x.title), x]));
+
+    function normTitle(s) {
+      return (s || "").trim().replace(/\s+/g, " ");
+    }
+
+    function stableIdFromReview(r) {
+      return (r && (r.id || r.reviewId || r.slug)) ? String(r.id || r.reviewId || r.slug) : (r.__sid || "");
+    }
+
+    function makeStableId(title, date, rating) {
+      const base = `${title||""}|${date||""}|${rating||""}`;
+      let h = 0;
+      for (let i=0;i<base.length;i++) h = (h*31 + base.charCodeAt(i)) >>> 0;
+      return ("r"+h.toString(16)).padEnd(10,"0");
+    }
+
+    function extractFields(r) {
+      const title = r.title || r.reviewTitle || r.name || "";
+      const date = r.date || r.createdAt || r.createdDate || r.writtenAt || "";
+      const rating = Number(r.rating || r.stars || r.score || 5);
+      const content = r.content || r.body || r.text || r.review || "";
+      const id = stableIdFromReview(r) || makeStableId(title, date, rating);
+      return { id, title, date, rating, content };
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#39;");
+    }
+
+    function renderStars(n) {
+      const full = Math.max(0, Math.min(5, Math.round(n)));
+      return "★".repeat(full) + "☆".repeat(5-full);
+    }
+
+    // 후기 본문: 원본이 HTML인 경우는 그대로, 아니면 줄바꿈만 <br>로
+    function normalizeContentToHtml(raw) {
+      const s = String(raw ?? "");
+      const looksHtml = /<\s*(p|br|div|span|a|strong|em|ul|ol|li|h\d)\b/i.test(s);
+      if (looksHtml) return s;
+      return escapeHtml(s).replace(/\n/g, "<br>");
+    }
+
+    async function getDeltaViews(id) {
+      const ref = doc(db, "reviewViews", id);
+      const snap = await getDoc(ref);
+      return snap.exists() ? (snap.data().views || 0) : 0;
+    }
+
+    async function bumpDeltaViews(id) {
+      const ref = doc(db, "reviewViews", id);
+      await setDoc(ref, { views: increment(1), updatedAt: serverTimestamp() }, { merge:true });
+    }
+
+    // ----- UI: Modals -----
+    function openModal(el) { el.classList.remove("hidden"); el.classList.add("flex"); }
+    function closeModal(el) { el.classList.add("hidden"); el.classList.remove("flex"); }
+
+    $("btn-open-auth").addEventListener("click", () => openModal($("auth-modal")));
+    $("btn-close-auth").addEventListener("click", () => closeModal($("auth-modal")));
+    $("btn-close-review").addEventListener("click", () => closeModal($("review-modal")));
+
+    $("tab-login").addEventListener("click", () => {
+      $("pane-login").classList.remove("hidden");
+      $("pane-signup").classList.add("hidden");
+      $("tab-login").classList.add("bg-indigo-600","text-white");
+      $("tab-signup").classList.remove("bg-indigo-600","text-white");
+      $("tab-signup").classList.add("border");
+    });
+    $("tab-signup").addEventListener("click", () => {
+      $("pane-signup").classList.remove("hidden");
+      $("pane-login").classList.add("hidden");
+      $("tab-signup").classList.add("bg-indigo-600","text-white");
+      $("tab-login").classList.remove("bg-indigo-600","text-white");
+      $("tab-login").classList.add("border");
+    });
+
+    async function resolveLoginEmail(idOrEmail) {
+      // 이메일이면 그대로
+      if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(idOrEmail)) return idOrEmail;
+      // usernames/<built-in function id> 문서에서 email 찾기
+      const ref = doc(db, "usernames", idOrEmail);
+      const snap = await getDoc(ref);
+      if(!snap.exists()) throw new Error("존재하지 않는 아이디입니다.");
+      const data = snap.data() || {};
+      const email = data.email || data.userEmail || data.loginEmail;
+      if(!email) throw new Error("아이디 매핑(email)이 없습니다. usernames/<built-in function id> 문서에 email 필드를 저장해 주세요.");
+      return email;
+    }
+
+    $("btn-login").addEventListener("click", async () => {
+      $("login-msg").textContent = "";
+      try {
+        const id = $("login-id").value.trim();
+        const pw = $("login-pw").value;
+        if(!id || !pw) throw new Error("아이디/비밀번호를 입력해 주세요.");
+        const email = await resolveLoginEmail(id);
+        await signInWithEmailAndPassword(auth, email, pw);
+        closeModal($("auth-modal"));
+      } catch (e) {
+        console.error(e);
+        $("login-msg").textContent = (e && e.message) ? e.message : "로그인에 실패했습니다.";
+      }
+    });
+
+    $("btn-signup").addEventListener("click", async () => {
+      $("signup-msg").textContent = "";
+      try {
+        const id = $("reg-id").value.trim();
+        const email = $("reg-email").value.trim();
+        const pw = $("reg-pw").value;
+        if(!id || !email || !pw) throw new Error("아이디/이메일/비밀번호를 모두 입력해 주세요.");
+        if(pw.length < 6) throw new Error("비밀번호는 6자 이상이어야 합니다.");
+
+        const cred = await createUserWithEmailAndPassword(auth, email, pw);
+
+        // usernames/<built-in function id> => email 매핑 저장 (로그인 시 id로 로그인 가능)
+        await setDoc(doc(db, "usernames", id), {
+          uid: cred.user.uid,
+          email,
+          createdAt: serverTimestamp()
+        }, { merge:true });
+
+        closeModal($("auth-modal"));
+      } catch (e) {
+        console.error(e);
+        $("signup-msg").textContent = (e && e.message) ? e.message : "회원가입에 실패했습니다.";
+      }
+    });
+
+    // ----- BEST 렌더링 -----
+    async function loadReviews() {
+      const res = await fetch("./data/reviews.json", { cache: "no-store" });
+      if(!res.ok) throw new Error("reviews.json을 불러오지 못했습니다.");
+      const list = await res.json();
+      return Array.isArray(list) ? list : (list.reviews || []);
+    }
+
+    function makeCard({title, author, date, rating, snippet, views, id}) {
+      const div = document.createElement("div");
+      div.className = "review-card rounded-3xl border border-slate-100 shadow-sm p-6 hover:shadow-md transition cursor-pointer bg-white";
+      div.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-amber-500 font-semibold">${escapeHtml(renderStars(rating))} <span class="text-slate-500 ml-1">${Number(rating).toFixed(1)}</span></div>
+          <div class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-600">BEST</div>
+        </div>
+        <div class="text-xl font-extrabold leading-snug">${escapeHtml(title)}</div>
+        <div class="author-line">작성자: <span class="font-semibold text-slate-700">${escapeHtml(author)}</span></div>
+        <div class="text-sm text-slate-500 mt-2">${escapeHtml(date || "")}</div>
+        <div class="review-snippet text-slate-700 mt-3">${escapeHtml(snippet || "")}</div>
+        <div class="text-slate-500 mt-4">조회수 <span class="count-pill text-slate-800">${views}</span></div>
+      `;
+      div.addEventListener("click", () => openReviewModal({id, title, author, date, rating}));
+      return div;
+    }
+
+    let REVIEW_BY_ID = new Map();
+
+    async function openReviewModal(meta) {
+      const r = REVIEW_BY_ID.get(meta.id);
+      // 컨텐츠 없으면 fallback
+      const contentHtml = r ? normalizeContentToHtml(r.content) : "<div class='text-slate-500'>후기 내용을 찾지 못했습니다.</div>";
+      const baseViews = (r && r.baseViews != null) ? r.baseViews : 0;
+
+      $("modal-title").textContent = meta.title || "";
+      $("modal-author").textContent = meta.author || "";
+      $("modal-date").textContent = meta.date || "";
+      $("modal-rating").textContent = `${renderStars(meta.rating)} ${Number(meta.rating).toFixed(1)}`;
+      $("modal-content").innerHTML = contentHtml;
+
+      openModal($("review-modal"));
+
+      // 조회수: base + delta
+      try {
+        const delta = await getDeltaViews(meta.id);
+        $("modal-views").textContent = String(baseViews + delta);
+        // 클릭 시 증가
+        await bumpDeltaViews(meta.id);
+        const delta2 = delta + 1;
+        $("modal-views").textContent = String(baseViews + delta2);
+
+        // 카드 표시값도 즉시 반영
+        const cardViewsEl = document.querySelector(`[data-views-for="${meta.id}"]`);
+        if(cardViewsEl) cardViewsEl.textContent = String(baseViews + delta2);
+      } catch (e) {
+        console.warn("조회수 연동 실패:", e);
+      }
+    }
+
+    async function renderBest() {
+      const list = await loadReviews();
+
+      // Build lookup map for normal usage (id, title-based)
+      for (const raw of list) {
+        const f = extractFields(raw);
+        REVIEW_BY_ID.set(f.id, {
+          id: f.id,
+          title: f.title,
+          date: f.date,
+          rating: f.rating,
+          content: f.content,
+          baseViews: Number(raw.viewsBase ?? raw.views ?? 0)
+        });
+      }
+
+      const grid = $("best-grid");
+      grid.innerHTML = "";
+
+      for (const lock of BEST_LOCK) {
+        // Find exact title match (normalized)
+        const found = list.find(r => normTitle(r.title || r.reviewTitle || r.name || "") === normTitle(lock.title));
+        const f = found ? extractFields(found) : {
+          id: makeStableId(lock.title, "", 5),
+          title: lock.title,
+          date: "",
+          rating: 5,
+          content: ""
+        };
+
+        // ensure id stable
+        const id = f.id;
+
+        // store for modal (content + baseViews)
+        REVIEW_BY_ID.set(id, {
+          id,
+          title: f.title,
+          date: f.date,
+          rating: f.rating,
+          content: f.content,
+          baseViews: Number(lock.baseViews || 0),
+        });
+
+        // compute views (base + delta)
+        const delta = await getDeltaViews(id).catch(() => 0);
+        const views = Number(lock.baseViews || 0) + Number(delta || 0);
+
+        // snippet from content
+        const snippet = String(f.content || "").replace(/\s+/g, " ").trim().slice(0, 70) || "후기 내용을 불러오지 못했습니다.";
+        const card = makeCard({
+          title: lock.title,
+          author: lock.author,
+          date: f.date,
+          rating: f.rating,
+          snippet,
+          views,
+          id
+        });
+
+        // attach a marker for instant card update
+        const viewsEl = card.querySelector(".count-pill");
+        if(viewsEl) {
+          viewsEl.setAttribute("data-views-for", id);
+        }
+        grid.appendChild(card);
+      }
+    }
+
+    // Auth state (optional UI changes)
+    onAuthStateChanged(auth, (user) => {
+      // 필요 시 헤더 버튼 텍스트 변경 등 추가 가능
+    });
+
+    renderBest().catch(err => {
+      console.error(err);
+      const grid = $("best-grid");
+      grid.innerHTML = `<div class="text-rose-600">BEST 후기를 불러오지 못했습니다. (data/reviews.json 경로 또는 JSON 형식 확인)</div>`;
+    });
+  </script>
+</body>
+</html>
