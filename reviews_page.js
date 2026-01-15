@@ -46,7 +46,7 @@ function wire() {
 
 async function main() {
   try { state.fb = initFirebase(); } catch (e) { console.error(e); }
-  state.baseReviews = await loadBaseReviews(state.fb?.db);
+  state.baseReviews = await loadBaseReviews();
   renderAll();
   wire();
 }

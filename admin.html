@@ -3,30 +3,239 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>관리자</title>
+  <title>시크릿클래스 관리자</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="./styles.css" />
+  <!-- Optional: centralized Firebase config for GitHub Pages -->
+  <script src="./config.js"></script>
 </head>
 <body class="bg-gray-50">
-  <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+  <header class="bg-white border-b">
     <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-      <div class="font-bold text-gray-900">관리자 패널</div>
-      <div class="flex gap-2">
-        <button id="btn-home" class="px-3 py-2 rounded-lg bg-white border border-gray-200 text-sm hover:bg-gray-50">메인</button>
-        <button id="btn-logout" class="px-3 py-2 rounded-lg bg-gray-900 text-white text-sm hover:bg-gray-800">로그아웃</button>
+      <div class="font-extrabold text-gray-900">시크릿클래스 관리자</div>
+      <div class="flex items-center gap-2 text-sm">
+        <a href="./index.html" class="text-gray-600 hover:text-gray-900">메인으로</a>
+        <button id="btn-logout" class="px-3 py-1.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800">로그아웃</button>
       </div>
     </div>
   </header>
 
-  <main class="max-w-6xl mx-auto px-4 py-10">
-    <h1 class="text-xl font-bold text-gray-900 mb-4">회원 및 결제 관리</h1>
-    <div id="member-list" class="space-y-3"></div>
-    <p class="text-sm text-gray-500 mt-6">
-      관리자 이메일은 <code class="bg-gray-100 px-1 rounded">config.js</code>의 <code class="bg-gray-100 px-1 rounded">window.ADMIN_EMAILS</code>에 등록되어 있어야 합니다.
-    </p>
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <div id="guard" class="p-4 rounded-xl border bg-white">
+      <div class="font-bold text-gray-900">접속 확인 중…</div>
+      <div class="text-sm text-gray-500 mt-1">관리자 계정으로 로그인되어 있어야 합니다.</div>
+    </div>
+
+    <section id="dashboard" class="hidden space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white border rounded-2xl p-5">
+          <div class="text-xs text-gray-500">총 회원수</div>
+          <div id="stat-total" class="text-2xl font-extrabold mt-1">-</div>
+        </div>
+        <div class="bg-white border rounded-2xl p-5">
+          <div class="text-xs text-gray-500">결제완료</div>
+          <div id="stat-complete" class="text-2xl font-extrabold mt-1">-</div>
+        </div>
+        <div class="bg-white border rounded-2xl p-5">
+          <div class="text-xs text-gray-500">입금확인중</div>
+          <div id="stat-pending" class="text-2xl font-extrabold mt-1">-</div>
+        </div>
+        <div class="bg-white border rounded-2xl p-5">
+          <div class="text-xs text-gray-500">미결제</div>
+          <div id="stat-none" class="text-2xl font-extrabold mt-1">-</div>
+        </div>
+      </div>
+
+      <div class="bg-white border rounded-2xl p-5">
+        <div class="flex flex-col md:flex-row md:items-end gap-3 justify-between">
+          <div class="space-y-2">
+            <div class="font-bold text-gray-900">회원 목록</div>
+            <div class="text-sm text-gray-500">검색/필터 후 결제상태를 변경할 수 있습니다.</div>
+          </div>
+          <div class="flex flex-col md:flex-row gap-2">
+            <input id="q" class="px-3 py-2 rounded-xl border bg-gray-50 w-full md:w-64" placeholder="검색: 이름/아이디/이메일/단톡방ID" />
+            <select id="f-source" class="px-3 py-2 rounded-xl border bg-gray-50">
+              <option value="">가입경로: 전체</option>
+              <option value="blog">블로그</option>
+              <option value="youtube">유튜브</option>
+              <option value="etc">기타</option>
+            </select>
+            <select id="f-pay" class="px-3 py-2 rounded-xl border bg-gray-50">
+              <option value="">결제상태: 전체</option>
+              <option value="complete">complete</option>
+              <option value="pending">pending</option>
+              <option value="none">none</option>
+            </select>
+            <button id="btn-export" class="px-4 py-2 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700">CSV 내보내기</button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto mt-4">
+          <table class="min-w-full text-sm">
+            <thead class="text-xs text-gray-500">
+              <tr class="border-b">
+                <th class="text-left py-2 pr-2">가입일</th>
+                <th class="text-left py-2 pr-2">이름</th>
+                <th class="text-left py-2 pr-2">아이디</th>
+                <th class="text-left py-2 pr-2">이메일</th>
+                <th class="text-left py-2 pr-2">단톡방ID</th>
+                <th class="text-left py-2 pr-2">가입경로</th>
+                <th class="text-left py-2 pr-2">결제상태</th>
+                <th class="text-left py-2 pr-2">변경</th>
+              </tr>
+            </thead>
+            <tbody id="rows" class="divide-y"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <script src="./config.js"></script>
-  <script type="module" src="./admin.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    updateDoc,
+    collection,
+    query,
+    orderBy,
+    onSnapshot,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+  const firebaseConfig = (window.FIREBASE_CONFIG && typeof window.FIREBASE_CONFIG === "object")
+    ? window.FIREBASE_CONFIG
+    : {
+apiKey: "AIzaSyCvFTB5GVkVZLLVilv_hCoJ0Fcjn-w-tyY",
+  authDomain: "secretclass-5c9d8.firebaseapp.com",
+  projectId: "secretclass-5c9d8",
+  storageBucket: "secretclass-5c9d8.firebasestorage.app",
+  messagingSenderId: "316837263466",
+  appId: "1:316837263466:web:ae28f1110f3728ea8ab213",
+  measurementId: "G-8GPZWFNNC6"
+    };
+
+  const APP_ID = window.APP_ID || "secretclass";
+  const ADMIN_EMAILS = Array.isArray(window.ADMIN_EMAILS)
+    ? window.ADMIN_EMAILS.map(v => String(v).toLowerCase())
+    : ["secret-brother@naver.com"];
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const P = {
+    // Root collections (rules와 1:1 매칭)
+    userProfile: (uid) => doc(db, "users", uid),
+    publicMember: (uid) => doc(db, "members", uid),
+    membersCol: () => collection(db, "members"),
+  };
+
+  const elGuard = document.getElementById("guard");
+  const elDash = document.getElementById("dashboard");
+  const elRows = document.getElementById("rows");
+  const elQ = document.getElementById("q");
+  const elFS = document.getElementById("f-source");
+  const elFP = document.getElementById("f-pay");
+
+  const fmt = (v) => (v == null ? "" : String(v));
+  const lower = (v) => fmt(v).toLowerCase();
+
+  let all = [];
+
+  const applyFilters = () => {
+    const qText = lower(elQ?.value || "");
+    const fSource = fmt(elFS?.value || "");
+    const fPay = fmt(elFP?.value || "");
+
+    const rows = all.filter(r => {
+      if (qText) {
+        const blob = lower([r.name, r.email, r.phone, r.username, r.chatNickname, r.source, r.payStatus].join(" "));
+        if (!blob.includes(qText)) return false;
+      }
+      if (fSource && fmt(r.source) !== fSource) return false;
+      if (fPay && fmt(r.payStatus) !== fPay) return false;
+      return true;
+    });
+
+    elRows.innerHTML = rows.map(r => {
+      const uid = fmt(r.uid);
+      const pay = fmt(r.payStatus || "");
+      const sel = (v) => (v === pay ? "selected" : "");
+      return `
+        <tr class="border-b">
+          <td class="p-3 text-xs text-gray-500">${fmt(r.joinDate)}</td>
+          <td class="p-3">
+            <div class="font-bold text-gray-900">${fmt(r.name)}</div>
+            <div class="text-xs text-gray-500">${fmt(r.email)}</div>
+          </td>
+          <td class="p-3 text-sm text-gray-700">${fmt(r.phone)}</td>
+          <td class="p-3 text-sm text-gray-700">${fmt(r.username)}</td>
+          <td class="p-3 text-sm text-gray-700">${fmt(r.source)}</td>
+          <td class="p-3">
+            <select data-uid="${uid}" class="paySel border rounded px-2 py-1 text-sm">
+              <option value="">(미설정)</option>
+              <option value="pending" ${sel("pending")}>입금확인중</option>
+              <option value="active"  ${sel("active")}>수강중</option>
+              <option value="none"    ${sel("none")}>취소/미수강</option>
+            </select>
+          </td>
+          <td class="p-3">
+            <button data-uid="${uid}" class="saveBtn px-3 py-1.5 rounded bg-indigo-600 text-white text-sm font-bold">저장</button>
+          </td>
+        </tr>
+      `;
+    }).join("") || `<tr><td class="py-10 text-center text-gray-400" colspan="7">결과가 없습니다.</td></tr>`;
+
+    document.querySelectorAll(".saveBtn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const uid = btn.getAttribute("data-uid");
+        const selEl = document.querySelector(`.paySel[data-uid="${uid}"]`);
+        const v = fmt(selEl?.value || "");
+        if (!uid) return;
+
+        try {
+          await updateDoc(P.userProfile(uid), { payStatus: v, updatedAt: serverTimestamp() });
+          await updateDoc(P.publicMember(uid), { payStatus: v, updatedAt: serverTimestamp() });
+          alert("저장 완료");
+        } catch (e) {
+          console.error(e);
+          alert("저장 실패: " + (e?.message || e));
+        }
+      });
+    });
+  };
+
+  elQ && (elQ.oninput = applyFilters);
+  elFS && (elFS.onchange = applyFilters);
+  elFP && (elFP.onchange = applyFilters);
+
+  document.getElementById("btn-logout")?.addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "./index.html";
+  });
+
+  onAuthStateChanged(auth, (user) => {
+    const isAdmin = !!user && ADMIN_EMAILS.includes(String(user.email || "").toLowerCase());
+    if (!isAdmin) {
+      if (elGuard) elGuard.classList.remove("hidden");
+      if (elDash) elDash.classList.add("hidden");
+      return;
+    }
+
+    if (elGuard) elGuard.classList.add("hidden");
+    if (elDash) elDash.classList.remove("hidden");
+
+    const qy = query(P.membersCol(), orderBy("joinDate", "desc"));
+    onSnapshot(qy, (snap) => {
+      all = [];
+      snap.forEach(d => all.push({ uid: d.id, ...d.data() }));
+      applyFilters();
+    }, (err) => {
+      console.error(err);
+      elRows.innerHTML = `<tr><td class="py-6 text-center text-red-600" colspan="7">members 읽기 권한이 없습니다: ${err.code}</td></tr>`;
+    });
+  });</script>
 </body>
 </html>

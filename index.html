@@ -71,10 +71,8 @@
         /* HTML 엔티티 디코딩용 */
         .decoded-content p { margin-bottom: 1em; }
     </style>
-
-    <!-- PortOne(아임포트) 결제 SDK (v1) -->
+    <!-- PortOne(아임포트) JS SDK -->
     <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
-
 </head>
 <body class="bg-white text-gray-900 font-body flex flex-col min-h-screen">
 
@@ -304,7 +302,7 @@
                             </div>
 
                             <div class="grid gap-4 max-w-sm mx-auto">
-                                <a href="#" onclick="window.App.checkPayment(event)" class="w-full py-4 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
+                                <a href="https://portone.io/korea/ko" target="_blank" onclick="window.App.checkPayment(event, this.href)" class="w-full py-4 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
                                     <i data-lucide="credit-card" class="w-5 h-5"></i> 카드 / 간편결제 신청
                                 </a>
                                 <button onclick="window.App.openModal('depositModal')" class="w-full py-4 bg-white border-2 border-gray-200 text-gray-700 hover:border-indigo-500 hover:text-indigo-600 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
@@ -958,89 +956,6 @@
   window.App.openAdminModal = () => alert("현재는 데모(정적) 모드입니다. Firebase 설정 후 관리자 기능이 활성화됩니다.");
   window.App.updateUserStatus = () => alert("현재는 데모(정적) 모드입니다. Firebase 설정이 필요합니다.");
 
-  window.App.checkPayment = async (e) => {
-            try {
-                if(e && typeof e.preventDefault === 'function') e.preventDefault();
-
-                // 1) 로그인 체크
-                if(!window.App.state?.isLoggedIn) {
-                    alert("로그인 후 신청해주세요.");
-                    window.App.openModal('loginModal', 'login');
-                    return;
-                }
-
-                // 2) PortOne(아임포트) SDK 준비 체크
-                const IMP = window.IMP;
-                if(!IMP || typeof IMP.init !== 'function' || typeof IMP.request_pay !== 'function') {
-                    alert("결제 모듈 로딩에 실패했습니다. (iamport.js) 새로고침 후 다시 시도해주세요.");
-                    return;
-                }
-
-                // 3) 필수 설정
-                const userCode = "imp07764510"; // 고객사 식별코드
-                const pg = (window.PORTONE_PG || "tosspayments").trim(); // 필요 시 config.js에서 window.PORTONE_PG 로 변경 가능
-                const amount = 349000; // 표시 금액(원)
-                const productName = "Secretclass PREMIUM (1:1 맞춤형 투자 큐레이팅)";
-                const merchantUid = `secretclass_${Date.now()}`;
-
-                IMP.init(userCode);
-
-                // 4) 결제창 호출
-                IMP.request_pay({
-                    pg,
-                    pay_method: "card",
-                    merchant_uid: merchantUid,
-                    name: productName,
-                    amount: amount,
-                    buyer_email: window.App.state.user?.email || "",
-                    buyer_name: window.App.state.user?.name || window.App.state.user?.displayName || "",
-                    m_redirect_url: window.location.href
-                }, async (rsp) => {
-                    // PC: callback, Mobile: m_redirect_url로 리디렉션될 수 있음
-                    if(!rsp) {
-                        alert("결제 결과를 확인할 수 없습니다. 다시 시도해주세요.");
-                        return;
-                    }
-
-                    if(rsp.success) {
-                        // ⚠️ 보안상 '결제 검증(금액/결제상태 확인)'은 서버에서 PortOne API로 반드시 검증하는 것이 안전합니다.
-                        // 여기서는 기존 정책과 동일하게 'pending'으로 올려두고, 관리자 화면에서 'complete' 승인하도록 유지합니다.
-                        try {
-                            const uid = window.App.state.user.uid;
-                            await updateDoc(getUserDoc(uid), { payStatus: 'pending' });
-                            await setDoc(doc(getPublicMemberColl(), uid), { 
-                                name: window.App.state.user.name,
-                                email: window.App.state.user.email,
-                                payStatus: 'pending',
-                                joinDate: window.App.state.user.joinDate || new Date().toISOString(),
-                                lastPayment: {
-                                    method: "card",
-                                    pg: pg,
-                                    merchant_uid: rsp.merchant_uid || merchantUid,
-                                    imp_uid: rsp.imp_uid || "",
-                                    paid_amount: rsp.paid_amount || amount,
-                                    paid_at: new Date().toISOString()
-                                }
-                            }, { merge: true });
-
-                            window.App.state.user.payStatus = 'pending';
-                            alert("결제가 완료되었습니다. 확인 후 수강 승인 처리됩니다. (입금확인중)");
-                            window.App.openMypage();
-                        } catch(err) {
-                            console.error(err);
-                            alert("결제는 완료되었지만, 사이트 상태 업데이트에 실패했습니다. 관리자에게 문의해주세요.");
-                        }
-                    } else {
-                        alert("결제가 취소/실패했습니다. " + (rsp.error_msg || ""));
-                    }
-                });
-
-            } catch(err) {
-                console.error(err);
-                alert("결제 요청 중 오류가 발생했습니다. 새로고침 후 다시 시도해주세요.");
-            }
-        };
-
   window.App.confirmDeposit = () => {
     alert("입금확인 요청 기능은 로그인/DB 연동 후 동작합니다.");
     window.App.openModal('loginModal', 'login');
@@ -1132,10 +1047,30 @@
 
     <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, collection, query, onSnapshot, orderBy, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-  // module에서도 정적 후기 사용 가능하도록 연결
+  import { 
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut,
+    updateProfile,
+    setPersistence,
+    browserLocalPersistence,
+    signInAnonymously
+  } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    setDoc,
+    getDoc,
+    collection,
+    query,
+    onSnapshot,
+    orderBy,
+    addDoc,
+    updateDoc
+  } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+// module에서도 정적 후기 사용 가능하도록 연결
   const STATIC_REVIEWS = window.STATIC_REVIEWS || [];
 
   (async () => {
@@ -1168,7 +1103,9 @@
 
     const firebaseApp = initializeApp(firebaseConfig);
     const auth = getAuth(firebaseApp);
-    const db = getFirestore(firebaseApp);
+        // 로그인 상태를 브라우저에 저장해서(새로고침해도) 유지합니다.
+    try { await setPersistence(auth, browserLocalPersistence); } catch(e) { console.warn('auth persistence not set', e); }
+const db = getFirestore(firebaseApp);
 
     const appId = (typeof __app_id !== 'undefined') ? __app_id : (window.__app_id || 'secret-class-v1');
 
@@ -1349,7 +1286,9 @@
                 await signInWithEmailAndPassword(auth, email, pw);
                 alert("로그인되었습니다.");
                 window.App.closeModal('loginModal');
-            } catch (e) {
+                                            if (typeof window.App._afterLoginAction === 'function') { const fn = window.App._afterLoginAction; window.App._afterLoginAction = null; try { fn(); } catch(e){} }
+if (typeof window.App._afterLoginAction === 'function') { const fn = window.App._afterLoginAction; window.App._afterLoginAction = null; try { fn(); } catch(e){} }
+} catch (e) {
                 console.error(e);
                 alert("로그인 실패: 이메일 또는 비밀번호를 확인해주세요.");
             }
@@ -1372,7 +1311,9 @@
                 alert("가입이 완료되었습니다.");
                 window.App.switchAuthTab('login');
                 window.App.closeModal('loginModal');
-            } catch (e) {
+                                            if (typeof window.App._afterLoginAction === 'function') { const fn = window.App._afterLoginAction; window.App._afterLoginAction = null; try { fn(); } catch(e){} }
+if (typeof window.App._afterLoginAction === 'function') { const fn = window.App._afterLoginAction; window.App._afterLoginAction = null; try { fn(); } catch(e){} }
+} catch (e) {
                 console.error(e);
                 if(e.code === 'auth/email-already-in-use') alert("이미 가입된 이메일입니다.");
                 else alert("가입 중 오류가 발생했습니다: " + e.message);
@@ -1444,12 +1385,102 @@
             alert('처리되었습니다.');
         };
 
-        window.App.checkPayment = (e, url) => {
-            if(url.includes('portone')) {
-                e.preventDefault();
-                window.open(url);
-                alert("결제창이 열렸습니다. (데모환경)");
+        window.App.checkPayment = async (e) => {
+            try {
+                if (e && typeof e.preventDefault === 'function') e.preventDefault();
+            } catch {}
+
+            // 1) 로그인 필수
+            if (!window.App.state.isLoggedIn || !window.App.state.user) {
+                window.App._afterLoginAction = () => window.App.checkPayment();
+                alert("로그인 후 신청해주세요.");
+                window.App.openModal('loginModal', 'login');
+                return;
             }
+
+            // 2) PortOne 결제창 호출
+            // - KG 이니시스: pg = "html5_inicis"
+            // - 가맹점 식별코드: IMP.init("imp07764510")
+            if (typeof window.IMP === "undefined") {
+                alert("결제 모듈 로딩에 실패했습니다. 새로고침 후 다시 시도해주세요.");
+                return;
+            }
+
+            const IMP = window.IMP;
+            try { IMP.init("imp07764510"); } catch {}
+
+            // 주문번호(merchant_uid)는 '매번' 달라야 합니다.
+            const merchantUid = "sc_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
+
+            const buyerEmail = window.App.state.user?.email || "";
+            const buyerName = window.App.state.user?.name || window.App.state.user?.displayName || "";
+
+            const payAmount = 349000; // 현재 UI 가격(349,000원). 필요시 UI 값으로 연결 가능
+            const payName = "시크릿클래스 1:1 맞춤형 투자 큐레이팅";
+
+            IMP.request_pay(
+                {
+                    pg: "html5_inicis",
+                    pay_method: "card",
+                    merchant_uid: merchantUid,
+                    name: payName,
+                    amount: payAmount,
+                    buyer_email: buyerEmail,
+                    buyer_name: buyerName,
+                },
+                async (rsp) => {
+                    // rsp.success: 결제 성공 여부
+                    if (!rsp || !rsp.success) {
+                        // 사용자가 결제창을 닫았거나 실패한 경우
+                        alert((rsp && rsp.error_msg) ? ("결제 실패: " + rsp.error_msg) : "결제가 취소되었습니다.");
+                        return;
+                    }
+
+                    // 3) 결제 성공 후 처리(현재는 'pending'으로만 올리고, 관리자가 승인하면 complete)
+                    // ※ 프론트에서 바로 complete 처리하면 위변조 위험이 있습니다. (서버 검증이 가장 안전)
+                    try {
+                        const uid = window.App.state.user.uid;
+
+                        // 결제 로그(선택): artifacts/{appId}/users/{uid}/payments/{merchantUid}
+                        try {
+                            await setDoc(
+                                doc(db, 'artifacts', appId, 'users', uid, 'payments', merchantUid),
+                                {
+                                    merchant_uid: merchantUid,
+                                    imp_uid: rsp.imp_uid || "",
+                                    pg_provider: rsp.pg_provider || "html5_inicis",
+                                    pay_method: rsp.pay_method || "card",
+                                    amount: rsp.paid_amount || payAmount,
+                                    status: rsp.status || "paid",
+                                    paid_at: rsp.paid_at ? new Date(rsp.paid_at * 1000).toISOString() : new Date().toISOString(),
+                                    buyer_email: buyerEmail,
+                                    buyer_name: buyerName,
+                                    createdAt: new Date().toISOString(),
+                                },
+                                { merge: true }
+                            );
+                        } catch (logErr) {
+                            console.warn("payment log skipped:", logErr);
+                        }
+
+                        // payStatus = pending
+                        await updateDoc(getUserDoc(uid), { payStatus: 'pending' });
+                        await setDoc(doc(getPublicMemberColl(), uid), {
+                            name: buyerName,
+                            email: buyerEmail,
+                            payStatus: 'pending',
+                            joinDate: window.App.state.user.joinDate || new Date().toISOString()
+                        }, { merge: true });
+
+                        window.App.state.user.payStatus = 'pending';
+                        alert("결제가 완료되었습니다. 관리자 승인 후 강의실 입장이 가능합니다.");
+                        window.App.openMypage();
+                    } catch (err) {
+                        console.error(err);
+                        alert("결제는 완료되었지만, 상태 저장에 실패했습니다. 관리자에게 문의해주세요.\n" + (err?.message || ""));
+                    }
+                }
+            );
         };
 
         window.App.confirmDeposit = async () => {
