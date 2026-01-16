@@ -982,8 +982,22 @@
 
             const merchant_uid = 'secretclass_' + Date.now();
 
-            window.IMP.request_pay({
-                // If you have exactly one PG set in PortOne console, pg can be omitted.
+            // Some PortOne(V1) merchants require an explicit `pg` value.
+            // If `pg` is missing or mismatched, iamport.js shows: "IMP.request_pay() 함수의 pg 파라미터로 잘못된 값".
+            // To make this work without asking you for PG details, we try a small set of common PG ids automatically.
+            // If your account is connected to one of these, the payment window will open.
+            const PG_CANDIDATES = [
+                'html5_inicis',
+                'tosspayments',
+                'nice',
+                'kcp',
+                'uplus',
+                'danal',
+                'kakaopay',
+                'payco'
+            ];
+
+            const baseParams = {
                 pay_method: 'card',
                 merchant_uid,
                 name: ORDER_NAME,
@@ -993,21 +1007,56 @@
                 buyer_email,
                 // Mobile redirect back to this page
                 m_redirect_url: location.origin + location.pathname
-            }, function (rsp) {
-                if (rsp && rsp.success) {
-                    const qs = new URLSearchParams({
-                        paid: '1',
-                        imp_uid: rsp.imp_uid || '',
-                        merchant_uid: rsp.merchant_uid || merchant_uid,
-                        amount: String(rsp.paid_amount || AMOUNT)
-                    });
-                    const sep = NAVER_FORM_URL.includes('?') ? '&' : '?';
-                    location.href = NAVER_FORM_URL + sep + qs.toString();
-                } else {
-                    const msg = (rsp && (rsp.error_msg || rsp.error_message)) ? (rsp.error_msg || rsp.error_message) : 'Payment cancelled.';
-                    alert(msg);
+            };
+
+            const handleSuccess = (rsp) => {
+                const qs = new URLSearchParams({
+                    paid: '1',
+                    imp_uid: rsp.imp_uid || '',
+                    merchant_uid: rsp.merchant_uid || merchant_uid,
+                    amount: String(rsp.paid_amount || AMOUNT)
+                });
+                const sep = NAVER_FORM_URL.includes('?') ? '&' : '?';
+                location.href = NAVER_FORM_URL + sep + qs.toString();
+            };
+
+            const tryRequestPay = (idx) => {
+                // If we've tried all candidates, show a clear next action.
+                if (idx >= PG_CANDIDATES.length) {
+                    alert(
+                        '결제창 호출에 실패했습니다.\n' +
+                        '원인: 포트원(아임포트) PG 식별자(pg)가 계정 설정과 맞지 않습니다.\n\n' +
+                        '해결: 포트원 콘솔에서 연결된 PG사가 무엇인지 확인 후,\n' +
+                        'index.html의 PG_CANDIDATES에 해당 pg 값을 1순위로 넣어주세요.\n' +
+                        '예: html5_inicis / tosspayments / nice / kcp / uplus'
+                    );
+                    return;
                 }
-            });
+
+                const pg = PG_CANDIDATES[idx];
+                const params = Object.assign({}, baseParams, { pg });
+
+                window.IMP.request_pay(params, function (rsp) {
+                    if (rsp && rsp.success) {
+                        handleSuccess(rsp);
+                        return;
+                    }
+
+                    const msg = (rsp && (rsp.error_msg || rsp.error_message)) ? (rsp.error_msg || rsp.error_message) : '';
+
+                    // If pg is invalid, silently try the next candidate.
+                    if (msg && msg.includes('pg') && (msg.includes('잘못') || msg.includes('invalid'))) {
+                        tryRequestPay(idx + 1);
+                        return;
+                    }
+
+                    // Other failures: show the message as-is.
+                    alert(msg || 'Payment cancelled.');
+                });
+            };
+
+            // Start with the first PG candidate.
+            tryRequestPay(0);
         };
 
         // Backward compatibility: if any old onclick still calls checkPayment
