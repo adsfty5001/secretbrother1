@@ -167,7 +167,8 @@ function excerptFromHtml(htmlStr, maxLen=140){
   }
 
   async function loadReviewsJson(){
-    const urls = ["./data/reviews.json", "./reviews.json", "./reviews/reviews.json"];
+    // 데이터 폴더(/data/reviews.json)를 최우선으로 사용 (125개 전체 후기)
+    const urls = ["./data/reviews.json", "/data/reviews.json", "./reviews/reviews.json", "./reviews.json"];
     for(const u of urls){
       try{
         const res = await fetch(u, { cache: "no-store" });
@@ -416,17 +417,9 @@ function excerptFromHtml(htmlStr, maxLen=140){
     }
   }
 
-  $("writeBtn")?.addEventListener("click", async ()=>{
-    const chk = await canWrite();
-    if(!chk.ok){
-      alert(chk.reason);
-      return;
-    }
-    // 작성자 자동 채움(있으면)
-    if($("wAuthor")){
-      $("wAuthor").value = chk.member?.name || chk.user.displayName || chk.user.email || "";
-    }
-    openModal("writeModal");
+  // 후기 작성은 네이버폼으로 수집 (로그인/권한 체크 제거)
+  $("writeBtn")?.addEventListener("click", ()=>{
+    window.open("https://naver.me/5JGkO1vW", "_blank");
   });
 
   $("writeClose")?.addEventListener("click", ()=>closeModal("writeModal"));
@@ -511,15 +504,6 @@ function excerptFromHtml(htmlStr, maxLen=140){
   onAuthStateChanged(auth, ()=>{ /* UI 변화만 */ });
 
   await bootstrap();
-
-  // 후기 작성은 네이버폼으로 진행(로그인 제거)
-  const writeBtn = $('writeBtn');
-  if (writeBtn) {
-    writeBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      window.open('https://naver.me/5JGkO1vW', '_blank');
-    });
-  }
 </script>
 </body>
 </html>

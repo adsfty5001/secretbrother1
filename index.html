@@ -757,6 +757,55 @@
     return (Array.isArray(rs) && rs.length) ? rs : STATIC_REVIEWS;
   };
 
+  // ---------- Reviews JSON Loader (125개 전체 후기) ----------
+  const extractAuthorFromTitle = (title) => {
+    const t = String(title || '').trim();
+    if (!t) return '';
+    // 예: "정규반 2기 미래소년k님 후기" -> "미래소년k"
+    let s = t.replace(/^정규반\s*\d+기\s*/,'').trim();
+    s = s.replace(/후기\s*$/,'').trim();
+    s = s.replace(/님\s*$/,'').trim();
+    // 마지막 안전장치
+    if (!s) {
+      const parts = t.split(/\s+/);
+      s = parts[parts.length - 1] || '';
+      s = s.replace(/후기$/,'').replace(/님$/,'').trim();
+    }
+    return s;
+  };
+
+  const normalizeJsonReview = (r) => {
+    if (!r) return null;
+    const title = r.title || '';
+    const author = r.author || r.nickname || r.displayName || r.writer || r.name || extractAuthorFromTitle(title);
+    return {
+      id: String(r.id ?? ''),
+      title: title,
+      author: author,
+      date: r.date || r.createdDate || '',
+      rating: Number(r.rating || 5),
+      views: Number(r.views || 0),
+      badge: (r.isBest ? 'BEST' : (r.badge || '')),
+      // PortOne/기존 로직 호환: content는 &lt;p&gt; 형태(엔티티) 그대로 두고, 모달에서 decode
+      content: (r.contentHtml ?? r.content ?? '')
+    };
+  };
+
+  const loadFullReviewsFromJson = async () => {
+    const urls = ['./data/reviews.json', '/data/reviews.json'];
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (Array.isArray(data) && data.length) {
+          return data.map(normalizeJsonReview).filter(Boolean);
+        }
+      } catch (e) {}
+    }
+    return null;
+  };
+
   // ---------- Review Rendering (Static Fallback) ----------
   const createReviewCard = (review, isBest) => {
     const rating = Number(review.rating || 0);
@@ -801,8 +850,8 @@
     const container = $('best-reviews-container');
     if (!container) return;
 
-    const reviews = getReviews();
-    const bests = reviews.filter(r => r && r.badge === 'BEST').slice(0, 6);
+    // BEST 6개는 고정 구성(전체 후기 데이터와 분리)
+    const bests = (STATIC_REVIEWS || []).filter(r => r && r.badge === 'BEST').slice(0, 6);
     container.innerHTML = bests.map(r => createReviewCard(r, true)).join('') || '<div class="text-gray-400 text-sm">표시할 BEST 후기가 없습니다.</div>';
     safeCreateIcons();
   };
@@ -1109,6 +1158,17 @@
 
 // Initial Render
         renderUI();
+
+        // 전체 후기(125개) 로드: 카드 미리보기는 동일, 클릭 시 모달로 전체 내용 노출
+        (async () => {
+          const full = await loadFullReviewsFromJson();
+          if (Array.isArray(full) && full.length) {
+            window.App.state.reviews = full;
+            // 초기 노출 개수는 기존과 동일
+            if (!window.App.state.visibleReviews) window.App.state.visibleReviews = 9;
+            renderAllReviews();
+          }
+        })();
 
   })();
 </script>
