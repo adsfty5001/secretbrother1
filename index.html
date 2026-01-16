@@ -988,6 +988,11 @@
         totalAmount: AMOUNT,
         currency: 'CURRENCY_KRW',
         payMethod: 'CARD',
+        customer: {
+          fullName: '비회원',
+          phoneNumber: '010-0000-0000',
+          email: `guest.${paymentId}@secretclass.co.kr`,
+        },
         // 모바일(redirect) 대응
         redirectUrl: `${location.origin}${location.pathname}?portone_redirect=1`,
       });
@@ -1077,7 +1082,7 @@
 
         window.App.loadMoreReviews = () => {
             window.App.state.visibleReviews += 9;
-            Impl.renderAllReviews();
+            renderAllReviews();
         };
 
         window.App.openReviewDetail = (id) => {
@@ -1130,7 +1135,7 @@
         // Auth & Init (removed: no-login mode)
 
 // Initial Render
-        Impl.renderUI();
+        renderUI();
 
   })();
 </script>
