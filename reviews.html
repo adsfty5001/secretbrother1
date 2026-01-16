@@ -167,7 +167,7 @@ function excerptFromHtml(htmlStr, maxLen=140){
   }
 
   async function loadReviewsJson(){
-    const urls = ["./reviews.json", "./data/reviews.json", "./reviews/reviews.json"];
+    const urls = ["./data/reviews.json", "./reviews.json", "./reviews/reviews.json"];
     for(const u of urls){
       try{
         const res = await fetch(u, { cache: "no-store" });
@@ -511,6 +511,15 @@ function excerptFromHtml(htmlStr, maxLen=140){
   onAuthStateChanged(auth, ()=>{ /* UI 변화만 */ });
 
   await bootstrap();
+
+  // 후기 작성은 네이버폼으로 진행(로그인 제거)
+  const writeBtn = $('writeBtn');
+  if (writeBtn) {
+    writeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.open('https://naver.me/5JGkO1vW', '_blank');
+    });
+  }
 </script>
 </body>
 </html>
