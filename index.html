@@ -11,6 +11,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons (HTTPS) -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- PortOne V1 (iamport.js) -->
+    <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+
     
     <style>
         /* [Fallback] Tailwind CDN 로딩 실패 시에도 hidden 클래스 동작 보장 */
@@ -71,8 +74,6 @@
         /* HTML 엔티티 디코딩용 */
         .decoded-content p { margin-bottom: 1em; }
     </style>
-    <!-- PortOne V1 (iamport) SDK -->
-    <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
 </head>
 <body class="bg-white text-gray-900 font-body flex flex-col min-h-screen">
 
@@ -87,7 +88,7 @@
     <!-- 2. 헤더 -->
     <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
         <!-- 로그인 상태 바 -->
-        <div class="bg-gray-50 border-b border-gray-100">
+        <div class="bg-gray-50 border-b border-gray-100" style="display:none">
             <div class="max-w-7xl mx-auto px-4 py-2 flex justify-end items-center gap-4 text-xs text-gray-500">
                 <div id="auth-guest" class="flex items-center gap-3">
                     <button onclick="window.App.openModal('loginModal', 'login')" class="hover:text-indigo-600 transition-colors">로그인</button>
@@ -302,7 +303,7 @@
                             </div>
 
                             <div class="grid gap-4 max-w-sm mx-auto">
-                                <button type="button" id="btn-pay-card" onclick="window.App.requestCardPay()" class="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold text-lg shadow-xl transition-all flex items-center justify-center gap-2 py-4">
+                                <button type="button" id="btn-pay-card" onclick="window.App.requestCardPayment()" class="w-full py-4 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
                                     <i data-lucide="credit-card" class="w-5 h-5"></i> 카드 / 간편결제 신청
                                 </button>
                                 <button onclick="window.App.openModal('depositModal')" class="w-full py-4 bg-white border-2 border-gray-200 text-gray-700 hover:border-indigo-500 hover:text-indigo-600 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
@@ -606,6 +607,8 @@
   //   최소 기능을 먼저 주입합니다.
   // - Firebase가 정상 초기화되면 module 스크립트가 App 함수를 덮어씁니다.
   // =========================================================
+
+  (function(){
 
   window.App = window.App || {};
   window.App.state = window.App.state || {
@@ -956,443 +959,84 @@
   window.App.openAdminModal = () => alert("현재는 데모(정적) 모드입니다. Firebase 설정 후 관리자 기능이 활성화됩니다.");
   window.App.updateUserStatus = () => alert("현재는 데모(정적) 모드입니다. Firebase 설정이 필요합니다.");
 
-  window.App.checkPayment = (e, url) => {
-    try {
-      if (url && typeof url === 'string') {
-        if (e && typeof e.preventDefault === 'function') e.preventDefault();
-        window.open(url, '_blank', 'noopener,noreferrer');
-      }
-    } catch (err) {}
-  };
+  window.App.requestCardPayment = () => {
+            // IMPORTANT: Do NOT put REST API Secret in frontend.
+            const IMP_CODE = 'imp07764510'; // Customer identifier (V1)
+            const NAVER_FORM_URL = 'https://naver.me/REPLACE_ME'; // TODO: Replace
+            const ORDER_NAME = 'Secretclass 1:1 Curation';
+            const AMOUNT = 349000;
 
-  window.App.confirmDeposit = () => {
-    alert("입금확인 요청 기능은 로그인/DB 연동 후 동작합니다.");
-    window.App.openModal('loginModal', 'login');
-  };
+            if (!window.IMP) {
+                alert('Payment module failed to load. Please refresh and try again.');
+                return;
+            }
 
-  window.App.checkWritePermission = () => {
-    alert("후기 작성은 로그인/DB 연동 후 동작합니다.");
-    window.App.openModal('loginModal', 'login');
-  };
+            // Collect minimum buyer info to reduce PG rejection.
+            const buyer_name = prompt('Buyer name (required):');
+            if (!buyer_name) return;
+            const buyer_tel = prompt('Phone number (required):');
+            if (!buyer_tel) return;
+            const buyer_email = prompt('Email (optional):') || '';
 
-  window.App.submitReview = () => {
-    alert("후기 등록은 로그인/DB 연동 후 동작합니다.");
-  };
+            try { window.IMP.init(IMP_CODE); } catch (e) {}
 
-  window.App.loadMoreReviews = () => {
-    window.App.state.visibleReviews = Number(window.App.state.visibleReviews || 9) + 9;
-    renderAllReviews();
-  };
+            const merchant_uid = 'secretclass_' + Date.now();
 
-  window.App.openReviewDetail = (id) => {
-    const reviews = getReviews();
-    const review = reviews.find(r => String(r.id) === String(id));
-    if (!review) return;
-
-    // View count (static only: UI 반영)
-    review.views = (review.views || 0) + 1;
-
-    const titleEl = $('modal-review-title');
-    const contentEl = $('modal-review-content');
-    const authorEl = $('modal-review-author');
-    const dateEl = $('modal-review-date');
-    const viewsEl = $('modal-review-views');
-    const starsEl = $('modal-stars');
-
-    if (titleEl) titleEl.innerText = review.title || '';
-    if (authorEl) authorEl.innerText = review.author || '';
-    if (dateEl) dateEl.innerText = review.date || '';
-    if (viewsEl) viewsEl.innerText = (review.views || 0).toLocaleString?.() ?? String(review.views || 0);
-
-    if (contentEl) {
-      const ta = document.createElement('textarea');
-      ta.innerHTML = review.content || '';
-      let decoded = ta.value;
-      if (!decoded.includes('<p>') && !decoded.includes('<br>')) {
-        decoded = decoded.replace(/\n/g, '<br>');
-      }
-      contentEl.innerHTML = decoded;
-    }
-
-    if (starsEl) {
-      const rating = Number(review.rating || 0);
-      let stars = '';
-      for (let i = 0; i < 5; i++) {
-        stars += `<i data-lucide="star" class="w-4 h-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}"></i>`;
-      }
-      starsEl.innerHTML = stars;
-    }
-
-    window.App.openModal('reviewDetailModal');
-    safeCreateIcons();
-  };
-
-  window.App.openMypage = () => {
-    window.App.openModal('mypageModal');
-
-    const isUser = Boolean(window.App.state.isLoggedIn && window.App.state.user);
-    $('mp-status-guest')?.classList.toggle('hidden', isUser);
-    $('mp-status-user')?.classList.toggle('hidden', !isUser);
-
-    if (isUser) {
-      const payStatus = window.App.state.user?.payStatus || 'none';
-      $('mp-name') && ($('mp-name').innerText = (window.App.state.user?.name || '수강생') + "님");
-      $('mp-email') && ($('mp-email').innerText = window.App.state.user?.email || '');
-
-      $('pay-none')?.classList.toggle('hidden', payStatus !== 'none');
-      $('pay-pending')?.classList.toggle('hidden', payStatus !== 'pending');
-      $('pay-complete')?.classList.toggle('hidden', payStatus !== 'complete');
-    }
-  };
-
-  // 최초 렌더 (Firebase 모듈 실패해도 홈/후기 보여야 함)
-  document.addEventListener('DOMContentLoaded', () => {
-    renderUI();
-    safeCreateIcons();
-  });
-
-  // Firebase 모듈 스크립트가 실행되면, 내부에서 Impl.renderUI()가 다시 호출되어 최신 상태로 갱신됩니다.
-</script>
-
-    <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, collection, query, onSnapshot, orderBy, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-  // module에서도 정적 후기 사용 가능하도록 연결
-  const STATIC_REVIEWS = window.STATIC_REVIEWS || [];
-
-  (async () => {
-    // *** 실제 로직 주입 ***
-    // window.App 객체에 실제 함수들을 덮어씌웁니다.
-    // [핵심 수정] __firebase_config / __app_id 가 없는 환경에서도 에러 없이 '정적 모드'로 동작하게 함
-
-    let rawCfg = null;
-    try {
-      if (typeof __firebase_config !== 'undefined') rawCfg = __firebase_config;
-      else if (window.__firebase_config) rawCfg = window.__firebase_config;
-      else if (window.firebaseConfig) rawCfg = window.firebaseConfig;
-    } catch (e) {
-      rawCfg = null;
-    }
-
-    if (!rawCfg) {
-      console.warn("[SecretClass] Firebase config not found. Running in static mode (reviews/UI only).");
-      // 정적 모드는 no-module 스크립트에서 이미 UI 렌더를 완료합니다.
-      return;
-    }
-
-    let firebaseConfig = null;
-    try {
-      firebaseConfig = (typeof rawCfg === 'string') ? JSON.parse(rawCfg) : rawCfg;
-    } catch (e) {
-      console.warn("[SecretClass] Firebase config parse failed. Running in static mode.", e);
-      return;
-    }
-
-    const firebaseApp = initializeApp(firebaseConfig);
-    const auth = getAuth(firebaseApp);
-    const db = getFirestore(firebaseApp);
-
-    const appId = (typeof __app_id !== 'undefined') ? __app_id : (window.__app_id || 'secret-class-v1');
-
-// Helpers
-        const getPublicReviewColl = () => collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
-        const getPublicMemberColl = () => collection(db, 'artifacts', appId, 'public', 'data', 'members'); 
-        const getUserDoc = (uid) => doc(db, 'artifacts', appId, 'users', uid, 'profile', 'info');
-
-        // Core Implementation
-        const Impl = {
-            renderUI: () => {
-                const guestDiv = document.getElementById('auth-guest');
-                const userDiv = document.getElementById('auth-user');
-                const userNameSpan = document.getElementById('user-name-display');
-                const adminBtn = document.getElementById('btn-admin-open'); 
-
-                if(window.App.state.isLoggedIn && window.App.state.user) {
-                    if(guestDiv) guestDiv.classList.add('hidden');
-                    if(userDiv) {
-                        userDiv.classList.remove('hidden-section');
-                        userDiv.style.display = 'flex';
-                    }
-                    if(userNameSpan) userNameSpan.innerText = window.App.state.user.name;
-                    
-                    if(adminBtn) {
-                        if(window.App.state.isAdmin) adminBtn.classList.remove('hidden');
-                        else adminBtn.classList.add('hidden');
-                    }
+            window.IMP.request_pay({
+                // If you have exactly one PG set in PortOne console, pg can be omitted.
+                pay_method: 'card',
+                merchant_uid,
+                name: ORDER_NAME,
+                amount: AMOUNT,
+                buyer_name,
+                buyer_tel,
+                buyer_email,
+                // Mobile redirect back to this page
+                m_redirect_url: location.origin + location.pathname
+            }, function (rsp) {
+                if (rsp && rsp.success) {
+                    const qs = new URLSearchParams({
+                        paid: '1',
+                        imp_uid: rsp.imp_uid || '',
+                        merchant_uid: rsp.merchant_uid || merchant_uid,
+                        amount: String(rsp.paid_amount || AMOUNT)
+                    });
+                    const sep = NAVER_FORM_URL.includes('?') ? '&' : '?';
+                    location.href = NAVER_FORM_URL + sep + qs.toString();
                 } else {
-                    if(guestDiv) guestDiv.classList.remove('hidden');
-                    if(userDiv) {
-                        userDiv.classList.add('hidden-section');
-                        userDiv.style.display = 'none';
-                    }
+                    const msg = (rsp && (rsp.error_msg || rsp.error_message)) ? (rsp.error_msg || rsp.error_message) : 'Payment cancelled.';
+                    alert(msg);
                 }
-                
-                Impl.renderBestReviews();
-                Impl.renderAllReviews();
-            },
-
-            renderBestReviews: () => {
-                const container = document.getElementById('best-reviews-container');
-                if(!container) return;
-                
-                let reviews = window.App.state.reviews;
-                if(reviews.length === 0) reviews = STATIC_REVIEWS;
-
-                const bests = reviews.filter(r => r.badge === 'BEST').slice(0, 6);
-                container.innerHTML = bests.map(r => Impl.createReviewCard(r, true)).join('');
-                if(typeof lucide !== 'undefined') lucide.createIcons();
-            },
-
-            renderAllReviews: () => {
-                const container = document.getElementById('all-reviews-container');
-                if(!container) return;
-                
-                let reviews = window.App.state.reviews;
-                if(reviews.length === 0) reviews = STATIC_REVIEWS;
-
-                const visible = reviews.slice(0, window.App.state.visibleReviews);
-                container.innerHTML = visible.map(r => Impl.createReviewCard(r, false)).join('');
-                
-                const loadBtn = document.getElementById('load-more-btn'); 
-                if(loadBtn) {
-                    loadBtn.style.display = (window.App.state.visibleReviews >= reviews.length) ? 'none' : 'inline-block';
-                }
-                if(typeof lucide !== 'undefined') lucide.createIcons();
-            },
-
-            createReviewCard: (review, isBest) => {
-                let stars = '';
-                for(let i=0; i<5; i++) stars += `<i data-lucide="star" class="w-3 h-3 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}"></i>`;
-                
-                let badgeHtml = '';
-                if(review.badge === 'BEST') badgeHtml = `<span class="bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded">BEST</span>`;
-                else if(review.badge === 'NEW' || (review.date && review.date.startsWith("2025"))) badgeHtml = `<span class="bg-indigo-100 text-indigo-600 text-[10px] font-bold px-1.5 py-0.5 rounded">NEW</span>`;
-
-                const bgClass = isBest ? 'hover:-translate-y-2 shadow-sm border-gray-100' : 'hover:-translate-y-1 shadow-sm border-gray-100';
-                
-                // Safe content handling
-                const tempDiv = document.createElement("div");
-                tempDiv.innerHTML = review.content || "";
-                const plainText = tempDiv.textContent || tempDiv.innerText || "";
-
-                // Use window.App.openReviewDetail in string onclick
-                return `
-                <div onclick="window.App.openReviewDetail('${review.id}')" class="bg-white p-6 rounded-2xl border ${bgClass} hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between h-full group">
-                    <div>
-                        <div class="flex justify-between items-start mb-3">
-                            <div class="flex gap-1 items-center">${stars}</div>
-                            ${badgeHtml}
-                        </div>
-                        <h3 class="font-bold text-lg mb-2 text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors">${review.title}</h3>
-                        <p class="text-sm text-gray-500 line-clamp-custom mb-4 leading-relaxed break-keep">${plainText}</p>
-                    </div>
-                    <div class="pt-4 border-t border-gray-50 flex justify-between items-center text-xs text-gray-400">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-gray-700">${review.author}</span>
-                            <span>${review.date}</span>
-                        </div>
-                        <div class="flex items-center gap-1"><i data-lucide="eye" class="w-3 h-3"></i> ${review.views ? review.views.toLocaleString() : 0}</div>
-                    </div>
-                </div>`;
-            }
-        };
-
-        // --- Overwrite Window Functions ---
-        
-        window.App.navigate = (page) => {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`view-${page}`).classList.remove('hidden');
-            window.scrollTo(0,0);
-        };
-        
-        window.App.scrollToSection = (id) => {
-            if(document.getElementById('view-home').classList.contains('hidden')) window.App.navigate('home');
-            setTimeout(()=> document.getElementById(id)?.scrollIntoView({behavior:'smooth'}), 100);
-        };
-
-        window.App.toggleMobileMenu = () => {
-            document.getElementById('mobileMenu').classList.toggle('hidden');
-        };
-
-        window.App.openModal = (id, tab) => {
-            document.getElementById(id).classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-            if(tab) window.App.switchAuthTab(tab);
-        };
-
-        window.App.closeModal = (id) => {
-            document.getElementById(id).classList.add('hidden');
-            document.body.style.overflow = '';
-        };
-
-        window.App.switchAuthTab = (tab) => {
-            const loginForm = document.getElementById('form-login');
-            const signupForm = document.getElementById('form-signup');
-            const loginTab = document.getElementById('tab-login');
-            const signupTab = document.getElementById('tab-signup');
-            
-            if(tab === 'login') {
-                loginForm.classList.remove('hidden');
-                signupForm.classList.add('hidden');
-                loginTab.className = "flex-1 py-3 font-bold text-indigo-600 border-b-2 border-indigo-600 transition-colors";
-                signupTab.className = "flex-1 py-3 font-bold text-gray-400 hover:text-gray-600 transition-colors";
-            } else {
-                loginForm.classList.add('hidden');
-                signupForm.classList.remove('hidden');
-                signupTab.className = "flex-1 py-3 font-bold text-indigo-600 border-b-2 border-indigo-600 transition-colors";
-                loginTab.className = "flex-1 py-3 font-bold text-gray-400 hover:text-gray-600 transition-colors";
-            }
-        };
-
-        window.App.toggleFaq = (btn) => {
-            const answer = btn.nextElementSibling;
-            const icon = btn.querySelector('.lucide-chevron-down');
-            const isHidden = answer.classList.contains('hidden');
-            answer.classList.toggle('hidden');
-            icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
-        };
-
-        window.App.copyToClipboard = (text) => {
-            const el = document.createElement('textarea');
-            el.value = text;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            alert("계좌번호가 복사되었습니다.");
-        };
-
-        window.App.processLogin = async () => {
-            const email = document.getElementById('login-email').value;
-            const pw = document.getElementById('login-pw').value;
-            if(!email || !pw) return alert('이메일과 비밀번호를 입력해주세요.');
-
-            try {
-                await signInWithEmailAndPassword(auth, email, pw);
-                alert("로그인되었습니다.");
-                window.App.closeModal('loginModal');
-            } catch (e) {
-                console.error(e);
-                alert("로그인 실패: 이메일 또는 비밀번호를 확인해주세요.");
-            }
-        };
-
-        window.App.processSignup = async () => {
-            const name = document.getElementById('reg-name').value;
-            const email = document.getElementById('reg-email').value;
-            const pw = document.getElementById('reg-pw').value;
-
-            if(!name || !email || !pw) return alert('모든 필드를 입력해주세요.');
-            if(pw.length < 6) return alert('비밀번호는 6자리 이상이어야 합니다.');
-
-            try {
-                const cred = await createUserWithEmailAndPassword(auth, email, pw);
-                const profileData = { name, email, payStatus: 'none', joinDate: new Date().toISOString() };
-                await setDoc(getUserDoc(cred.user.uid), profileData);
-                await setDoc(doc(getPublicMemberColl(), cred.user.uid), profileData);
-
-                alert("가입이 완료되었습니다.");
-                window.App.switchAuthTab('login');
-                window.App.closeModal('loginModal');
-            } catch (e) {
-                console.error(e);
-                if(e.code === 'auth/email-already-in-use') alert("이미 가입된 이메일입니다.");
-                else alert("가입 중 오류가 발생했습니다: " + e.message);
-            }
-        };
-
-        window.App.logout = () => {
-            if(confirm('로그아웃 하시겠습니까?')) {
-                signOut(auth).then(() => {
-                    window.location.reload();
-                });
-            }
-        };
-
-        window.App.openAdminModal = () => {
-            if(!window.App.state.isAdmin) return alert("관리자 권한이 없습니다.");
-            window.App.openModal('adminModal');
-            
-            // Load logic here or separate
-            const listEl = document.getElementById('admin-user-list');
-            listEl.innerHTML = '<div class="text-center py-4">로딩중...</div>';
-
-            onSnapshot(getPublicMemberColl(), (snapshot) => {
-                listEl.innerHTML = '';
-                if(snapshot.empty) {
-                    listEl.innerHTML = '<div class="text-center py-4">가입한 회원이 없습니다.</div>';
-                    return;
-                }
-
-                const members = [];
-                snapshot.forEach(doc => members.push({ id: doc.id, ...doc.data() }));
-                members.sort((a,b) => (b.joinDate || '').localeCompare(a.joinDate || ''));
-
-                members.forEach(m => {
-                    const isPaid = m.payStatus === 'complete';
-                    const isPending = m.payStatus === 'pending';
-                    
-                    let statusBadge = '<span class="bg-gray-100 text-gray-500 px-2 py-1 rounded text-xs">미신청</span>';
-                    let actionBtn = '';
-
-                    if(isPaid) {
-                        statusBadge = '<span class="bg-green-100 text-green-600 px-2 py-1 rounded text-xs font-bold">수강중</span>';
-                        actionBtn = `<button onclick="window.App.updateUserStatus('${m.id}', 'none')" class="text-xs text-red-500 hover:underline">취소</button>`;
-                    } else if(isPending) {
-                        statusBadge = '<span class="bg-yellow-100 text-yellow-600 px-2 py-1 rounded text-xs font-bold animate-pulse">입금확인중</span>';
-                        actionBtn = `<button onclick="window.App.updateUserStatus('${m.id}', 'complete')" class="bg-indigo-600 text-white text-xs px-2 py-1 rounded hover:bg-indigo-700">승인하기</button>`;
-                    } else {
-                            actionBtn = `<button onclick="window.App.updateUserStatus('${m.id}', 'complete')" class="text-xs text-indigo-500 hover:underline">강제승인</button>`;
-                    }
-
-                    const el = document.createElement('div');
-                    el.className = "flex justify-between items-center p-3 bg-white border border-gray-200 rounded-lg";
-                    el.innerHTML = `
-                        <div>
-                            <div class="font-bold text-sm">${m.name} <span class="text-gray-400 font-normal text-xs">(${m.email})</span></div>
-                            <div class="mt-1">${statusBadge}</div>
-                        </div>
-                        <div>${actionBtn}</div>
-                    `;
-                    listEl.appendChild(el);
-                });
             });
         };
 
-        window.App.updateUserStatus = async (targetUid, newStatus) => {
-            if(!confirm('상태를 변경하시겠습니까?')) return;
-            await updateDoc(getUserDoc(targetUid), { payStatus: newStatus });
-            await updateDoc(doc(getPublicMemberColl(), targetUid), { payStatus: newStatus });
-            alert('처리되었습니다.');
+        // Backward compatibility: if any old onclick still calls checkPayment
+        window.App.checkPayment = (e) => {
+            if (e && e.preventDefault) e.preventDefault();
+            window.App.requestCardPayment();
         };
 
-        window.App.checkPayment = (e, url) => {
-            if(url.includes('portone')) {
-                e.preventDefault();
-                window.open(url);
-                alert("결제창이 열렸습니다. (데모환경)");
-            }
-        };
+        // If mobile redirect returned with imp_success, forward user to Naver Form.
+        (function () {
+            try {
+                const params = new URLSearchParams(location.search);
+                const impSuccess = params.get('imp_success');
+                const impUid = params.get('imp_uid');
+                const merchantUid = params.get('merchant_uid');
+                if ((impSuccess === 'true' || impSuccess === '1') && (impUid || merchantUid)) {
+                    const NAVER_FORM_URL = 'https://naver.me/REPLACE_ME'; // TODO: Replace (same as above)
+                    const qs = new URLSearchParams({ paid: '1', imp_uid: impUid || '', merchant_uid: merchantUid || '' });
+                    const sep = NAVER_FORM_URL.includes('?') ? '&' : '?';
+                    location.replace(NAVER_FORM_URL + sep + qs.toString());
+                }
+            } catch (e) {}
+        })();
 
-        window.App.confirmDeposit = async () => {
-            if(!window.App.state.isLoggedIn) return alert("로그인 후 신청해주세요.");
-            
-            const uid = window.App.state.user.uid;
-            await updateDoc(getUserDoc(uid), { payStatus: 'pending' });
-            await setDoc(doc(getPublicMemberColl(), uid), { 
-                name: window.App.state.user.name, 
-                email: window.App.state.user.email,
-                payStatus: 'pending',
-                joinDate: window.App.state.user.joinDate || new Date().toISOString()
-            }, { merge: true });
-
-            window.App.state.user.payStatus = 'pending';
-            window.App.closeModal('depositModal');
-            alert("입금 확인 요청이 접수되었습니다. 관리자 승인 후 강의실 입장이 가능합니다.");
-            window.App.openMypage(); 
-        };
+        window.App.confirmDeposit = () => {
+  const NAVER_FORM_URL = 'https://naver.me/REPLACE_ME'; // TODO: Replace
+  alert('무통장 입금 신청을 위해 설문 폼으로 이동합니다.');
+  location.href = NAVER_FORM_URL;
+};
 
         window.App.checkWritePermission = () => {
             if(!window.App.state.isLoggedIn) {
@@ -1410,34 +1054,11 @@
             window.App.openModal('writeReviewModal');
         };
 
-        window.App.submitReview = async () => {
-            if(!window.App.state.isLoggedIn) return;
-            
-            const title = document.getElementById('w-title').value;
-            const content = document.getElementById('w-content').value;
-            const rating = parseInt(document.getElementById('w-rating').value);
-            
-            if(!title || !content) return alert("내용을 모두 입력해주세요.");
-
-            try {
-                await addDoc(getPublicReviewColl(), {
-                    title, content, rating,
-                    author: window.App.state.user.name,
-                    date: new Date().toISOString().split('T')[0],
-                    views: 0,
-                    userId: window.App.state.user.uid,
-                    badge: "NEW"
-                });
-                
-                window.App.closeModal('writeReviewModal');
-                alert("소중한 후기가 등록되었습니다!");
-                document.getElementById('w-title').value = '';
-                document.getElementById('w-content').value = '';
-            } catch(e) {
-                console.error(e);
-                alert("등록 실패: " + e.message);
-            }
-        };
+        window.App.submitReview = () => {
+  const NAVER_FORM_URL = 'https://naver.me/REPLACE_ME'; // TODO: Replace
+  alert('후기 작성은 설문 폼에서 받고 있습니다. 폼으로 이동합니다.');
+  location.href = NAVER_FORM_URL;
+};
 
         window.App.loadMoreReviews = () => {
             window.App.state.visibleReviews += 9;
@@ -1459,8 +1080,7 @@
             tempTextArea.innerHTML = review.content;
             let decodedContent = tempTextArea.value;
             if (!decodedContent.includes('<p>') && !decodedContent.includes('<br>')) {
-                decodedContent = decodedContent.replace(/
-/g, '<br>');
+                decodedContent = decodedContent.replace(/\\n/g, '<br>');
             }
             document.getElementById('modal-review-content').innerHTML = decodedContent;
             document.getElementById('modal-review-author').innerText = review.author;
@@ -1492,61 +1112,11 @@
             }
         };
 
-        // Auth & Init
-        onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                if (firebaseUser.isAnonymous) {
-                    window.App.state.isLoggedIn = false;
-                    window.App.state.user = null;
-                    window.App.state.isAdmin = false;
-                } else {
-                    const userDocRef = getUserDoc(firebaseUser.uid);
-                    try {
-                        const userSnapshot = await getDoc(userDocRef);
-                        let profile = {};
-                        if(userSnapshot.exists()) {
-                            profile = userSnapshot.data();
-                        } else {
-                            profile = { name: firebaseUser.displayName || '수강생', payStatus: 'none', email: firebaseUser.email };
-                            await setDoc(userDocRef, profile);
-                            await setDoc(doc(getPublicMemberColl(), firebaseUser.uid), profile);
-                        }
-                        window.App.state.user = { uid: firebaseUser.uid, email: firebaseUser.email, ...profile };
-                        window.App.state.isLoggedIn = true;
-                        window.App.state.isAdmin = (firebaseUser.email === 'admin@secretclass.com');
-                    } catch (e) { console.error("Profile Fetch Error", e); }
-                }
+        // Auth & Init (removed: no-login mode)
 
-                if(window.App.state.unsubscribeReviews) window.App.state.unsubscribeReviews();
-                
-                window.App.state.unsubscribeReviews = onSnapshot(getPublicReviewColl(), (snapshot) => {
-                    const dbReviews = [];
-                    snapshot.forEach(doc => {
-                        dbReviews.push({ id: doc.id, ...doc.data(), isDb: true });
-                    });
-                    dbReviews.sort((a,b) => new Date(b.date) - new Date(a.date));
-                    
-                    // Merge
-                    window.App.state.reviews = [...dbReviews, ...STATIC_REVIEWS];
-                    
-                    const totalCnt = document.getElementById('total-review-count');
-                    if(totalCnt) totalCnt.innerText = window.App.state.reviews.length;
-                    
-                    Impl.renderUI(); 
-                }, (error) => {
-                    console.warn("DB Access:", error.code); 
-                });
-
-            } else {
-                signInAnonymously(auth).catch(e => console.error("Anon Auth Fail", e));
-            }
-            Impl.renderUI();
-        });
-
-        // Initial Render
+// Initial Render
         Impl.renderUI();
 
-    
   })();
 </script>
 </body>
