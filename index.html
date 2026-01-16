@@ -958,109 +958,92 @@
   window.App.logout = () => alert("현재는 데모(정적) 모드입니다. Firebase Auth 설정이 필요합니다.");
   window.App.openAdminModal = () => alert("현재는 데모(정적) 모드입니다. Firebase 설정 후 관리자 기능이 활성화됩니다.");
   window.App.updateUserStatus = () => alert("현재는 데모(정적) 모드입니다. Firebase 설정이 필요합니다.");
-  window.App.requestCardPayment = async () => {
-    // PortOne V2 결제창 호출 (KG이니시스: inicis_v2 채널 사용)
-    // 주의: API Secret(서버용 키)은 프론트에 절대 넣지 않습니다.
 
+  // 카드/간편결제: PortOne V2 Browser SDK (KG이니시스 채널)로 결제창을 즉시 호출합니다.
+  // - 사용자 입력(이름/휴대폰/이메일) 없이 바로 결제창으로 이동
+  // - 결제 성공/실패 시 메시지를 최대한 상세히 표시
+  window.App.requestCardPayment = async () => {
     const STORE_ID = 'store-91be10b3-3cf4-493f-87ee-617ada079c74';
     const CHANNEL_KEY = 'channel-key-45be25a9-4140-44f5-b38b-554cc0f0e016';
     const NAVER_FORM_URL = 'https://naver.me/FeN7ayAf';
-
     const ORDER_NAME = 'Secretclass 1:1 Curation';
     const AMOUNT = 349000;
 
+    // SDK 로드 체크
     if (!window.PortOne || typeof window.PortOne.requestPayment !== 'function') {
-      alert('결제 모듈(PortOne V2) 로딩에 실패했습니다. 새로고침 후 다시 시도해주세요.');
+      alert('결제 모듈(PortOne V2 SDK) 로딩에 실패했습니다. 새로고침 후 다시 시도해주세요.');
       return;
     }
 
-    // 구매자 정보(이니시스에서 필수로 요구하는 케이스가 많아 최소값을 받습니다)
-    const fullName = prompt('이름(필수):');
-    if (!fullName) return;
-
-    const phoneRaw = prompt('휴대폰번호(필수):');
-    if (!phoneRaw) return;
-    const phoneNumber = String(phoneRaw).replace(/[^0-9]/g, '');
-
-    const email = (prompt('이메일(필수):') || '').trim();
-    if (!email) {
-      alert('이메일은 필수입니다.');
-      return;
-    }
-
-    // PortOne 결제 ID는 고객사가 고유하게 채번해야 합니다(중복되면 실패).
-    const paymentId = (crypto?.randomUUID ? `secretclass-${crypto.randomUUID()}` : `secretclass-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-
-    // 모바일(redirect)까지 고려해 redirectUrl을 현재 페이지로 지정합니다.
-    const redirectUrl = `${location.origin}${location.pathname}?paymentId=${encodeURIComponent(paymentId)}`;
+    // 결제 식별자(paymentId): 고객사에서 생성(중복 결제 방지)
+    const rand = Math.random().toString(16).slice(2);
+    const paymentId = `sc_${Date.now()}_${rand}`;
 
     try {
-      const rsp = await window.PortOne.requestPayment({
+      const response = await window.PortOne.requestPayment({
         storeId: STORE_ID,
         channelKey: CHANNEL_KEY,
         paymentId,
         orderName: ORDER_NAME,
         totalAmount: AMOUNT,
         currency: 'CURRENCY_KRW',
-        // 카드/간편결제는 채널 설정에 따라 결제창에서 노출됩니다.
-        customer: {
-          fullName,
-          phoneNumber,
-          email,
-        },
-        redirectUrl,
+        payMethod: 'CARD',
+        // 모바일(redirect) 대응
+        redirectUrl: `${location.origin}${location.pathname}?portone_redirect=1`,
       });
 
-      // 리디렉션 없이 결제 UI가 표시된 경우, 여기로 결과가 반환됩니다.
-      if (rsp && rsp.code) {
-        alert(rsp.message || '결제에 실패했습니다.');
+      // 실패(오류 코드 존재)
+      if (response && response.code !== undefined) {
+        console.error('[PortOne] requestPayment failed:', response);
+        const details = [
+          response.message ? `메시지: ${response.message}` : '',
+          response.pgMessage ? `PG: ${response.pgMessage}` : '',
+          response.pgCode ? `PG Code: ${response.pgCode}` : '',
+          response.code ? `Code: ${response.code}` : '',
+        ].filter(Boolean).join('\n');
+        alert(details || '결제 창 호출 중 오류가 발생했습니다.');
         return;
       }
 
-      // 결제 성공(또는 결제창 종료 후 성공 응답) 시: 네이버폼으로 이동
-      if (rsp && rsp.paymentId) {
-        const qs = new URLSearchParams({
-          paid: '1',
-          paymentId: rsp.paymentId,
-          txId: rsp.txId || '',
-          amount: String(AMOUNT),
-        });
-        const sep = NAVER_FORM_URL.includes('?') ? '&' : '?';
-        location.href = NAVER_FORM_URL + sep + qs.toString();
-      }
+      // 성공: 네이버폼으로 이동(결제 식별자 전달)
+      const paidPaymentId = (response && response.paymentId) ? response.paymentId : paymentId;
+      const qs = new URLSearchParams({ paid: '1', paymentId: paidPaymentId, amount: String(AMOUNT) });
+      const sep = NAVER_FORM_URL.includes('?') ? '&' : '?';
+      location.href = NAVER_FORM_URL + sep + qs.toString();
     } catch (e) {
-      console.error(e);
-      alert('결제 창 호출 중 오류가 발생했습니다.');
+      console.error('[PortOne] requestPayment exception:', e);
+      alert('결제 창 호출 중 오류가 발생했습니다. (콘솔 로그를 확인해주세요)');
     }
   };
 
-// Backward compatibility: if any old onclick still calls checkPayment
+
+        // Backward compatibility: if any old onclick still calls checkPayment
         window.App.checkPayment = (e) => {
             if (e && e.preventDefault) e.preventDefault();
             window.App.requestCardPayment();
         };
-        // If redirect returned (mobile redirection), forward user to Naver Form.
+
+        // 모바일(redirect) 결제 완료/실패 후 복귀 처리
         (function () {
             try {
                 const params = new URLSearchParams(location.search);
-                const paymentId = params.get('paymentId');
-                const txId = params.get('txId') || '';
+                if (params.get('portone_redirect') !== '1') return;
+
+                const NAVER_FORM_URL = 'https://naver.me/FeN7ayAf';
+                const paymentId = params.get('paymentId') || '';
                 const code = params.get('code');
-                const message = params.get('message');
+                const message = params.get('message') || params.get('pgMessage') || '';
 
-                if (!paymentId) return;
-
-                // 실패(에러 코드가 존재)
                 if (code) {
                     alert(message || '결제에 실패했습니다.');
                     return;
                 }
 
-                // 성공으로 보고 네이버폼 이동
-                const NAVER_FORM_URL = 'https://naver.me/FeN7ayAf';
-                const qs = new URLSearchParams({ paid: '1', paymentId, txId });
-                const sep = NAVER_FORM_URL.includes('?') ? '&' : '?';
-                location.replace(NAVER_FORM_URL + sep + qs.toString());
+                if (paymentId) {
+                    const qs = new URLSearchParams({ paid: '1', paymentId });
+                    const sep = NAVER_FORM_URL.includes('?') ? '&' : '?';
+                    location.replace(NAVER_FORM_URL + sep + qs.toString());
+                }
             } catch (e) {}
         })();
 
