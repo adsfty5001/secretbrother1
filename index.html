@@ -962,12 +962,19 @@
   window.App.requestCardPayment = () => {
     // IMPORTANT: Do NOT put REST API Secret in frontend.
     // PortOne V1 결제창(IMP.request_pay)에서 KG이니시스(Web Standard) 사용 시
-    // pg 값은 'html5_inicis.{MID}' 형태여야 합니다.
-    // (MID는 포트원 콘솔에서 KG이니시스 채널/상점ID로 발급된 값)
+	  // 권장: PortOne 콘솔의 채널키(channelKey)를 사용하세요.
+	  // (V1 문서에서도 pg는 지원 중단 예정, channelKey 사용을 권장합니다)
+	  // channelKey가 준비되기 전까지는 임시로 pg='html5_inicis'로 호출해도 됩니다.
 
-    const IMP_CODE = 'imp07764510'; // 고객사 식별코드
-    const INICIS_MID = 'MOIsecret1'; // 예) 'INIpayTest' / 실제 운영 MID
-    const NAVER_FORM_URL = 'https://naver.me/FeN7ayAf'; // TODO: Replace
+	    const IMP_CODE = 'imp07764510'; // 고객사 식별코드
+	    // PortOne 콘솔 > 결제 연동 > 연동 정보 > 채널 관리에서 채널키(channelKey)를 확인해 입력하세요.
+	    // 채널키를 넣으면 pg 값을 잘못 넣어서 생기는 오류를 원천 차단할 수 있습니다.
+	    const PORTONE_CHANNEL_KEY = ''; // 예) 'channel-key-xxxxx' (비워두면 pg 방식으로 시도)
+	
+	    // 아래 MID는 참고용(PortOne 채널 설정에 입력). 보통 프론트 코드에는 넣지 않아도 됩니다.
+	    const INICIS_MID = 'MOIsecret1';
+	
+	    const NAVER_FORM_URL = 'https://naver.me/FeN7ayAf'; // TODO: Replace
 
     const ORDER_NAME = 'Secretclass 1:1 Curation';
     const AMOUNT = 349000;
@@ -977,10 +984,7 @@
       return;
     }
 
-    if (!INICIS_MID || INICIS_MID.includes('REPLACE_WITH')) {
-      alert('KG이니시스 MID가 설정되지 않았습니다. index.html의 INICIS_MID 값을 먼저 입력해주세요.');
-      return;
-    }
+	    // INICIS_MID는 PortOne 콘솔의 채널 설정값이므로, 여기서 강제 체크하지 않습니다.
 
     // 최소 구매자 정보 (PG사 필수값)
     const buyer_name = prompt('이름(필수):');
@@ -991,11 +995,12 @@
 
     try { window.IMP.init(IMP_CODE); } catch (e) {}
 
-    const merchant_uid = 'secretclass_' + Date.now();
-    const pg = `html5_inicis.${INICIS_MID}`;
+	    const merchant_uid = 'secretclass_' + Date.now();
+	    // 기본은 pg='html5_inicis' 로 시도합니다. (MID를 포함한 pg 값이 필요하면 PortOne 문서 기준으로 추가)
+	    const pg = 'html5_inicis';
 
-    const params = {
-      pg,
+	    const params = {
+	      pg,
       pay_method: 'card',
       merchant_uid,
       name: ORDER_NAME,
@@ -1006,6 +1011,12 @@
       // 모바일 결제 후 복귀 URL
       m_redirect_url: location.origin + location.pathname,
     };
+
+	    // channelKey가 설정되어 있으면 channelKey 우선(권장)
+	    if (PORTONE_CHANNEL_KEY && PORTONE_CHANNEL_KEY.trim()) {
+	      params.channelKey = PORTONE_CHANNEL_KEY.trim();
+	      delete params.pg;
+	    }
 
     const handleSuccess = (rsp) => {
       const qs = new URLSearchParams({
@@ -1043,7 +1054,7 @@
                 const impUid = params.get('imp_uid');
                 const merchantUid = params.get('merchant_uid');
                 if ((impSuccess === 'true' || impSuccess === '1') && (impUid || merchantUid)) {
-                    const NAVER_FORM_URL = 'https://naver.me/REPLACE_ME'; // TODO: Replace (same as above)
+					const NAVER_FORM_URL = 'https://naver.me/FeN7ayAf'; // 모바일 결제 완료 후 이동(네이버폼)
                     const qs = new URLSearchParams({ paid: '1', imp_uid: impUid || '', merchant_uid: merchantUid || '' });
                     const sep = NAVER_FORM_URL.includes('?') ? '&' : '?';
                     location.replace(NAVER_FORM_URL + sep + qs.toString());
@@ -1052,7 +1063,7 @@
         })();
 
         window.App.confirmDeposit = () => {
-  const NAVER_FORM_URL = 'https://naver.me/REPLACE_ME'; // TODO: Replace
+	  const NAVER_FORM_URL = 'https://naver.me/FeN7ayAf';
   alert('무통장 입금 신청을 위해 설문 폼으로 이동합니다.');
   location.href = NAVER_FORM_URL;
 };
@@ -1074,7 +1085,7 @@
         };
 
         window.App.submitReview = () => {
-  const NAVER_FORM_URL = 'https://naver.me/REPLACE_ME'; // TODO: Replace
+	  const NAVER_FORM_URL = 'https://naver.me/FeN7ayAf';
   alert('후기 작성은 설문 폼에서 받고 있습니다. 폼으로 이동합니다.');
   location.href = NAVER_FORM_URL;
 };
