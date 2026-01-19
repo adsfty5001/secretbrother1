@@ -2,6 +2,41 @@ import { addDoc, onSnapshot, orderBy, query, runTransaction, serverTimestamp } f
 import { getPublicReviewsColl, getReviewCounterDoc } from "./paths.js";
 import { stripHtml, fmtNum, fmtDate, escHtml } from "./ui.js";
 
+// ------------------------------------------------------------
+// Review content helpers
+// - contentHtml in reviews.json is often HTML-escaped (&lt;p&gt; ...)
+// - some entries contain literal "\\r\\n" sequences
+// We must NOT modify the source data; only normalize at render time.
+// ------------------------------------------------------------
+
+export function decodeHtmlEntities(str) {
+  const t = document.createElement("textarea");
+  t.innerHTML = String(str ?? "");
+  return t.value;
+}
+
+export function normalizeEncodedNewlines(str) {
+  return String(str ?? "")
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "\n");
+}
+
+export function cleanContentHtml(contentHtml) {
+  // 1) Decode HTML entities so &lt;p&gt; becomes <p>
+  // 2) Turn literal "\\r\\n" into real line breaks
+  // 3) Remove raw CR/LF chars (HTML already has <p>/<br> tags)
+  const decoded = decodeHtmlEntities(contentHtml);
+  const withNewlines = normalizeEncodedNewlines(decoded);
+  return withNewlines.replace(/\r\n|\r|\n/g, "");
+}
+
+export function plainTextFromContentHtml(contentHtml) {
+  const html = cleanContentHtml(contentHtml);
+  // stripHtml expects real HTML markup
+  return stripHtml(html).replace(/\s+/g, " ").trim();
+}
+
 export async function loadBaseReviews() {
   const res = await fetch("./data/reviews.json", { cache: "no-store" });
   const data = await res.json();
@@ -74,13 +109,13 @@ export async function incrementBaseReviewView(db, review) {
 
 export function reviewCardHtml(review) {
   const title = escHtml(review.title);
-  const excerpt = escHtml(stripHtml(review.contentHtml)).slice(0, 220);
+  const excerpt = escHtml(plainTextFromContentHtml(review.contentHtml)).slice(0, 220);
   const badge = review.isBest ? `<span class="bg-red-100 text-red-700 text-[10px] font-semibold px-2 py-1 rounded">BEST</span>` : "";
   const metaDate = escHtml(fmtDate(review.createdDate));
   const views = fmtNum(totalViews(review));
 
   return `
-    <button class="text-left w-full bg-white border rounded-2xl p-5 hover:shadow-lg transition shadow-sm h-full flex flex-col justify-between"
+    <button class="review-card text-left w-full bg-white border rounded-2xl p-5 hover:shadow-lg transition shadow-sm h-full flex flex-col justify-between overflow-hidden"
             data-review-id="${escHtml(review.id)}" type="button">
       <div>
         <div class="flex items-start justify-between gap-3">

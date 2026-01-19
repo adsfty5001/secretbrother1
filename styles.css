@@ -1,11 +1,4 @@
 /* Minimal site styles (Tailwind handles most). */
-.line-clamp-1 {
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -13,10 +6,21 @@
   overflow: hidden;
 }
 
-/* Backward-compat alias used by index.html */
-.line-clamp-custom {
+.line-clamp-1 {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Make review cards near 1:1 proportion for consistent grid */
+.review-card {
+  aspect-ratio: 1 / 1;
 }
