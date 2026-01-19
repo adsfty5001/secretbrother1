@@ -1,7 +1,7 @@
 import "./config.js";
 import { initFirebase } from "./firebase.js";
 import { openModal, closeModal, qs, fmtNum } from "./ui.js";
-import { loadBaseReviews, reviewCardHtml, incrementBaseReviewView, totalViews, cleanContentHtml } from "./reviews.js";
+import { loadBaseReviews, reviewCardHtml, incrementBaseReviewView, totalViews } from "./reviews.js";
 
 const state = { fb: null, baseReviews: [] };
 
@@ -22,7 +22,7 @@ async function openReviewModal(review) {
   document.getElementById("reviewModalTitle").textContent = review.title || "";
   document.getElementById("reviewModalDate").textContent = review.createdDate || "";
   document.getElementById("reviewModalViews").textContent = String(totalViews(review));
-  document.getElementById("reviewModalContent").innerHTML = cleanContentHtml(review.contentHtml || "");
+  document.getElementById("reviewModalContent").innerHTML = review.contentHtml || "";
   openModal("reviewModal");
 
   if (state.fb?.db) {
