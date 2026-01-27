@@ -165,53 +165,33 @@ function excerptFromHtml(htmlStr, maxLen=140){
     if(txt.length <= maxLen) return txt;
     return txt.slice(0, maxLen) + "…";
   }
+
   async function loadReviewsJson(){
-    // ✅ 우선순위: /data/reviews.json (정상 원본) → 그 외 후보
-    // 문제 원인(가장 흔함): 루트에 남아있는 ./reviews.json(8개 테스트 데이터)을 먼저 읽어버림.
-    // 그래서 "충분한 개수(예: 30개 이상)"가 아니면 다음 후보로 넘어가도록 처리합니다.
-    const MIN_VALID_COUNT = 30;
+    // Prefer /data/reviews.json (full dataset). Some deployments may still have a small /reviews.json at root.
+    const urls = ["./data/reviews.json", "./reviews.json", "./reviews/reviews.json"];
+    let fallback = null;
 
-    const urls = [
-      "./data/reviews.json",
-      "/data/reviews.json",
-      "data/reviews.json",
-      "./reviews/reviews.json",
-      "/reviews/reviews.json",
-      "./reviews.json",
-      "/reviews.json",
-      "reviews.json",
-    ];
-
-    let best = { url: null, arr: [] };
-
-    for (const u of urls){
+    for(const u of urls){
       try{
-        // cache busting
-        const bust = (u.includes("?") ? "&" : "?") + "ts=" + Date.now();
-        const res = await fetch(u + bust, { cache: "no-store" });
+        const res = await fetch(u + (u.includes("?")?"&":"?") + "v=" + Date.now(), { cache: "no-store" });
         if(!res.ok) continue;
         const arr = await res.json();
-        if(Array.isArray(arr) && arr.length > best.arr.length){
-          best = { url: u, arr };
-          // 충분히 큰 데이터면 즉시 반환
-          if(arr.length >= MIN_VALID_COUNT) {
-            console.log("[reviews] loaded from:", u, "count:", arr.length);
+        if(Array.isArray(arr)) {
+          if(arr.length >= 50) {
+            console.info("[reviews] Loaded reviews from", u, arr.length);
             return arr;
+          }
+          // Keep the first small dataset as a fallback, but keep searching for the full one.
+          if(!fallback && arr.length > 0) {
+            fallback = arr;
+            console.warn("[reviews] Small dataset fallback from", u, arr.length);
+          } else {
+            console.warn("[reviews] Too few reviews from", u, arr.length);
           }
         }
       }catch(e){}
     }
-
-    if(best.arr.length){
-      console.log("[reviews] loaded (fallback) from:", best.url, "count:", best.arr.length);
-      return best.arr;
-    }
-
-    console.warn("[reviews] reviews.json 로드 실패: 모든 후보 경로에서 0개");
-    return [];
-  }
-
-    return [];
+    return fallback || [];
   }
 
   function normalizeReview(r){
