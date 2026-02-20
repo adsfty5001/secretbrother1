@@ -773,131 +773,6 @@
     return (Array.isArray(rs) && rs.length) ? rs : STATIC_REVIEWS;
   };
 
-
-  // ---------- Reviews: JSON loader + view counter (no backend) ----------
-  const BEST_TITLE_MAP = [
-    { match: '3년간 못했던 내집마련', author: '김아름님', viewsBase: 1240 },
-    { match: '시크릿큐레이팅후기_막막함에 확신', author: '이수정님', viewsBase: 980 },
-    { match: '큰 돈이 들어가는 만큼, 경험이 적은 만큼', author: '이서연님', viewsBase: 850 },
-    { match: '조정지역 발표 다음날 동탄 매수', author: '변미소님', viewsBase: 1100 },
-    { match: '큐레이팅 후기', author: '이민석님', viewsBase: 760 },
-    { match: '[시크릿브라더] 부동산 큐레이팅 후기', author: '김기용님', viewsBase: 640 },
-  ];
-
-  const decodeHtml = (s) => {
-    if (s == null) return '';
-    const ta = document.createElement('textarea');
-    ta.innerHTML = String(s);
-    return ta.value;
-  };
-
-  const normalizeContentHtml = (raw) => {
-    // raw may be HTML-escaped, include literal \r\n sequences, or "#######" separators.
-    let s = decodeHtml(raw || '');
-    s = s.replace(/\\r\\n|\\n\\r|\\n|\\r/g, '\n'); // literal backslash sequences
-    s = s.replace(/\r\n|\n\r|\r/g, '\n');              // real newlines
-    s = s.replace(/#+/g, '\n');                             // "#######" -> newline
-    // If it already contains tags, keep them; otherwise convert newlines to <br>
-    if (/[<][a-z][\s\S]*[>]/i.test(s)) {
-      return s;
-    }
-    return s.split('\n').map(line => line.trim()).join('<br>');
-  };
-
-  const htmlToPlainText = (html) => {
-    const div = document.createElement('div');
-    div.innerHTML = normalizeContentHtml(html);
-    return (div.textContent || div.innerText || '').trim();
-  };
-
-  const extractAuthorFromTitle = (title) => {
-    const t = String(title || '').trim();
-    if (!t) return '수강생';
-    // pattern: "..._홍길동" or "... _ 홍길동"
-    const under = t.split('_').map(x => x.trim()).filter(Boolean);
-    if (under.length >= 2) {
-      const cand = under[under.length - 1].replace(/님$/,'').trim();
-      if (/^[가-힣]{2,4}$/.test(cand)) return cand + '님';
-    }
-    // trailing korean name
-    const m1 = t.match(/([가-힣]{2,4})(님)?\s*$/);
-    if (m1 && m1[1]) return m1[1] + '님';
-    // last word that looks like a name (common surnames)
-    const m2 = t.match(/\b([김이박최정강조윤장임한오서신권황안송전홍유고문양손배백허남심노하][가-힣]{1,2})\b(?!.*\b[가-힣]{2,3}\b)/);
-    if (m2 && m2[1]) return m2[1] + '님';
-    return '수강생';
-  };
-
-  const getLocalViewDelta = (id) => {
-    try {
-      const key = 'sc_review_view_delta_' + String(id);
-      return Number(localStorage.getItem(key) || '0') || 0;
-    } catch (e) {
-      return 0;
-    }
-  };
-
-  const incLocalViewDelta = (id) => {
-    try {
-      const key = 'sc_review_view_delta_' + String(id);
-      const next = (Number(localStorage.getItem(key) || '0') || 0) + 1;
-      localStorage.setItem(key, String(next));
-      return next;
-    } catch (e) {
-      return 0;
-    }
-  };
-
-  const getDisplayViews = (review) => {
-    const base = Number(review.viewsBase ?? review.views ?? 0) || 0;
-    const delta = getLocalViewDelta(review.id);
-    return base + delta;
-  };
-
-  const loadReviewsFromJson = async () => {
-    const urls = ['./data/reviews.json', '/data/reviews.json', 'data/reviews.json'];
-    for (const url of urls) {
-      try {
-        const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) continue;
-        const data = await res.json();
-        if (!Array.isArray(data) || !data.length) continue;
-
-        const normalized = data.map((r) => {
-          const title = r?.title || '';
-          const best = BEST_TITLE_MAP.find(b => title.includes(b.match));
-          const author = best?.author || (extractAuthorFromTitle(title));
-          const viewsBase = (best?.viewsBase != null)
-            ? best.viewsBase
-            : (Number(r?.views || 0) || 0);
-
-          return {
-            id: String(r?.id || ''),
-            title,
-            author,
-            date: String(r?.date || r?.createdDate || ''),
-            rating: 5,
-            badge: best ? 'BEST' : '',
-            viewsBase,
-            content: normalizeContentHtml(r?.contentHtml || ''),
-          };
-        }).filter(r => r.id && r.title);
-
-        return normalized;
-      } catch (e) {}
-    }
-    return null;
-  };
-
-  const initReviewsFromJson = async () => {
-    const list = await loadReviewsFromJson();
-    if (Array.isArray(list) && list.length > 8) {
-      window.App.state.reviews = list;
-      // Reset "더보기" count so the first screen stays tidy
-      window.App.state.visibleReviews = 9;
-    }
-  };
-
   // ---------- Review Rendering (Static Fallback) ----------
   const createReviewCard = (review, isBest) => {
     const rating = Number(review.rating || 0);
@@ -914,7 +789,8 @@
     const bgClass = isBest ? 'hover:-translate-y-2 shadow-sm border-gray-100' : 'hover:-translate-y-1 shadow-sm border-gray-100';
 
     const tempDiv = document.createElement('div');
-    const plainText = htmlToPlainText(review.content || '');
+    tempDiv.innerHTML = review.content || '';
+    const plainText = (tempDiv.textContent || tempDiv.innerText || '').trim();
 
     return `
       <div onclick="window.App.openReviewDetail('${review.id}')" class="bg-white p-6 rounded-2xl border ${bgClass} hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between h-full group">
@@ -931,7 +807,7 @@
             <span class="font-bold text-gray-700">${review.author || ''}</span>
             <span>${review.date || ''}</span>
           </div>
-          <div class="flex items-center gap-1"><i data-lucide="eye" class="w-3 h-3"></i> ${(getDisplayViews(review) || 0).toLocaleString?.() ?? (getDisplayViews(review) || 0)}</div>
+          <div class="flex items-center gap-1"><i data-lucide="eye" class="w-3 h-3"></i> ${(review.views || 0).toLocaleString?.() ?? (review.views || 0)}</div>
         </div>
       </div>
     `;
@@ -1216,22 +1092,26 @@
             
             if(!review) return;
 
-            incLocalViewDelta(review.id);
+            review.views = (review.views || 0) + 1;
             
             document.getElementById('modal-review-title').innerText = review.title;
             
-            document.getElementById('modal-review-content').innerHTML = normalizeContentHtml(review.content || '');
-document.getElementById('modal-review-author').innerText = review.author;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.innerHTML = review.content;
+            let decodedContent = tempTextArea.value;
+            if (!decodedContent.includes('<p>') && !decodedContent.includes('<br>')) {
+                decodedContent = decodedContent.replace(/\\n/g, '<br>');
+            }
+            document.getElementById('modal-review-content').innerHTML = decodedContent;
+            document.getElementById('modal-review-author').innerText = review.author;
             document.getElementById('modal-review-date').innerText = review.date;
-            document.getElementById('modal-review-views').innerText = (getDisplayViews(review) || 0).toLocaleString?.() ?? String(getDisplayViews(review) || 0);
+            document.getElementById('modal-review-views').innerText = review.views.toLocaleString();
             
             let stars = '';
             for(let i=0; i<5; i++) stars += `<i data-lucide="star" class="w-4 h-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}"></i>`;
             document.getElementById('modal-stars').innerHTML = stars;
 
             window.App.openModal('reviewDetailModal');
-            // refresh cards after view increment
-            try { renderBestReviews(); renderAllReviews(); } catch(e) {}
         };
 
         window.App.openMypage = () => {
@@ -1255,7 +1135,7 @@ document.getElementById('modal-review-author').innerText = review.author;
         // Auth & Init (removed: no-login mode)
 
 // Initial Render
-        (async () => { await initReviewsFromJson(); renderUI(); })();
+        renderUI();
 
   })();
 </script>

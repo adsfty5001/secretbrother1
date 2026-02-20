@@ -167,29 +167,15 @@ function excerptFromHtml(htmlStr, maxLen=140){
   }
 
   async function loadReviewsJson(){
-    // Prefer canonical path: /data/reviews.json (repo root /data/reviews.json)
-    // Cache-bust to avoid stale CDN caches during deployment.
-    const ts = Date.now();
-    const candidates = [
-      `/data/reviews.json?v=${ts}`,
-      `./data/reviews.json?v=${ts}`,
-      `./reviews.json?v=${ts}`,
-      `/reviews.json?v=${ts}`
-    ];
-
-    let lastErr = null;
-    for(const url of candidates){
+    const urls = ["./reviews.json", "./data/reviews.json", "./reviews/reviews.json"];
+    for(const u of urls){
       try{
-        const res = await fetch(url, { cache: "no-store" });
-        if(!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
-        const data = await res.json();
-        if(!Array.isArray(data)) throw new Error(`${url} -> JSON is not an array`);
-        return data;
-      }catch(err){
-        lastErr = err;
-      }
+        const res = await fetch(u, { cache: "no-store" });
+        if(!res.ok) continue;
+        const arr = await res.json();
+        if(Array.isArray(arr)) return arr;
+      }catch(e){}
     }
-    console.error("[reviews] Failed to load reviews.json from all candidates.", lastErr);
     return [];
   }
 
@@ -198,12 +184,7 @@ function excerptFromHtml(htmlStr, maxLen=140){
     const title = String(r.title ?? "");
     const author = String(r.author ?? r.writer ?? r.name ?? r.userName ?? r.username ?? r.nickname ?? r.displayName ?? "");
     const date = String(r.date ?? r.createdAt ?? "");
-    let contentHtml = decodeHtml(r.contentHtml ?? r.content ?? "");
-    // Remove literal escape sequences that appear in some data (e.g., "\r\n\r\n")
-    contentHtml = contentHtml
-      .replace(/\r\n/g, "")
-      .replace(/\n/g, "")
-      .replace(/\r/g, "");
+    const contentHtml = decodeHtml(r.contentHtml ?? r.content ?? "");
     const baseViews = Number(r.views ?? 0) || 0;
     return { id, title, author, date, contentHtml, baseViews, source:"json", rating: Number(r.rating ?? 0) || null };
   }
@@ -359,17 +340,15 @@ function excerptFromHtml(htmlStr, maxLen=140){
       const rating = getRating(r);
 
       const card = document.createElement("div");
-      card.className = "review-card bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition cursor-pointer flex flex-col";
+      card.className = "bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition cursor-pointer";
       card.innerHTML = `
-        <div>
-          <div class="flex items-start justify-between gap-3">
-            <div class="text-lg font-bold text-gray-900 line-clamp-2">${escapeHtml(r.title)}</div>
-            <div class="text-sm shrink-0">${renderStars(rating)}</div>
-          </div>
-          <div class="mt-2 text-sm text-gray-500">${fmtDate(r.date)}${r.author ? " · "+escapeHtml(r.author) : ""}</div>
-          <div class="mt-3 text-sm text-gray-700 leading-relaxed line-clamp-3">${escapeHtml(excerptFromHtml(r.contentHtml, 220))}</div>
+        <div class="flex items-center justify-between">
+          <div class="text-lg font-bold text-gray-900">${escapeHtml(r.title)}</div>
+          <div class="text-sm">${renderStars(rating)}</div>
         </div>
-        <div class="mt-auto pt-4 text-sm text-gray-500">조회수 <span id="views-a-${escapeHtml(r.id)}" class="font-semibold text-gray-800">${totalViews}</span></div>
+        <div class="mt-2 text-sm text-gray-500">${fmtDate(r.date)}${r.author ? " · "+escapeHtml(r.author) : ""}</div>
+        <div class="mt-3 text-sm text-gray-700 leading-relaxed">${escapeHtml(excerptFromHtml(r.contentHtml, 140))}</div>
+        <div class="mt-4 text-sm text-gray-500">조회수 <span id="views-a-${escapeHtml(r.id)}" class="font-semibold text-gray-800">${totalViews}</span></div>
       `;
       card.addEventListener("click", ()=> openDetail(r.id));
       list.appendChild(card);
@@ -437,9 +416,17 @@ function excerptFromHtml(htmlStr, maxLen=140){
     }
   }
 
-  // 후기 작성: 로그인/권한 확인 없이 네이버폼으로 바로 이동
-  $("writeBtn")?.addEventListener("click", ()=>{
-    window.open("https://naver.me/5JGkO1vW", "_blank");
+  $("writeBtn")?.addEventListener("click", async ()=>{
+    const chk = await canWrite();
+    if(!chk.ok){
+      alert(chk.reason);
+      return;
+    }
+    // 작성자 자동 채움(있으면)
+    if($("wAuthor")){
+      $("wAuthor").value = chk.member?.name || chk.user.displayName || chk.user.email || "";
+    }
+    openModal("writeModal");
   });
 
   $("writeClose")?.addEventListener("click", ()=>closeModal("writeModal"));
@@ -514,7 +501,7 @@ function excerptFromHtml(htmlStr, maxLen=140){
     ALL = Array.from(map.values());
 
     const totalCountEl = $("#totalCount");
-    if(totalCountEl) totalCountEl.textContent = `총 ${ALL.length}개`;
+    if(totalCountEl) totalCountEl.textContent = `총 ${ALL.length}개 후기`;
     if(statusMsg) statusMsg.textContent = "";
 
     applyFilter();
