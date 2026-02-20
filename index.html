@@ -710,7 +710,7 @@
 하지만 시간이 갈수록 가치가 낮다는 것을 알게 되었고, 그 당시 매수할 수 있었던 다른 물건들은 1-2억씩 먼저 오르는 상황이 되었습니다.
 그래서 이번엔 전문가이신 시브님 큐레이팅을 신청하게 되었습니다!
 결과적으로 좋은 물건을, 좋은 가격에 매수할 수 있었던 건 시크릿 큐레이팅 덕분입니다.
-(중략)
+
 감사합니다.` },
             { id: 4, title: "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기", author: "변미소님", date: "2025-11-12", rating: 5, badge: "BEST", views: 1100, content: `안녕하세요 전 추석직전 큐레이팅 신청하고 추석연휴동안  갈아타기를 위해 열심히 임장을 다녔습니다.
 70일 아기를 데리고 임장을 하는 것이 정말 쉽지 않았는데요. 아기와 나중에 실거주와 투자하기 좋은 곳으로 살고싶다는
@@ -739,13 +739,13 @@
 저는 추석 연휴가 끝나고 큐레이팅을 시작해서 한 주만에 살던 집을 매도하고 새집을 매수하게 되었습니다.
 처음에 큐레이팅을 신청할 때는 '정말로 이번 기회에 매도와 매수를 해야겠다' 이런 생각보다는 그간에 부동산에 대해서 제가 생각했던
 시나리오를 누군가에게 검증 받아 보자라는 마음으로 시작했습니다.
-(중략)
+
 하지만 정말로 치열한 고민 끝에 내린 결정이었음을 이미 알고 있고 그러한 치열한 생각의 과정에서 옆에 있어 줬던 시크릿브라더에게 참 감사합니다.` },
             { id: 6, title: "[시크릿브라더] 부동산 큐레이팅 후기", author: "김기용님", date: "2025-10-27", rating: 5, badge: "BEST", views: 640, content: `안녕하세요, 
 10월 초 추석 연휴 전 큐레이팅을 신청 하였고, 실거주와 갭투자를 고민하는 상황이었습니다. 
 결론을 먼저 말씀 드리자면 시크릿브라더님 큐레이팅 조언을 통해 실거주집을 매수하기로 계약을 한 상태입니다. 
 결과부터 말씀드리자면 큐레이팅 내용에 대해 정말 대만족 입니다!
-(중략)
+
 솔직히 질문에 대한 시브님의 답을 듣는 과정이 길지 않았고 명쾌했습니다.` },
             { id: 7, date: "2025-12-05", author: "한철수님", title: "시브님 큐레이팅 대박입니다.", content: "평소 블로그랑 유튜브 보면서 공부하고 있었는데...", rating: 5, views: 320 },
             // ... (나머지 48개도 여기에 모두 포함됨)
@@ -789,7 +789,8 @@
     const bgClass = isBest ? 'hover:-translate-y-2 shadow-sm border-gray-100' : 'hover:-translate-y-1 shadow-sm border-gray-100';
 
     const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = review.content || '';
+    const __cleanContent = (review.content || '').replace(/\(중략\)/g, '');
+            tempDiv.innerHTML = __cleanContent;
     const plainText = (tempDiv.textContent || tempDiv.innerText || '').trim();
 
     return `
@@ -1097,7 +1098,8 @@
             document.getElementById('modal-review-title').innerText = review.title;
             
             const tempTextArea = document.createElement('textarea');
-            tempTextArea.innerHTML = review.content;
+            const __rawContent = (review.content || '').replace(/\(중략\)/g, '');
+            tempTextArea.innerHTML = __rawContent;
             let decodedContent = tempTextArea.value;
             if (!decodedContent.includes('<p>') && !decodedContent.includes('<br>')) {
                 decodedContent = decodedContent.replace(/\\n/g, '<br>');
