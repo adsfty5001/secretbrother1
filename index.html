@@ -775,14 +775,14 @@
 
 
   // ---------- Reviews: JSON loader + view counter (no backend) ----------
-  const BEST_FIXED_AUTHORS = [
-  "김아름님",
-  "이수정님",
-  "이서연님",
-  "변미소님",
-  "이민석님",
-  "김기용님"
-];
+  const BEST_TITLE_MAP = [
+    { match: '3년간 못했던 내집마련', author: '김아름님', viewsBase: 1240 },
+    { match: '시크릿큐레이팅후기_막막함에 확신', author: '이수정님', viewsBase: 980 },
+    { match: '큰 돈이 들어가는 만큼, 경험이 적은 만큼', author: '이서연님', viewsBase: 850 },
+    { match: '조정지역 발표 다음날 동탄 매수', author: '변미소님', viewsBase: 1100 },
+    { match: '큐레이팅 후기', author: '이민석님', viewsBase: 760 },
+    { match: '[시크릿브라더] 부동산 큐레이팅 후기', author: '김기용님', viewsBase: 640 },
+  ];
 
   const decodeHtml = (s) => {
     if (s == null) return '';
@@ -794,7 +794,6 @@
   const normalizeContentHtml = (raw) => {
     // raw may be HTML-escaped, include literal \r\n sequences, or "#######" separators.
     let s = decodeHtml(raw || '');
-    s = s.replace(/\(중략\)|\[중략\]/g, '');
     s = s.replace(/\\r\\n|\\n\\r|\\n|\\r/g, '\n'); // literal backslash sequences
     s = s.replace(/\r\n|\n\r|\r/g, '\n');              // real newlines
     s = s.replace(/#+/g, '\n');                             // "#######" -> newline
@@ -855,17 +854,6 @@
     return base + delta;
   };
 
-  const getOrCreateBestViewsBase = (id) => {
-    const key = `sc_best_views_base_${id}`;
-    let v = parseInt(localStorage.getItem(key) || '', 10);
-    if (!Number.isFinite(v) || v < 800 || v > 1500) {
-      v = 800 + Math.floor(Math.random() * 701); // 800~1500
-      localStorage.setItem(key, String(v));
-    }
-    return v;
-  };
-
-
   const loadReviewsFromJson = async () => {
     const urls = ['./data/reviews.json', '/data/reviews.json', 'data/reviews.json'];
     for (const url of urls) {
@@ -877,9 +865,13 @@
 
         const normalized = data.map((r) => {
           const title = r?.title || '';
-          const author = extractAuthorFromTitle(title) || '수강생';
-          const viewsBase = Number(r?.views || 0) || 0;
-return {
+          const best = BEST_TITLE_MAP.find(b => title.includes(b.match));
+          const author = best?.author || (extractAuthorFromTitle(title));
+          const viewsBase = (best?.viewsBase != null)
+            ? best.viewsBase
+            : (Number(r?.views || 0) || 0);
+
+          return {
             id: String(r?.id || ''),
             title,
             author,
@@ -946,28 +938,16 @@ return {
   };
 
   const renderBestReviews = () => {
-  const container = document.getElementById("bestReviews");
-  if (!container) return;
+    const container = $('best-reviews-container');
+    if (!container) return;
 
-  const bests = BEST_FIXED_AUTHORS
-    .map((author) => STATIC_REVIEWS.find((r) => (r.author || "").trim() === author))
-    .filter(Boolean)
-    .map((r) => ({
-      ...r,
-      isBest: true,
-      // 베스트 6개 조회수는 800~1500 랜덤 베이스(1회 생성 후 localStorage에 고정) + 클릭 시 누적 증가
-      viewsBase: getOrCreateBestViewsBase(r.id),
-    }));
+    const reviews = getReviews();
+    const bests = reviews.filter(r => r && r.badge === 'BEST').slice(0, 6);
+    container.innerHTML = bests.map(r => createReviewCard(r, true)).join('') || '<div class="text-gray-400 text-sm">표시할 BEST 후기가 없습니다.</div>';
+    safeCreateIcons();
+  };
 
-  container.innerHTML = bests.length
-    ? bests.map((r) => createReviewCard(r, true)).join("")
-    : `<div style="padding:12px;color:#777;">BEST 후기를 불러오지 못했습니다.</div>`;
-
-  // lucide icon render (if present)
-  try { if (window.lucide) window.lucide.createIcons(); } catch (e) {}
-};
-
-const renderAllReviews = () => {
+  const renderAllReviews = () => {
     const container = $('all-reviews-container');
     if (!container) return;
 
