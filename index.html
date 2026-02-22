@@ -341,7 +341,7 @@
                     </div>
                     
                     <div class="text-center">
-                        <button onclick="window.location.href='https://cafe.naver.com/f-e/cafes/30389976/menus/20?viewType=L'" class="inline-flex items-center gap-2 bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white px-10 py-4 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-lg group">
+                        <button onclick="window.App.navigate('reviews')" class="inline-flex items-center gap-2 bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white px-10 py-4 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-lg group">
                             실시간 전체 후기 보러가기 <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
                         </button>
                         <p class="text-gray-400 text-sm mt-3">지금 이 순간에도 후기가 올라오고 있습니다!</p>
@@ -710,7 +710,7 @@
 하지만 시간이 갈수록 가치가 낮다는 것을 알게 되었고, 그 당시 매수할 수 있었던 다른 물건들은 1-2억씩 먼저 오르는 상황이 되었습니다.
 그래서 이번엔 전문가이신 시브님 큐레이팅을 신청하게 되었습니다!
 결과적으로 좋은 물건을, 좋은 가격에 매수할 수 있었던 건 시크릿 큐레이팅 덕분입니다.
-(중략)
+
 감사합니다.` },
             { id: 4, title: "조정지역 발표 다음날 동탄 매수 시크릿큐레이팅 후기", author: "변미소님", date: "2025-11-12", rating: 5, badge: "BEST", views: 1100, content: `안녕하세요 전 추석직전 큐레이팅 신청하고 추석연휴동안  갈아타기를 위해 열심히 임장을 다녔습니다.
 70일 아기를 데리고 임장을 하는 것이 정말 쉽지 않았는데요. 아기와 나중에 실거주와 투자하기 좋은 곳으로 살고싶다는
@@ -739,13 +739,13 @@
 저는 추석 연휴가 끝나고 큐레이팅을 시작해서 한 주만에 살던 집을 매도하고 새집을 매수하게 되었습니다.
 처음에 큐레이팅을 신청할 때는 '정말로 이번 기회에 매도와 매수를 해야겠다' 이런 생각보다는 그간에 부동산에 대해서 제가 생각했던
 시나리오를 누군가에게 검증 받아 보자라는 마음으로 시작했습니다.
-(중략)
+
 하지만 정말로 치열한 고민 끝에 내린 결정이었음을 이미 알고 있고 그러한 치열한 생각의 과정에서 옆에 있어 줬던 시크릿브라더에게 참 감사합니다.` },
             { id: 6, title: "[시크릿브라더] 부동산 큐레이팅 후기", author: "김기용님", date: "2025-10-27", rating: 5, badge: "BEST", views: 640, content: `안녕하세요, 
 10월 초 추석 연휴 전 큐레이팅을 신청 하였고, 실거주와 갭투자를 고민하는 상황이었습니다. 
 결론을 먼저 말씀 드리자면 시크릿브라더님 큐레이팅 조언을 통해 실거주집을 매수하기로 계약을 한 상태입니다. 
 결과부터 말씀드리자면 큐레이팅 내용에 대해 정말 대만족 입니다!
-(중략)
+
 솔직히 질문에 대한 시브님의 답을 듣는 과정이 길지 않았고 명쾌했습니다.` },
             { id: 7, date: "2025-12-05", author: "한철수님", title: "시브님 큐레이팅 대박입니다.", content: "평소 블로그랑 유튜브 보면서 공부하고 있었는데...", rating: 5, views: 320 },
             // ... (나머지 48개도 여기에 모두 포함됨)
@@ -1139,5 +1139,97 @@
 
   })();
 </script>
+
+<script>
+
+// ==== BEST 후기: JSON 원문으로 보정(중략 제거 + 깨짐/이상문자 정리) ====
+function normalizeAuthorName(name) {
+  return (name || "").toString().trim();
+}
+
+function cleanReviewHtml(raw) {
+  let s = (raw ?? "").toString();
+
+  // If JSON stores escaped HTML entities like &lt;p&gt;
+  try { s = s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"); } catch (e) {}
+
+  // Common junk sequences in this project
+  s = s.replace(/\\r\\n|\\n|\\r/g, "\n");
+  s = s.replace(/#+/g, "\n\n");         // ######## -> paragraph break
+  s = s.replace(/\uFFFD/g, "");          // replacement char
+  s = s.replace(/\(중략\)/g, "");        // remove literal "" marker
+
+  // If still plain text, wrap into <p> blocks (keep existing tags)
+  const hasTag = /<\/?[a-z][\s\S]*>/i.test(s);
+  if (!hasTag) {
+    const parts = s.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+    s = parts.map(p => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`).join("");
+  } else {
+    // Normalize excessive newlines between tags
+    s = s.replace(/\n{3,}/g, "\n\n");
+  }
+  return s;
+}
+
+function escapeHtml(str) {
+  return (str || "").toString()
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function pickBestReviewByAuthor(reviews, author) {
+  const a = normalizeAuthorName(author);
+  if (!Array.isArray(reviews) || !a) return null;
+
+  const candidates = reviews.filter(r => normalizeAuthorName(r.author || r.nickname || r.displayName || r.writer || r.name) === a);
+  if (!candidates.length) return null;
+
+  // Prefer isBest === true, else highest views, else latest date
+  const scored = candidates.map(r => {
+    const views = Number(r.views ?? r.viewCount ?? 0) || 0;
+    const isBest = !!(r.isBest || r.best || r.is_best);
+    const dateStr = (r.date || r.createdAt || r.createdDate || "").toString();
+    /*date parsed below*/
+    return { r, isBest, views, ts: isNaN(Date.parse(dateStr)) ? 0 : Date.parse(dateStr) };
+  });
+  scored.sort((x, y) => {
+    if (x.isBest !== y.isBest) return y.isBest - x.isBest;
+    if (x.views !== y.views) return y.views - x.views;
+    return y.ts - x.ts;
+  });
+  return scored[0].r;
+}
+
+// Hook: after JSON 로드 완료 시 BEST 6을 "원문"으로 보정
+function patchBestSixFromJson(allReviews) {
+  if (!window.App || !Array.isArray(window.App.state?.bestReviews)) return;
+
+  const best = window.App.state.bestReviews;
+  for (let i = 0; i < best.length; i++) {
+    const author = normalizeAuthorName(best[i]?.author || best[i]?.nickname || "");
+    if (!author) continue;
+
+    // Only patch specific BEST authors (including those 3) OR if content contains 
+    const needs = ["이서연","이민석","김기용"].includes(author) || (best[i]?.contentHtml || best[i]?.content || "").toString().includes("");
+    if (!needs) continue;
+
+    const full = pickBestReviewByAuthor(allReviews, author);
+    if (!full) continue;
+
+    best[i] = {
+      ...best[i],
+      id: full.id ?? best[i].id,
+      title: full.title ?? best[i].title,
+      date: full.date ?? best[i].date,
+      author: author,
+      views: best[i].views, // keep base views logic
+      contentHtml: cleanReviewHtml(full.contentHtml ?? full.content ?? "")
+    };
+  }
+  window.App.state.bestReviews = best;
+}
+
+</script>
+
 </body>
 </html>
