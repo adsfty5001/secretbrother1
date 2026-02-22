@@ -7,9 +7,6 @@
 <title>전체 수강생 후기 - 시크릿클래스</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="./styles.css" rel="stylesheet"/>
-<!-- Firebase config (둘 중 존재하는 경로를 사용) -->
-<script src="./config.js"></script>
-
 <style>
     .card-hover { transition: transform .15s ease, box-shadow .15s ease; }
     .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.06); }
@@ -88,19 +85,9 @@
 </div>
 </div>
 </div>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import {
-    getFirestore, collection, getDocs, doc, getDoc, addDoc,
-    serverTimestamp, query, orderBy, runTransaction
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const CONFIG = window.SECRETCLASS_CONFIG || window.SECRETCLASS_FIREBASE_CONFIG || window.FIREBASE_CONFIG || window.firebaseConfig;
-  const app = initializeApp(CONFIG);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
+<script>
+(function(){
   const $ = (id) => document.getElementById(id);
 
   const decodeHtml = (s) => {
@@ -111,11 +98,10 @@
   const escapeHtml = (s) => String(s||"")
     .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
     .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+
   const normalizeText = (s) => String(s || "")
-    .replace(/\\r\\n/g, "\n")
-    .replace(/\\n/g, "\n")
-    .replace(/\\r/g, "\n")
     .replace(/\r\n/g, "\n")
+    .replace(/\n/g, "\n")
     .replace(/\r/g, "\n")
     .replace(/\u00A0/g, " ")
     .replace(/\s+\n/g, "\n")
@@ -146,19 +132,16 @@
     return String(dateStr || "").slice(0,10);
   }
 
-  
   function htmlToPlainText(htmlStr){
     let s = decodeHtml(htmlStr || "");
-    // Convert common HTML formatting to plain text paragraphs (display-only)
     s = s.replace(/<br\s*\/?\s*>/gi, "\n");
     s = s.replace(/<\/p\s*>/gi, "\n\n");
     s = s.replace(/<p[^>]*>/gi, "");
-    // Strip any remaining tags
     s = s.replace(/<[^>]+>/g, "");
     return normalizeText(s);
   }
 
-function excerptFromHtml(htmlStr, maxLen=140){
+  function excerptFromHtml(htmlStr, maxLen=140){
     const div = document.createElement("div");
     div.innerHTML = htmlStr || "";
     const txt = normalizeText(div.textContent || "");
@@ -167,7 +150,7 @@ function excerptFromHtml(htmlStr, maxLen=140){
   }
 
   async function loadReviewsJson(){
-    const urls = ["./reviews.json", "./data/reviews.json", "./reviews/reviews.json"];
+    const urls = ["./data/reviews.json", "./reviews.json", "./reviews/reviews.json"];
     for(const u of urls){
       try{
         const res = await fetch(u, { cache: "no-store" });
@@ -186,86 +169,42 @@ function excerptFromHtml(htmlStr, maxLen=140){
     const date = String(r.date ?? r.createdAt ?? "");
     const contentHtml = decodeHtml(r.contentHtml ?? r.content ?? "");
     const baseViews = Number(r.views ?? 0) || 0;
-    return { id, title, author, date, contentHtml, baseViews, source:"json", rating: Number(r.rating ?? 0) || null };
+    return { id, title, author, date, contentHtml, baseViews, rating: Number(r.rating ?? 0) || null };
   }
 
-  function tsToDateStr(ts){
-    try{
-      if(!ts) return "";
-      const d = ts.toDate ? ts.toDate() : new Date(ts);
-      return d.toISOString().slice(0,10);
-    }catch(e){
-      return "";
-    }
-  }
+  // ---------- View Counter (LocalStorage, no Firebase) ----------
+  // NOTE: 정적 웹에서 "전 방문자 공용" 조회수 누적은 서버 없이 불가능합니다.
+  //       이 구현은 "브라우저(기기) 단위"로 누적 저장됩니다.
+  const VIEW_STORE_KEY = "secretclass_review_views_v1";
+  const loadViewStore = () => {
+    try { return JSON.parse(localStorage.getItem(VIEW_STORE_KEY) || "{}") || {}; }
+    catch (e) { return {}; }
+  };
+  const saveViewStore = (store) => {
+    try { localStorage.setItem(VIEW_STORE_KEY, JSON.stringify(store || {})); }
+    catch (e) {}
+  };
 
-  async function loadFirestoreReviews(){
-    try{
-      const q = query(collection(db, "reviews"), orderBy("createdAt", "desc"));
-      const snap = await getDocs(q);
-      return snap.docs.map(d=>{
-        const data = d.data() || {};
-        return {
-          id: d.id,
-          title: String(data.title ?? ""),
-          author: String(data.author ?? data.writer ?? data.name ?? ""),
-          date: tsToDateStr(data.createdAt),
-          contentHtml: decodeHtml(data.contentHtml ?? data.content ?? ""),
-          baseViews: 0,
-          source:"firestore",
-          rating: Number(data.rating ?? 0) || null
-        };
-      });
-    }catch(e){
-      try{
-        const snap = await getDocs(collection(db, "reviews"));
-        return snap.docs.map(d=>{
-          const data = d.data() || {};
-          return {
-            id: d.id,
-            title: String(data.title ?? ""),
-            author: String(data.author ?? data.writer ?? data.name ?? ""),
-            date: tsToDateStr(data.createdAt),
-            contentHtml: decodeHtml(data.contentHtml ?? data.content ?? ""),
-            baseViews: 0,
-            source:"firestore",
-            rating: Number(data.rating ?? 0) || null
-          };
-        });
-      }catch(e2){
-        return [];
-      }
-    }
-  }
-
-  // delta views from reviewViews/{reviewId}.views
   const viewDeltaCache = new Map();
-  async function getDeltaViews(reviewId){
-    if(viewDeltaCache.has(reviewId)) return viewDeltaCache.get(reviewId);
-    try{
-      const ref = doc(db, "reviewViews", reviewId);
-      const snap = await getDoc(ref);
-      const delta = snap.exists() ? (Number(snap.data().views) || 0) : 0;
-      viewDeltaCache.set(reviewId, delta);
-      return delta;
-    }catch(e){
-      return 0;
+  function hydrateViewCache(){
+    const store = loadViewStore();
+    for(const [k,v] of Object.entries(store)){
+      viewDeltaCache.set(String(k), Number(v)||0);
     }
   }
-  async function incrementDeltaViews(reviewId){
-    const ref = doc(db, "reviewViews", reviewId);
-    const next = await runTransaction(db, async (tx)=>{
-      const snap = await tx.get(ref);
-      if(!snap.exists()){
-        tx.set(ref, { views: 1 }); // create exactly 1
-        return 1;
-      }
-      const cur = Number(snap.data().views) || 0;
-      const n = cur + 1; // update +1
-      tx.update(ref, { views: n });
-      return n;
-    });
-    viewDeltaCache.set(reviewId, next);
+  function getDeltaViewsSync(id){
+    return Number(viewDeltaCache.get(String(id)) || 0) || 0;
+  }
+  async function getDeltaViews(id){
+    return getDeltaViewsSync(id);
+  }
+  async function incrementDeltaViews(id){
+    const key = String(id);
+    const next = getDeltaViewsSync(key) + 1;
+    viewDeltaCache.set(key, next);
+    const store = loadViewStore();
+    store[key] = next;
+    saveViewStore(store);
     return next;
   }
 
@@ -295,6 +234,10 @@ function excerptFromHtml(htmlStr, maxLen=140){
     return r.rating || ratingFor(r.id);
   }
 
+  function totalViewsOf(r){
+    return (Number(r.baseViews)||0) + getDeltaViewsSync(r.id);
+  }
+
   function applyFilter(){
     const q = ($("searchInput")?.value || "").trim().toLowerCase();
     const sort = $("sortSelect")?.value || "recent";
@@ -315,7 +258,7 @@ function excerptFromHtml(htmlStr, maxLen=140){
     } else if(sort==="rating"){
       arr.sort((a,b)=> getRating(b) - getRating(a));
     } else if(sort==="views"){
-      arr.sort((a,b)=> ( (b.baseViews+(viewDeltaCache.get(b.id)||0)) - (a.baseViews+(viewDeltaCache.get(a.id)||0)) ));
+      arr.sort((a,b)=> (totalViewsOf(b) - totalViewsOf(a)));
     }
 
     FILTERED = arr;
@@ -336,7 +279,7 @@ function excerptFromHtml(htmlStr, maxLen=140){
 
     for(const r of slice){
       const delta = await getDeltaViews(r.id);
-      const totalViews = r.baseViews + delta;
+      const totalViews = (Number(r.baseViews)||0) + (Number(delta)||0);
       const rating = getRating(r);
 
       const card = document.createElement("div");
@@ -388,7 +331,7 @@ function excerptFromHtml(htmlStr, maxLen=140){
     try{
       delta = await incrementDeltaViews(id);
     }catch(e){}
-    const total = r.baseViews + (Number(delta)||0);
+    const total = (Number(r.baseViews)||0) + (Number(delta)||0);
 
     const modalViewsEl = document.getElementById("modalViews");
     if(modalViewsEl) modalViewsEl.textContent = String(total);
@@ -402,71 +345,9 @@ function excerptFromHtml(htmlStr, maxLen=140){
   $("modalClose")?.addEventListener("click", ()=>closeModal("reviewModal"));
   $("modalClose2")?.addEventListener("click", ()=>closeModal("reviewModal"));
 
-  // ---- Write review ----
-  async function canWrite(){
-    const user = auth.currentUser;
-    if(!user) return { ok:false, reason:"로그인이 필요합니다." };
-    try{
-      const mSnap = await getDoc(doc(db, "members", user.uid));
-      const ps = mSnap.exists() ? (mSnap.data().payStatus || "") : "";
-      if(ps !== "complete") return { ok:false, reason:"결제 완료자만 작성 가능합니다." };
-      return { ok:true, user, member: mSnap.data() };
-    }catch(e){
-      return { ok:false, reason:"결제 상태 확인에 실패했습니다." };
-    }
-  }
-
-  $("writeBtn")?.addEventListener("click", async ()=>{
-    const chk = await canWrite();
-    if(!chk.ok){
-      alert(chk.reason);
-      return;
-    }
-    // 작성자 자동 채움(있으면)
-    if($("wAuthor")){
-      $("wAuthor").value = chk.member?.name || chk.user.displayName || chk.user.email || "";
-    }
-    openModal("writeModal");
-  });
-
-  $("writeClose")?.addEventListener("click", ()=>closeModal("writeModal"));
-
-  $("writeSubmit")?.addEventListener("click", async ()=>{
-    const chk = await canWrite();
-    if(!chk.ok){
-      alert(chk.reason);
-      return;
-    }
-    const title = ($("wTitle")?.value || "").trim();
-    const author = ($("wAuthor")?.value || "").trim();
-    const rating = Number($("wRating")?.value || 5) || 5;
-    const original = ($("wOriginal")?.value || "").trim(); // optional
-    const content = ($("wContent")?.value || "").trim();
-    const msg = $("writeMsg");
-    if(msg) msg.textContent = "";
-
-    if(!title) return (msg ? msg.textContent="제목을 입력해 주세요." : alert("제목을 입력해 주세요."));
-    if(!content) return (msg ? msg.textContent="내용을 입력해 주세요." : alert("내용을 입력해 주세요."));
-
-    const contentHtml = content.split("\n").map(line=>escapeHtml(line)).join("<br/>");
-
-    try{
-      await addDoc(collection(db, "reviews"), {
-        title,
-        contentHtml,
-        author: author || (chk.member?.name || chk.user.displayName || chk.user.email || ""),
-        originalLink: original || "",
-        rating: Math.max(1, Math.min(5, Math.round(rating))),
-        createdAt: serverTimestamp()
-      });
-      alert("후기가 등록되었습니다.");
-      closeModal("writeModal");
-      await bootstrap();
-    }catch(e){
-      console.error(e);
-      if(msg) msg.textContent = "등록에 실패했습니다. 잠시 후 다시 시도해 주세요.";
-      else alert("등록에 실패했습니다.");
-    }
+  // ---- Write review: Firebase 미사용 -> 네이버폼으로 연결 ----
+  $("writeBtn")?.addEventListener("click", ()=>{
+    window.open("https://naver.me/5JGkO1vW", "_blank");
   });
 
   // ---- Events ----
@@ -489,28 +370,27 @@ function excerptFromHtml(htmlStr, maxLen=140){
   });
 
   async function bootstrap(){
+    hydrateViewCache();
+
     const jsonRaw = await loadReviewsJson();
     const jsonReviews = (jsonRaw || []).map(normalizeReview).filter(r=>r.id);
 
-    const fsReviews = await loadFirestoreReviews();
-
     const map = new Map();
     for(const r of jsonReviews) map.set(r.id, r);
-    for(const r of fsReviews) map.set(r.id, r);
-
     ALL = Array.from(map.values());
 
-    const totalCountEl = $("#totalCount");
+    const totalCountEl = $("totalCount");
     if(totalCountEl) totalCountEl.textContent = `총 ${ALL.length}개 후기`;
+    const statusMsg = $("statusMsg");
     if(statusMsg) statusMsg.textContent = "";
 
     applyFilter();
     await renderPage();
   }
 
-  onAuthStateChanged(auth, ()=>{ /* UI 변화만 */ });
-
-  await bootstrap();
+  bootstrap();
+})();
 </script>
+
 </body>
 </html>
